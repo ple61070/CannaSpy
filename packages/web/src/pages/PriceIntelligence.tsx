@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { usePriceMatrix } from '../hooks/usePriceMatrix'
+import { useAuthFetch } from '../lib/useAuthFetch'
 import PriceCell from '../components/intelligence/PriceCell'
 import EmptyState from '../components/shared/EmptyState'
 
 const API = import.meta.env.VITE_API_URL ?? ''
 
-const CATEGORIES = ['', 'flower', 'preroll', 'edible', 'concentrate', 'vape', 'topical']
+// Values match actual menu_items.category values from the data pipeline
+const CATEGORIES = ['', 'Concentrate', 'Indica', 'Hybrid', 'Edible', 'Preroll', 'Gear', 'Wax', 'Drink', 'Tincture', 'Topicals']
 
 interface Location { id: string; name: string }
 
@@ -33,20 +35,21 @@ function exportCSV(
 }
 
 export default function PriceIntelligence() {
+  const authFetch = useAuthFetch()
   const [locations, setLocations] = useState<Location[]>([])
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
   const [category, setCategory] = useState('')
   const { matrix, loading, error } = usePriceMatrix(selectedLocation, category || undefined)
 
   useEffect(() => {
-    fetch(`${API}/api/v1/locations`)
+    authFetch(`${API}/api/v1/locations`)
       .then((r) => r.json())
       .then((d) => {
         const locs: Location[] = d.locations || []
         setLocations(locs)
         if (locs.length > 0 && !selectedLocation) setSelectedLocation(locs[0].id)
       })
-  }, [])
+  }, [authFetch])
 
   // Build product → competitor → price map
   const productMap = new Map<string, Map<string, { price: number; inStock: boolean; onPromo: boolean }>>()
@@ -99,7 +102,7 @@ export default function PriceIntelligence() {
           >
             <option value="">All categories</option>
             {CATEGORIES.slice(1).map((c) => (
-              <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+              <option key={c} value={c}>{c}</option>
             ))}
           </select>
           {products.length > 0 && (

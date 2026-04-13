@@ -24,28 +24,37 @@ export async function pricingRoutes(fastify: FastifyInstance) {
       return reply.code(404).send({ error: 'Location not found', code: 'LOCATION_NOT_FOUND' })
     }
 
-    // Build query — raw_name-based (no products join required; works before normalization)
-    const categoryFilter = category ? `AND po.raw_name ILIKE $3` : ''
+    // Query menu_items (written by collector.py) for competitors linked to this location.
+    // No active=TRUE requirement — seeded competitors may be inactive prospects but still have real data.
     const params: unknown[] = [location_id]
-    if (category) params.push(`%${category}%`)
+    let categoryFilter = ''
+    if (category) {
+      params.push(category)
+      categoryFilter = `AND mi.category = $${params.length}`
+    }
 
     const result = await query(
-      `SELECT DISTINCT ON (po.competitor_id, po.raw_name)
-         po.competitor_id,
-         po.raw_name,
-         po.price,
-         po.on_promo as on_sale,
-         po.promo_text as discount_label,
-         po.detected_at as last_updated,
-         c.name as competitor_name
-       FROM price_observations po
-       JOIN competitors c ON c.id = po.competitor_id
-       JOIN tracked_competitors tc ON tc.competitor_id = po.competitor_id
-         AND tc.active = TRUE
-       WHERE tc.location_id = $1
-         AND po.detected_at > NOW() - INTERVAL '48 hours'
+      `SELECT DISTINCT ON (mi.competitor_id, mi.name)
+         mi.competitor_id,
+         mi.name        AS raw_name,
+         mi.price,
+         mi.on_sale,
+         mi.discount_label,
+         mi.category,
+         mi.collected_at AS last_updated,
+         c.name          AS competitor_name
+       FROM menu_items mi
+       JOIN competitors c ON c.id = mi.competitor_id
+       WHERE mi.competitor_id IN (
+         SELECT tc.competitor_id
+         FROM tracked_competitors tc
+         WHERE tc.location_id = $1
+       )
+         AND mi.price IS NOT NULL
+         AND mi.price > 0
          ${categoryFilter}
-       ORDER BY po.competitor_id, po.raw_name, po.detected_at DESC`,
+       ORDER BY mi.competitor_id, mi.name, mi.collected_at DESC
+       LIMIT 500`,
       params
     )
 
