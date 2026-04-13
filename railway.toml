@@ -3,7 +3,7 @@ builder = "NIXPACKS"
 buildCommand = "pnpm install --frozen-lockfile && rm -rf packages/api/dist && pnpm --filter api build"
 
 [deploy]
-startCommand = "node packages/api/dist/index.js"
+startCommand = "node --dns-result-order=ipv4first packages/api/dist/index.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
