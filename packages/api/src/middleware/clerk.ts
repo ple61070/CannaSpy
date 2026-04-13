@@ -21,7 +21,6 @@ export async function clerkAuthPreHandler(
 
     // Use Clerk org ID if present, fall back to user ID as personal org key
     // This allows the app to work without Clerk Organizations being configured
-    request.log.info(`[clerk] userId=${auth.userId} orgId=${auth.orgId} hasAuthHeader=${!!request.headers.authorization}`)
     const tenantKey = auth.orgId || `user_${auth.userId}`
 
     // Resolve tenant key → internal DB UUID, auto-creating on first access

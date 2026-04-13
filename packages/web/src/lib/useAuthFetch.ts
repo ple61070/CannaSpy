@@ -11,7 +11,6 @@ export function useAuthFetch() {
   return useCallback(
     async (url: string, options: RequestInit = {}): Promise<Response> => {
       const token = await getToken()
-      console.debug('[useAuthFetch] token:', token ? `${token.slice(0, 20)}…` : 'NULL')
       const existing = (options.headers || {}) as Record<string, string>
       const headers: Record<string, string> = { ...existing }
       if (!headers['Content-Type']) headers['Content-Type'] = 'application/json'
