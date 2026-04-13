@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAlerts } from '../hooks/useAlerts'
+import { useAuthFetch } from '../lib/useAuthFetch'
 
 const API = import.meta.env.VITE_API_URL ?? ''
 import { useBlocks } from '../hooks/useBlocks'
@@ -8,16 +9,17 @@ import AlertCard from '../components/shared/AlertCard'
 import EmptyState from '../components/shared/EmptyState'
 
 export default function CommandCenter() {
+  const authFetch = useAuthFetch()
   const navigate = useNavigate()
   const { alerts, loading: alertsLoading, markReviewed } = useAlerts({ limit: 5 })
   const { blocks, loading: blocksLoading } = useBlocks()
   const [locationCount, setLocationCount] = useState(0)
 
   useEffect(() => {
-    fetch(`${API}/api/v1/locations`)
+    authFetch(`${API}/api/v1/locations`)
       .then((r) => r.json())
       .then((d) => setLocationCount(d.total || 0))
-  }, [])
+  }, [authFetch])
 
   const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   const unreviewedCount = alerts.filter((a) => !a.reviewed).length

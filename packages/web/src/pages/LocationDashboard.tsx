@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAlerts } from '../hooks/useAlerts'
+import { useAuthFetch } from '../lib/useAuthFetch'
 
 const API = import.meta.env.VITE_API_URL ?? ''
 import CompetitorRow from '../components/intelligence/CompetitorRow'
@@ -8,6 +9,7 @@ import AlertCard from '../components/shared/AlertCard'
 import EmptyState from '../components/shared/EmptyState'
 
 export default function LocationDashboard() {
+  const authFetch = useAuthFetch()
   const { locationId } = useParams<{ locationId: string }>()
   const navigate = useNavigate()
   const [location, setLocation] = useState<{ name: string; address: string; dcc_license?: string } | null>(null)
@@ -18,14 +20,14 @@ export default function LocationDashboard() {
   useEffect(() => {
     if (!locationId) return
     Promise.all([
-      fetch(`${API}/api/v1/locations/${locationId}`).then((r) => r.json()),
-      fetch(`${API}/api/v1/locations/${locationId}/competitors`).then((r) => r.json()),
+      authFetch(`${API}/api/v1/locations/${locationId}`).then((r) => r.json()),
+      authFetch(`${API}/api/v1/locations/${locationId}/competitors`).then((r) => r.json()),
     ]).then(([loc, comps]) => {
       setLocation(loc)
       setCompetitors(comps.competitors || [])
       setLoading(false)
     })
-  }, [locationId])
+  }, [locationId, authFetch])
 
   if (loading) {
     return <div style={{ color: 'var(--text-muted)', padding: 32, fontFamily: 'Space Mono, monospace', fontSize: 13 }}>Loading location data...</div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAlerts } from '../hooks/useAlerts'
+import { useAuthFetch } from '../lib/useAuthFetch'
 import AlertCard from '../components/shared/AlertCard'
 import EmptyState from '../components/shared/EmptyState'
 
@@ -10,6 +11,7 @@ const ALERT_TYPES = ['', 'price_drop', 'price_increase', 'new_promo', 'promo_end
 interface Location { id: string; name: string }
 
 export default function AlertFeed() {
+  const authFetch = useAuthFetch()
   const [filterType, setFilterType] = useState('')
   const [filterLocationId, setFilterLocationId] = useState('')
   const [showAll, setShowAll] = useState(false)
@@ -21,10 +23,10 @@ export default function AlertFeed() {
   })
 
   useEffect(() => {
-    fetch(`${API}/api/v1/locations`)
+    authFetch(`${API}/api/v1/locations`)
       .then((r) => r.json())
       .then((d) => setLocations(d.locations || []))
-  }, [])
+  }, [authFetch])
 
   const filtered = filterType ? alerts.filter((a) => a.alert_type === filterType) : alerts
   const unreviewedCount = alerts.filter((a) => !a.reviewed).length
