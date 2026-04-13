@@ -45,7 +45,8 @@ export async function clerkAuthPreHandler(
 
     const orgDbId = orgResult.rows[0]?.id ?? null
     request.auth = { orgId: tenantKey, orgDbId, userId: auth.userId }
-  } catch {
+  } catch (err: any) {
+    request.log.error({ err: err?.message || String(err) }, '[clerk] auth middleware error')
     return reply.code(401).send({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' })
   }
 }
