@@ -18,33 +18,33 @@ export async function clerkAuthPreHandler(
     if (!auth?.userId) {
       return reply.code(401).send({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' })
     }
-    if (!auth?.orgId) {
-      return reply.code(403).send({ success: false, error: 'Forbidden', code: 'ORG_REQUIRED' })
-    }
 
-    // Resolve Clerk org_id → internal DB UUID, auto-creating on first access
+    // Use Clerk org ID if present, fall back to user ID as personal org key
+    // This allows the app to work without Clerk Organizations being configured
+    const tenantKey = auth.orgId || `user_${auth.userId}`
+
+    // Resolve tenant key → internal DB UUID, auto-creating on first access
     let orgResult = await query<{ id: string }>(
       'SELECT id FROM organizations WHERE clerk_org_id = $1',
-      [auth.orgId]
+      [tenantKey]
     )
 
     if (!orgResult.rows.length) {
-      // Auto-create org on first API access (onboarding path)
-      // Use orgId as slug — guaranteed unique, can be updated later via settings
-      const slug = auth.orgId
-      const rawName = (auth as any).orgSlug || auth.orgId
-      const name = rawName.replace(/-/g, ' ').replace(/^org_/i, '').trim() || auth.orgId
+      const slug = tenantKey.toLowerCase().replace(/[^a-z0-9-_]/g, '-')
+      const name = auth.orgId
+        ? ((auth as any).orgSlug || auth.orgId).replace(/-/g, ' ').replace(/^org_/i, '').trim()
+        : `Personal (${auth.userId.slice(-6)})`
       orgResult = await query<{ id: string }>(
         `INSERT INTO organizations (clerk_org_id, name, slug)
          VALUES ($1, $2, $3)
          ON CONFLICT (clerk_org_id) DO UPDATE SET name = organizations.name
          RETURNING id`,
-        [auth.orgId, name, slug]
+        [tenantKey, name, slug]
       )
     }
 
     const orgDbId = orgResult.rows[0]?.id ?? null
-    request.auth = { orgId: auth.orgId, orgDbId, userId: auth.userId }
+    request.auth = { orgId: tenantKey, orgDbId, userId: auth.userId }
   } catch {
     return reply.code(401).send({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' })
   }
