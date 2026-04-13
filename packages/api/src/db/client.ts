@@ -1,5 +1,14 @@
 import { Pool } from 'pg'
 import { createClient } from '@supabase/supabase-js'
+import dns from 'dns'
+
+// Railway's network doesn't route IPv6 — force all DNS resolutions to IPv4
+// Must be applied before pool is created so pg's socket connections use IPv4
+const _lookup = dns.lookup.bind(dns)
+;(dns as any).lookup = (hostname: string, opts: any, cb: any) => {
+  if (typeof opts === 'function') { cb = opts; opts = {} }
+  return _lookup(hostname, { ...opts, family: 4 }, cb)
+}
 
 export const db = new Pool({
   connectionString: process.env.DATABASE_URL,
