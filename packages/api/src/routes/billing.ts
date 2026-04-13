@@ -5,7 +5,6 @@
  * Webhook is handled separately in billing.webhook.ts.
  */
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { getAuth } from '@clerk/fastify'
 import { query } from '../db/client'
 import Stripe from 'stripe'
 import * as billingService from '../services/billing.service'
@@ -17,10 +16,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 export async function billingRoutes(fastify: FastifyInstance) {
   // GET /api/v1/billing/usage
   fastify.get('/usage', async (req: FastifyRequest, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -52,10 +47,6 @@ export async function billingRoutes(fastify: FastifyInstance) {
 
   // POST /api/v1/billing/checkout — create Stripe checkout session
   fastify.post('/checkout', async (req: FastifyRequest, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -73,7 +64,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
     if (!customerId) {
       const customer = await stripe.customers.create({
         name: org.rows[0].name,
-        metadata: { org_id: auth.orgId },
+        metadata: { org_id: req.auth!.orgId },
       })
       customerId = customer.id
       await query('UPDATE organizations SET stripe_id = $1 WHERE id = $2', [customerId, orgDbId])

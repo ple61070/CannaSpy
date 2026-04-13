@@ -1,5 +1,4 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { getAuth } from '@clerk/fastify'
 import { query } from '../db/client'
 import { z } from 'zod'
 import { addBlock, cancelBlock, BlockNotFoundError } from '../services/blocking.service'
@@ -12,10 +11,6 @@ const CreateBlockSchema = z.object({
 export async function blocksRoutes(fastify: FastifyInstance) {
   // GET /api/v1/blocks
   fastify.get('/', async (req: FastifyRequest, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -42,10 +37,6 @@ export async function blocksRoutes(fastify: FastifyInstance) {
 
   // POST /api/v1/blocks
   fastify.post('/', async (req: FastifyRequest, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId || !auth?.userId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -75,7 +66,7 @@ export async function blocksRoutes(fastify: FastifyInstance) {
       })
     }
 
-    const { blockId } = await addBlock(orgDbId, competitor_id, auth.userId, location_ids)
+    const { blockId } = await addBlock(orgDbId, competitor_id, req.auth!.userId, location_ids)
 
     // Fetch competitor name for response
     const comp = await query<{ name: string }>(
@@ -92,15 +83,11 @@ export async function blocksRoutes(fastify: FastifyInstance) {
 
   // DELETE /api/v1/blocks/:id
   fastify.delete('/:id', async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId || !auth?.userId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
     try {
-      await cancelBlock(req.params.id, orgDbId, auth.userId)
+      await cancelBlock(req.params.id, orgDbId, req.auth!.userId)
       return {
         success: true,
         data: {

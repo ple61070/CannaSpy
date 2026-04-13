@@ -1,5 +1,4 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { getAuth } from '@clerk/fastify'
 import { query } from '../db/client'
 
 export async function alertsRoutes(fastify: FastifyInstance) {
@@ -14,10 +13,6 @@ export async function alertsRoutes(fastify: FastifyInstance) {
       offset?: string
     }
   }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -72,10 +67,6 @@ export async function alertsRoutes(fastify: FastifyInstance) {
 
   // PATCH /api/v1/alerts/:id/reviewed
   fastify.patch('/:id/reviewed', async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId || !auth?.userId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -92,7 +83,7 @@ export async function alertsRoutes(fastify: FastifyInstance) {
       `UPDATE alerts SET reviewed = TRUE, reviewed_by = $1, reviewed_at = NOW()
        WHERE id = $2
        RETURNING id, alert_type, reviewed, reviewed_by, reviewed_at, created_at`,
-      [auth.userId, req.params.id]
+      [req.auth!.userId, req.params.id]
     )
 
     return { success: true, data: result.rows[0] }

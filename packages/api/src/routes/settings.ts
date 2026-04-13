@@ -1,5 +1,4 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { getAuth } from '@clerk/fastify'
 import { query } from '../db/client'
 import { z } from 'zod'
 
@@ -15,10 +14,6 @@ const UpdatePrefsSchema = z.object({
 export async function settingsRoutes(fastify: FastifyInstance) {
   // GET /api/v1/settings/notifications
   fastify.get('/notifications', async (req: FastifyRequest, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId || !auth?.userId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -28,7 +23,7 @@ export async function settingsRoutes(fastify: FastifyInstance) {
        FROM notification_preferences
        WHERE org_id = $1 AND user_id = $2 AND location_id IS NULL
        LIMIT 1`,
-      [orgDbId, auth.userId]
+      [orgDbId, req.auth!.userId]
     )
 
     if (result.rows.length) {
@@ -52,10 +47,6 @@ export async function settingsRoutes(fastify: FastifyInstance) {
 
   // PATCH /api/v1/settings/notifications
   fastify.patch('/notifications', async (req: FastifyRequest, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId || !auth?.userId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -74,7 +65,7 @@ export async function settingsRoutes(fastify: FastifyInstance) {
     // Upsert — note: location_id IS NULL, which breaks standard ON CONFLICT, so use select+update/insert
     const existing = await query<{ id: string }>(
       'SELECT id FROM notification_preferences WHERE org_id = $1 AND user_id = $2 AND location_id IS NULL',
-      [orgDbId, auth.userId]
+      [orgDbId, req.auth!.userId]
     )
 
     if (existing.rows.length) {
@@ -94,7 +85,7 @@ export async function settingsRoutes(fastify: FastifyInstance) {
          VALUES ($1, $2, NULL, $3, $4, $5, $6)`,
         [
           orgDbId,
-          auth.userId,
+          req.auth!.userId,
           digest_frequency ?? 'realtime',
           email_enabled ?? true,
           push_enabled ?? true,

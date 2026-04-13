@@ -1,5 +1,4 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { getAuth } from '@clerk/fastify'
 import { query } from '../db/client'
 import { z } from 'zod'
 
@@ -17,11 +16,6 @@ const CreateCompetitorSchema = z.object({
 export async function competitorsRoutes(fastify: FastifyInstance) {
   // GET /api/v1/competitors/:id
   fastify.get('/:id', async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
-
     const result = await query(
       `SELECT id, name, address, lat, lng, website_url, platform, google_place_id,
               dcc_license, robots_ok, last_scraped, created_at
@@ -38,11 +32,6 @@ export async function competitorsRoutes(fastify: FastifyInstance) {
 
   // POST /api/v1/competitors — add a new competitor to the global pool
   fastify.post('/', async (req: FastifyRequest, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
-
     const parsed = CreateCompetitorSchema.safeParse(req.body)
     if (!parsed.success) {
       return reply.code(400).send({
@@ -69,11 +58,6 @@ export async function competitorsRoutes(fastify: FastifyInstance) {
     Params: { id: string }
     Querystring: { days?: string }
   }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
-
     const days = Math.min(parseInt(req.query.days || '30', 10), 90)
 
     const result = await query(
@@ -92,11 +76,6 @@ export async function competitorsRoutes(fastify: FastifyInstance) {
 
   // GET /api/v1/competitors/:id/promotions — active promotions
   fastify.get('/:id/promotions', async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
-
     const result = await query(
       `SELECT * FROM promotions
        WHERE competitor_id = $1 AND active = TRUE

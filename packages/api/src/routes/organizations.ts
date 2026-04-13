@@ -1,5 +1,4 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { getAuth } from '@clerk/fastify'
 import { query } from '../db/client'
 import { z } from 'zod'
 
@@ -11,10 +10,6 @@ const CreateOrgSchema = z.object({
 export async function organizationsRoutes(fastify: FastifyInstance) {
   // GET /api/v1/organizations/me — get current user's org
   fastify.get('/me', async (req: FastifyRequest, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) {
       return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
@@ -41,11 +36,6 @@ export async function organizationsRoutes(fastify: FastifyInstance) {
 
   // POST /api/v1/organizations — create org (called after Clerk org creation)
   fastify.post('/', async (req: FastifyRequest, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.userId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
-
     const parsed = CreateOrgSchema.safeParse(req.body)
     if (!parsed.success) {
       return reply.code(400).send({
@@ -63,13 +53,13 @@ export async function organizationsRoutes(fastify: FastifyInstance) {
          VALUES ($1, $2, $3)
          ON CONFLICT (clerk_org_id) DO UPDATE SET name = EXCLUDED.name
          RETURNING id`,
-        [auth.orgId, name, slug]
+        [req.auth!.orgId, name, slug]
       )
 
       await query(
         `INSERT INTO audit_log (org_id, user_id, action, entity_type, entity_id)
          VALUES ($1, $2, 'org_created', 'organization', $1)`,
-        [result.rows[0].id, auth.userId]
+        [result.rows[0].id, req.auth!.userId]
       )
 
       return reply.code(201).send({ id: result.rows[0].id })

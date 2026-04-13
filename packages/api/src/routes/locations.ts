@@ -1,5 +1,4 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { getAuth } from '@clerk/fastify'
 import { query } from '../db/client'
 import { z } from 'zod'
 import * as blockingService from '../services/blocking.service'
@@ -22,10 +21,6 @@ export async function locationsRoutes(fastify: FastifyInstance) {
   fastify.get('/', async (req: FastifyRequest<{
     Querystring: { limit?: string; offset?: string }
   }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -52,10 +47,6 @@ export async function locationsRoutes(fastify: FastifyInstance) {
 
   // GET /api/v1/locations/:id
   fastify.get('/:id', async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -75,10 +66,6 @@ export async function locationsRoutes(fastify: FastifyInstance) {
 
   // POST /api/v1/locations
   fastify.post('/', async (req: FastifyRequest, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId || !auth?.userId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -103,7 +90,7 @@ export async function locationsRoutes(fastify: FastifyInstance) {
     await query(
       `INSERT INTO audit_log (org_id, user_id, action, entity_type, entity_id)
        VALUES ($1, $2, 'location_created', 'location', $3)`,
-      [orgDbId, auth.userId, result.rows[0].id]
+      [orgDbId, req.auth!.userId, result.rows[0].id]
     )
 
     return reply.code(201).send({ id: result.rows[0].id })
@@ -111,10 +98,6 @@ export async function locationsRoutes(fastify: FastifyInstance) {
 
   // PATCH /api/v1/locations/:id
   fastify.patch('/:id', async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId || !auth?.userId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -163,10 +146,6 @@ export async function locationsRoutes(fastify: FastifyInstance) {
 
   // GET /api/v1/locations/:id/competitors
   fastify.get('/:id/competitors', async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -206,10 +185,6 @@ export async function locationsRoutes(fastify: FastifyInstance) {
 
   // POST /api/v1/locations/:id/competitors
   fastify.post('/:id/competitors', async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId || !auth?.userId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -242,7 +217,7 @@ export async function locationsRoutes(fastify: FastifyInstance) {
         const { blockId } = await blockingService.addBlock(
           orgDbId,
           parsed.data.competitor_id,
-          auth.userId,
+          req.auth!.userId,
           [req.params.id]
         )
         return reply.code(201).send({ id: blockId, slot_type: 'block' })
@@ -272,10 +247,6 @@ export async function locationsRoutes(fastify: FastifyInstance) {
     Params: { id: string }
     Querystring: { radius?: string }
   }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -307,10 +278,6 @@ export async function locationsRoutes(fastify: FastifyInstance) {
   fastify.delete('/:id/competitors/:cId', async (req: FastifyRequest<{
     Params: { id: string; cId: string }
   }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId || !auth?.userId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -343,7 +310,7 @@ export async function locationsRoutes(fastify: FastifyInstance) {
         [orgDbId, req.params.cId]
       )
       if (bl.rows.length) {
-        await blockingService.cancelBlock(bl.rows[0].id, orgDbId, auth.userId)
+        await blockingService.cancelBlock(bl.rows[0].id, orgDbId, req.auth!.userId)
       } else {
         // No active block_list row — just deactivate tracked_competitor
         await query(

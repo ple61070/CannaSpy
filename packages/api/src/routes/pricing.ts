@@ -1,5 +1,4 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { getAuth } from '@clerk/fastify'
 import { query } from '../db/client'
 
 export async function pricingRoutes(fastify: FastifyInstance) {
@@ -7,10 +6,6 @@ export async function pricingRoutes(fastify: FastifyInstance) {
   fastify.get('/matrix', async (req: FastifyRequest<{
     Querystring: { location_id?: string; category?: string }
   }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
@@ -61,11 +56,6 @@ export async function pricingRoutes(fastify: FastifyInstance) {
   fastify.get('/history', async (req: FastifyRequest<{
     Querystring: { competitor_id?: string; days?: string; product_id?: string }
   }>, reply: FastifyReply) => {
-    const auth = getAuth(req as any)
-    if (!auth?.orgId) {
-      return reply.code(401).send({ error: 'Unauthorized', code: 'UNAUTHORIZED' })
-    }
-
     const { competitor_id, product_id } = req.query
     const days = Math.min(parseInt(req.query.days || '30', 10), 90)
 
