@@ -129,10 +129,7 @@ def get_session(slug: str) -> Session:
     session = Session()
     session.headers.update(
         {
-            "User-Agent": (
-                "Mozilla/5.0 (compatible; market-data-aggregator/1.0)"
-            ),
-            "Accept": "application/json",
+            "Accept": "*/*",
             "Accept-Language": "en-US,en;q=0.9",
         }
     )
