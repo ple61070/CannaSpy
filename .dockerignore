@@ -1,0 +1,17 @@
+# Prevent stale compiled output from overwriting fresh Railway/Nixpacks build
+packages/api/dist/
+packages/web/dist/
+
+# Dependencies (reinstalled during build)
+node_modules/
+packages/*/node_modules/
+
+# Local env — never include in image
+.env
+.env.local
+.env.*.local
+
+# Dev tooling
+.git/
+.claude/
+*.md

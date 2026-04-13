@@ -1,0 +1,10 @@
+playwright==1.43.0
+beautifulsoup4==4.12.3
+requests==2.31.0
+anthropic==0.26.0
+psycopg2-binary==2.9.9
+redis==5.0.3
+python-dotenv==1.0.1
+pytz==2024.1
+googlemaps==4.10.0
+lxml==5.2.1

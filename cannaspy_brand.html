@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Brand & Voice Guidelines</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── THEME TOKENS ── */
+[data-theme="dark"] {
+  --bg:           #0d0f11;
+  --surface:      #141618;
+  --surface2:     #1a1d20;
+  --surface3:     #212428;
+  --border:       rgba(255,255,255,0.07);
+  --border2:      rgba(255,255,255,0.13);
+  --border3:      rgba(255,255,255,0.22);
+  --text-1:       #e8e6e0;
+  --text-2:       #7a7870;
+  --text-3:       #4a4845;
+  --toggle-bg:    #212428;
+  --toggle-knob:  #e8e6e0;
+  --swatch-border: rgba(255,255,255,0.15);
+  --code-bg:      #0a0c0e;
+  --tag-bg:       rgba(255,255,255,0.06);
+  --tag-border:   rgba(255,255,255,0.1);
+  --wrong-bg:     rgba(212,83,126,0.08);
+  --right-bg:     rgba(29,158,117,0.08);
+  --wrong-border: rgba(212,83,126,0.25);
+  --right-border: rgba(29,158,117,0.25);
+  --rule-bg:      rgba(255,255,255,0.03);
+  --icon-sun:     block;
+  --icon-moon:    none;
+}
+
+[data-theme="light"] {
+  --bg:           #f4f2ee;
+  --surface:      #ffffff;
+  --surface2:     #f8f7f4;
+  --surface3:     #eeece8;
+  --border:       rgba(0,0,0,0.07);
+  --border2:      rgba(0,0,0,0.12);
+  --border3:      rgba(0,0,0,0.20);
+  --text-1:       #1a1814;
+  --text-2:       #6b6860;
+  --text-3:       #a09d98;
+  --toggle-bg:    #e0ddd8;
+  --toggle-knob:  #1a1814;
+  --swatch-border: rgba(0,0,0,0.12);
+  --code-bg:      #edeae5;
+  --tag-bg:       rgba(0,0,0,0.04);
+  --tag-border:   rgba(0,0,0,0.1);
+  --wrong-bg:     rgba(192,74,58,0.06);
+  --right-bg:     rgba(15,110,86,0.06);
+  --wrong-border: rgba(192,74,58,0.22);
+  --right-border: rgba(15,110,86,0.22);
+  --rule-bg:      rgba(0,0,0,0.02);
+  --icon-sun:     none;
+  --icon-moon:    block;
+}
+
+/* Accent colors — same in both themes (intentional — they're brand colors) */
+:root {
+  --a-intel:   #1d9e75;
+  --a-block:   #ba7517;
+  --a-alert:   #d4537e;
+  --a-trust:   #3b8bd4;
+  --a-roi:     #8b5cf6;
+  --a-collab:  #d4537e;
+  --mono: 'Space Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+
+/* ── BASE ── */
+body {
+  background: var(--bg);
+  color: var(--text-1);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  transition: background 0.25s, color 0.25s;
+  min-width: 760px;
+}
+
+/* ── LAYOUT ── */
+.page { max-width: 900px; margin: 0 auto; padding: 48px 40px 80px; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 28px;
+  margin-bottom: 40px;
+  border-bottom: 1px solid var(--border2);
+}
+.wordmark {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-1);
+}
+.wordmark span {
+  color: var(--text-2);
+  font-weight: 400;
+  font-size: 10px;
+  display: block;
+  letter-spacing: 0.14em;
+  margin-top: 2px;
+}
+
+/* ── TOGGLE ── */
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-2);
+  text-transform: uppercase;
+}
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+}
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--toggle-bg);
+  border-radius: 12px;
+  border: 1px solid var(--border2);
+  transition: background 0.2s, border-color 0.2s;
+}
+.toggle-knob {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--toggle-knob);
+  transition: transform 0.2s, background 0.2s;
+}
+.toggle input:checked ~ .toggle-track { background: var(--surface3); }
+.toggle input:checked ~ .toggle-knob { transform: translateX(20px); }
+.icon-sun  { display: var(--icon-sun); }
+.icon-moon { display: var(--icon-moon); }
+
+/* ── SECTION ── */
+.section { margin-bottom: 52px; }
+.section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border2);
+}
+h2 {
+  font-family: var(--sans);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--text-2);
+  margin-bottom: 28px;
+}
+
+/* ── MANIFESTO ── */
+.manifesto { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-bottom: 0; }
+.manifesto-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 24px 22px;
+  transition: background 0.2s;
+}
+.manifesto-card:first-child { border-radius: 8px 0 0 8px; }
+.manifesto-card:last-child  { border-radius: 0 8px 8px 0; }
+.manifesto-card:hover { background: var(--surface2); }
+.manifesto-eyebrow {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.manifesto-card:nth-child(1) .manifesto-eyebrow { color: var(--a-alert); }
+.manifesto-card:nth-child(2) .manifesto-eyebrow { color: var(--a-intel); }
+.manifesto-card:nth-child(3) .manifesto-eyebrow { color: var(--a-block); }
+.manifesto-headline {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+.manifesto-body { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+
+/* ── TAGLINE TABLE ── */
+.tagline-table { width: 100%; border-collapse: collapse; }
+.tagline-table tr { border-bottom: 1px solid var(--border); }
+.tagline-table tr:last-child { border-bottom: none; }
+.tagline-table td {
+  padding: 13px 0;
+  vertical-align: top;
+  font-size: 14px;
+}
+.tagline-table td:first-child {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-2);
+  width: 200px;
+  padding-right: 24px;
+  letter-spacing: 0.06em;
+  padding-top: 15px;
+}
+.tagline-table td:last-child {
+  font-size: 14px;
+  color: var(--text-1);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* ── VOICE RULES ── */
+.rule-card {
+  background: var(--rule-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 22px;
+  margin-bottom: 10px;
+}
+.rule-card:hover { background: var(--surface2); border-color: var(--border2); }
+.rule-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-3);
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.rule-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: 8px;
+}
+.rule-body { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+
+/* ── COPY EXAMPLES ── */
+.example-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.example-wrong, .example-right {
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.example-wrong {
+  background: var(--wrong-bg);
+  border: 1px solid var(--wrong-border);
+  color: var(--text-2);
+}
+.example-right {
+  background: var(--right-bg);
+  border: 1px solid var(--right-border);
+  color: var(--text-1);
+}
+.example-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: block;
+}
+.example-wrong .example-label { color: var(--a-alert); }
+.example-right .example-label { color: var(--a-intel); }
+
+/* ── COPY RULES TABLE ── */
+.copy-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+.copy-table thead tr { border-bottom: 2px solid var(--border2); }
+.copy-table thead td {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 0 0 10px;
+}
+.copy-table tbody tr { border-bottom: 1px solid var(--border); }
+.copy-table tbody tr:last-child { border-bottom: none; }
+.copy-table tbody td {
+  padding: 11px 0;
+  font-size: 13px;
+  vertical-align: top;
+}
+.copy-table tbody td:first-child {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-2);
+  width: 160px;
+  padding-right: 20px;
+  padding-top: 13px;
+}
+.copy-table tbody td:nth-child(2) {
+  color: var(--text-2);
+  padding-right: 16px;
+  text-decoration: line-through;
+  text-decoration-color: var(--a-alert);
+  text-decoration-thickness: 1px;
+}
+.copy-table tbody td:nth-child(3) { color: var(--text-1); font-weight: 500; }
+
+/* ── COLOR PALETTE ── */
+.palette-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.swatch-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: background 0.15s;
+}
+.swatch-card:hover { background: var(--surface2); }
+.swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--swatch-border);
+  flex-shrink: 0;
+}
+.swatch-info {}
+.swatch-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: 3px;
+}
+.swatch-hex {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-2);
+  letter-spacing: 0.06em;
+}
+.swatch-role {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+/* ── UI PALETTE (semantic) ── */
+.ui-palette { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+.ui-swatch {
+  height: 48px;
+  display: flex;
+  align-items: flex-end;
+  padding: 8px 10px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  transition: opacity 0.15s;
+}
+.ui-swatch:hover { opacity: 0.85; }
+.ui-swatch:first-child { border-radius: 8px 0 0 8px; }
+.ui-swatch:last-child  { border-radius: 0 8px 8px 0; }
+
+/* ── TYPOGRAPHY ── */
+.type-specimen {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 28px 24px;
+  margin-bottom: 10px;
+}
+.type-specimen + .type-specimen { margin-top: 0; }
+.type-meta {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.type-display { font-family: var(--sans); font-size: 28px; font-weight: 600; color: var(--text-1); line-height: 1.2; margin-bottom: 6px; }
+.type-body    { font-family: var(--sans); font-size: 15px; font-weight: 400; color: var(--text-2); line-height: 1.65; }
+.type-mono    { font-family: var(--mono); font-size: 13px; color: var(--text-1); line-height: 1.6; }
+
+/* ── NEVER LIST ── */
+.never-list { list-style: none; padding: 0; }
+.never-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-2);
+}
+.never-list li:last-child { border-bottom: none; }
+.never-list li::before {
+  content: '×';
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--a-alert);
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+/* ── NOTICE BOX ── */
+.notice {
+  background: rgba(186,117,23,0.08);
+  border: 1px solid rgba(186,117,23,0.25);
+  border-left: 3px solid var(--a-block);
+  border-radius: 0 6px 6px 0;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--text-1);
+  line-height: 1.6;
+  margin-top: 16px;
+}
+.notice strong {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--a-block);
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* ── FOOTER ── */
+.footer {
+  margin-top: 60px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-3);
+  letter-spacing: 0.08em;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.section {
+  animation: fadeUp 0.4s ease both;
+}
+.section:nth-child(2) { animation-delay: 0.05s; }
+.section:nth-child(3) { animation-delay: 0.10s; }
+.section:nth-child(4) { animation-delay: 0.15s; }
+.section:nth-child(5) { animation-delay: 0.20s; }
+.section:nth-child(6) { animation-delay: 0.25s; }
+.section:nth-child(7) { animation-delay: 0.30s; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="wordmark">
+      CANNASPY
+      <span>BRAND &amp; VOICE GUIDELINES — V2.0</span>
+    </div>
+    <div class="toggle-wrap">
+      <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <label class="toggle" title="Toggle theme">
+        <input type="checkbox" id="theme-toggle" onchange="toggleTheme(this)">
+        <div class="toggle-track"></div>
+        <div class="toggle-knob"></div>
+      </label>
+      <span id="theme-label">Light</span>
+    </div>
+  </div>
+
+  <!-- 1. MANIFESTO -->
+  <div class="section">
+    <div class="section-label">01 — Brand Foundation</div>
+    <h2>The Three-Pillar Manifesto</h2>
+    <p class="subtitle">Opening framework for every sales deck and investor pitch.</p>
+    <div class="manifesto">
+      <div class="manifesto-card">
+        <div class="manifesto-eyebrow">The old way</div>
+        <div class="manifesto-headline">Weedmaps built a trap.</div>
+        <div class="manifesto-body">Dispensaries paid because leaving cost them consumer traffic. The value was real — but the relationship was adversarial. They stayed out of fear, not loyalty.</div>
+      </div>
+      <div class="manifesto-card">
+        <div class="manifesto-eyebrow">The CannaSpy way</div>
+        <div class="manifesto-headline">CannaSpy builds a moat.</div>
+        <div class="manifesto-body">Dispensaries pay because leaving costs them competitive advantage — and hands it directly to a rival. The relationship is collaborative. They stay because they win.</div>
+      </div>
+      <div class="manifesto-card">
+        <div class="manifesto-eyebrow">The result</div>
+        <div class="manifesto-headline">Same psychology. Better ethics.</div>
+        <div class="manifesto-body">FOMO, scarcity, hold-it-or-lose-it — all the same triggers. But CannaSpy delivers genuine ROI, not just fear of missing out. Customers don't resent us. They brag about us.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. TAGLINES -->
+  <div class="section">
+    <div class="section-label">02 — Taglines</div>
+    <h2>Copy by use case</h2>
+    <p class="subtitle">Each tagline is mapped to a specific context. Do not use them interchangeably.</p>
+    <table class="tagline-table">
+      <tbody>
+        <tr><td>Primary brand</td><td>"We don't sell data. We sell competitive advantage — and the peace of mind that comes with it."</td></tr>
+        <tr><td>One-liner</td><td>"Weedmaps built a trap. CannaSpy builds a moat."</td></tr>
+        <tr><td>Sales outreach hook</td><td>"First to respond wins the territory."</td></tr>
+        <tr><td>Blocking feature</td><td>"Know what they know. Block what they see."</td></tr>
+        <tr><td>ROI framing</td><td>"25–100× ROI. No CFO kills this line item."</td></tr>
+        <tr><td>Investor narrative</td><td>"Same psychology. Better ethics."</td></tr>
+        <tr><td>Churn prevention</td><td>"The second you cancel, they get the call."</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 3. VOICE PRINCIPLES -->
+  <div class="section">
+    <div class="section-label">03 — Voice Principles</div>
+    <h2>How CannaSpy speaks</h2>
+    <p class="subtitle">Five rules. Apply them to every screen, email, alert, and empty state.</p>
+
+    <div class="rule-card">
+      <div class="rule-num">RULE 01</div>
+      <div class="rule-title">Direct, not clever</div>
+      <div class="rule-body">Write exactly what you mean. CannaSpy's buyers are operators — busy, skeptical, and have seen every SaaS pitch. Say the thing clearly.</div>
+      <div class="example-pair">
+        <div class="example-wrong"><span class="example-label">Wrong</span>"Unlock unprecedented visibility into your competitive landscape"</div>
+        <div class="example-right"><span class="example-label">Right</span>"See every price change your rivals make before you open the doors"</div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-num">RULE 02</div>
+      <div class="rule-title">Confident, not arrogant</div>
+      <div class="rule-body">CannaSpy knows it has something valuable. It doesn't need to oversell it.</div>
+      <div class="example-pair">
+        <div class="example-wrong"><span class="example-label">Wrong</span>"The most powerful competitive intelligence platform ever built for cannabis"</div>
+        <div class="example-right"><span class="example-label">Right</span>"Real-time competitor pricing and the ability to block rivals from seeing what you see"</div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-num">RULE 03</div>
+      <div class="rule-title">Factual about blocking — never threatening</div>
+      <div class="rule-body">The cancel-block consequence is a product feature, not a threat. State it neutrally. Let the operator draw their own conclusions.</div>
+      <div class="example-pair">
+        <div class="example-wrong"><span class="example-label">Wrong (UI)</span>"Cancel and we'll immediately call your rivals"</div>
+        <div class="example-right"><span class="example-label">Right (UI)</span>"Canceling this block will re-add [Competitor] to our active prospect list. Our team typically follows up within 24–48 hours."</div>
+      </div>
+      <div class="notice">
+        <strong>Critical distinction</strong>
+        This language belongs in the product UI — factual and neutral. It does NOT belong in marketing copy or cold outreach emails, where it reads as a threat rather than a feature.
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-num">RULE 04</div>
+      <div class="rule-title">War room, not wellness</div>
+      <div class="rule-body">CannaSpy is for operators competing hard. The tone is serious, focused, and strategic. Not aggressive — but not warm and soft either.</div>
+      <div class="example-pair">
+        <div class="example-wrong"><span class="example-label">Wrong</span>"You're all caught up! 🎉 No competitor changes today."</div>
+        <div class="example-right"><span class="example-label">Right</span>"All clear across 10 markets as of 6:42 AM. Last check: 2 minutes ago."</div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-num">RULE 05</div>
+      <div class="rule-title">Never write "competitive intelligence platform"</div>
+      <div class="rule-body">Write "competitive advantage." Intelligence describes the mechanism. Advantage describes the outcome. Operators buy outcomes.</div>
+      <div class="example-pair">
+        <div class="example-wrong"><span class="example-label">Wrong</span>"CannaSpy is a competitive intelligence platform for dispensary operators"</div>
+        <div class="example-right"><span class="example-label">Right</span>"CannaSpy gives dispensary operators a competitive advantage their rivals can't access"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. UI COPY RULES -->
+  <div class="section">
+    <div class="section-label">04 — UI Copy Rules</div>
+    <h2>Specific copy standards</h2>
+    <p class="subtitle">Empty states, buttons, errors, and confirmation dialogs.</p>
+
+    <p style="font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;">Empty states</p>
+    <table class="copy-table" style="margin-bottom:28px;">
+      <thead><tr><td>Screen</td><td>Wrong</td><td>Right</td></tr></thead>
+      <tbody>
+        <tr><td>Alert feed</td><td>"No alerts today"</td><td>"All clear across [N] markets. Last checked [timestamp]."</td></tr>
+        <tr><td>Competitor list</td><td>"No competitors added"</td><td>"Add your first rival to start monitoring."</td></tr>
+        <tr><td>Block management</td><td>"No active blocks"</td><td>"No rivals currently suppressed. Add a block to start building your moat."</td></tr>
+        <tr><td>Price matrix</td><td>"Loading..."</td><td>"Pulling latest prices from [N] sources..."</td></tr>
+      </tbody>
+    </table>
+
+    <p style="font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;">Button labels</p>
+    <table class="copy-table" style="margin-bottom:28px;">
+      <thead><tr><td>Action</td><td>Wrong</td><td>Right</td></tr></thead>
+      <tbody>
+        <tr><td>Add block</td><td>"Submit"</td><td>"Block this rival"</td></tr>
+        <tr><td>Confirm cancel</td><td>"OK"</td><td>"Cancel this block"</td></tr>
+        <tr><td>Add location</td><td>"Save"</td><td>"Add location"</td></tr>
+        <tr><td>View source</td><td>"Details"</td><td>"View source"</td></tr>
+        <tr><td>Dismiss alert</td><td>"OK"</td><td>"Mark as reviewed"</td></tr>
+      </tbody>
+    </table>
+
+    <p style="font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;">Confirmation dialogs</p>
+    <table class="copy-table">
+      <thead><tr><td>Context</td><td>Wrong</td><td>Right</td></tr></thead>
+      <tbody>
+        <tr><td>Remove block</td><td>"Are you sure you want to remove this block?"</td><td>"Cancel block on [Competitor]? They'll be added back to our prospect list immediately."</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 5. COLOR PALETTE -->
+  <div class="section">
+    <div class="section-label">05 — Color Palette</div>
+    <h2>Dark theme (primary)</h2>
+    <p class="subtitle">The canonical palette. Light theme tokens follow the same structure with inverted values.</p>
+
+    <p style="font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;">UI surfaces &amp; text</p>
+    <div class="palette-grid" style="margin-bottom:28px;">
+      <div class="swatch-card"><div class="swatch" style="background:#0d0f11;"></div><div class="swatch-info"><div class="swatch-name">Background</div><div class="swatch-hex">#0d0f11</div><div class="swatch-role">Page background</div></div></div>
+      <div class="swatch-card"><div class="swatch" style="background:#141618; border-color: var(--border3)"></div><div class="swatch-info"><div class="swatch-name">Surface</div><div class="swatch-hex">#141618</div><div class="swatch-role">Cards, panels</div></div></div>
+      <div class="swatch-card"><div class="swatch" style="background:#1a1d20; border-color: var(--border3)"></div><div class="swatch-info"><div class="swatch-name">Surface elevated</div><div class="swatch-hex">#1a1d20</div><div class="swatch-role">Hover, modals</div></div></div>
+      <div class="swatch-card"><div class="swatch" style="background:#e8e6e0;"></div><div class="swatch-info"><div class="swatch-name">Text primary</div><div class="swatch-hex">#e8e6e0</div><div class="swatch-role">Headings, body</div></div></div>
+      <div class="swatch-card"><div class="swatch" style="background:#7a7870;"></div><div class="swatch-info"><div class="swatch-name">Text secondary</div><div class="swatch-hex">#7a7870</div><div class="swatch-role">Labels, metadata</div></div></div>
+      <div class="swatch-card"><div class="swatch" style="background:#4a4845;"></div><div class="swatch-info"><div class="swatch-name">Text muted</div><div class="swatch-hex">#4a4845</div><div class="swatch-role">Placeholders, disabled</div></div></div>
+    </div>
+
+    <p style="font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;">Section accents (same in both themes)</p>
+    <div class="palette-grid" style="margin-bottom:16px;">
+      <div class="swatch-card"><div class="swatch" style="background:#1d9e75;"></div><div class="swatch-info"><div class="swatch-name">Intelligence</div><div class="swatch-hex">#1d9e75</div><div class="swatch-role">Monitoring, positive delta</div></div></div>
+      <div class="swatch-card"><div class="swatch" style="background:#ba7517;"></div><div class="swatch-info"><div class="swatch-name">Blocking</div><div class="swatch-hex">#ba7517</div><div class="swatch-role">Block mechanic, warnings</div></div></div>
+      <div class="swatch-card"><div class="swatch" style="background:#d4537e;"></div><div class="swatch-info"><div class="swatch-name">Alerts</div><div class="swatch-hex">#d4537e</div><div class="swatch-role">Urgent moves, exposure</div></div></div>
+      <div class="swatch-card"><div class="swatch" style="background:#3b8bd4;"></div><div class="swatch-info"><div class="swatch-name">Data trust</div><div class="swatch-hex">#3b8bd4</div><div class="swatch-role">Evidence, confidence</div></div></div>
+      <div class="swatch-card"><div class="swatch" style="background:#8b5cf6;"></div><div class="swatch-info"><div class="swatch-name">ROI</div><div class="swatch-hex">#8b5cf6</div><div class="swatch-role">Reporting, insights</div></div></div>
+      <div class="swatch-card"><div class="swatch" style="background:#5f7a8a;"></div><div class="swatch-info"><div class="swatch-name">Admin</div><div class="swatch-hex">#5f7a8a</div><div class="swatch-role">Account, billing</div></div></div>
+    </div>
+
+    <p style="font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;">Price delta semantics</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;">
+      <div class="ui-swatch" style="background:#1d9e75;color:rgba(255,255,255,0.85);border-radius:8px 0 0 8px;">POSITIVE — you're cheaper</div>
+      <div class="ui-swatch" style="background:#d4537e;color:rgba(255,255,255,0.85);">NEGATIVE — you're exposed</div>
+      <div class="ui-swatch" style="background:#4a4845;color:rgba(255,255,255,0.6);border-radius:0 8px 8px 0;">NEUTRAL — no match</div>
+    </div>
+  </div>
+
+  <!-- 6. TYPOGRAPHY -->
+  <div class="section">
+    <div class="section-label">06 — Typography</div>
+    <h2>Type system</h2>
+    <p class="subtitle">Two typefaces. Two weights. Used consistently across all surfaces.</p>
+
+    <div class="type-specimen">
+      <div class="type-meta">DM Sans — Primary / Display / Body</div>
+      <div class="type-display">First to respond wins the territory.</div>
+      <div class="type-body" style="margin-top:10px;">CannaSpy monitors competitor dispensaries in real time — pricing, promotions, product catalog activity — and delivers that intelligence through a dashboard built for operators who compete hard.</div>
+    </div>
+    <div class="type-specimen" style="margin-top:8px;">
+      <div class="type-meta">Space Mono — Labels / Numbers / Timestamps / IDs</div>
+      <div class="type-mono">SCREEN_04 · COMMAND CENTER<br>Last checked: 06:42:18 UTC-8 · 10 markets active · 3 unreviewed alerts<br>MedMen West Hollywood · $32.00 → $28.00 · −12.5% · detected 4min ago</div>
+    </div>
+
+    <div class="notice" style="margin-top:16px;">
+      <strong>Type rules</strong>
+      Weights: 400 regular, 500 medium, 600 semibold only. Never 700+ — too heavy against dark surfaces. Numbers and prices always Space Mono. Timestamps always Space Mono, always show local time converted from UTC.
+    </div>
+  </div>
+
+  <!-- 7. NEVER LIST -->
+  <div class="section">
+    <div class="section-label">07 — What to Avoid</div>
+    <h2>Never do this</h2>
+    <p class="subtitle">CannaSpy is a professional B2B intelligence tool, not a dispensary brand.</p>
+    <ul class="never-list">
+      <li>Use leaf emoji, cannabis leaf imagery, or plant iconography in the product UI</li>
+      <li>Reference "420", "blaze", "high times", or any cannabis culture slang</li>
+      <li>Use green as a dominant theme color — it reads as a dispensary, not an intelligence platform</li>
+      <li>Write "competitive intelligence platform" — write "competitive advantage"</li>
+      <li>Write "we'll notify your competitors" — write "they'll be re-added to our prospect list"</li>
+      <li>Make the cancel block warning feel punitive — it must be factual and neutral</li>
+      <li>Use "Nothing here yet" or "No data available" as empty states — write operational status</li>
+      <li>Use "Submit" or "OK" as button labels — use specific action verbs</li>
+      <li>Mention the block cancellation consequence in marketing copy or cold outreach — product UI only</li>
+      <li>Use Inter, Roboto, or system fonts — use DM Sans + Space Mono</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <span>CANNASPY — CONFIDENTIAL</span>
+    <span>BRAND &amp; VOICE V2.0 — MARCH 2026</span>
+  </div>
+
+</div>
+
+<script>
+function toggleTheme(checkbox) {
+  const theme = checkbox.checked ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('theme-label').textContent = checkbox.checked ? 'Dark' : 'Light';
+}
+</script>
+</body>
+</html>

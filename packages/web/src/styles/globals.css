@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Backgrounds */
+  --bg-base:        #0d0f11;
+  --bg-surface:     #141618;
+  --bg-elevated:    #1a1d20;
+
+  /* Borders */
+  --border-subtle:  rgba(255, 255, 255, 0.07);
+  --border-default: rgba(255, 255, 255, 0.12);
+  --border-strong:  rgba(255, 255, 255, 0.20);
+
+  /* Text */
+  --text-primary:   #e8e6e0;
+  --text-secondary: #7a7870;
+  --text-muted:     #4a4845;
+
+  /* Accents */
+  --accent-intel:   #1d9e75;
+  --accent-block:   #ba7517;
+  --accent-trust:   #3b8bd4;
+  --accent-alert:   #d4537e;
+  --accent-roi:     #8b5cf6;
+  --accent-collab:  #d4537e;
+
+  /* Semantic */
+  --color-positive: #1d9e75;
+  --color-negative: #d4537e;
+  --color-neutral:  #7a7870;
+  --color-warning:  #ba7517;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Monospace elements */
+.mono, code, kbd, time, .price, .timestamp {
+  font-family: 'Space Mono', monospace;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* Card base */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.card-elevated {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+/* Section accent cards */
+.card-intel   { border-top: 2px solid var(--accent-intel); }
+.card-block   { border-top: 2px solid var(--accent-block); }
+.card-alert   { border-top: 2px solid var(--accent-alert); }
+.card-trust   { border-top: 2px solid var(--accent-trust); }
+.card-roi     { border-top: 2px solid var(--accent-roi); }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  outline: none;
+}
+
+.btn-primary {
+  background: var(--accent-intel);
+  color: #fff;
+}
+.btn-primary:hover { filter: brightness(1.1); }
+
+.btn-block {
+  background: var(--accent-block);
+  color: #fff;
+}
+.btn-block:hover { filter: brightness(1.1); }
+
+.btn-danger {
+  background: var(--accent-alert);
+  color: #fff;
+}
+.btn-danger:hover { filter: brightness(1.1); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+}
+.btn-ghost:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+/* Price delta */
+.delta-positive { color: var(--color-positive); }
+.delta-negative { color: var(--color-negative); }
+.delta-neutral  { color: var(--color-neutral); }

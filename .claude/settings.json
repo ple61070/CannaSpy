@@ -1,0 +1,24 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat docs/SESSION-HANDOFF.md 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"systemMessage\": \"REMINDER: Update docs/SESSION-HANDOFF.md with what was done, what failed, and what is next.\"}'"
+          }
+        ]
+      }
+    ]
+  }
+}
