@@ -1,82 +1,116 @@
 # CannaSpy Session Handoff
-**Date:** 2026-04-13 (session 2)
+**Date:** 2026-04-13 (Session 3)
+
+---
 
 ## What Was Completed This Session
 
-### Infrastructure
-- **Railway PostgreSQL** replacing broken Supabase connection (IPv6-only, pooler disabled)
-  - Internal URL: `postgres.railway.internal:5432` (used by API in production)
-  - Public URL: `metro.proxy.rlwy.net:36204` (used by local scraper)
-  - DATABASE_URL updated on Railway cannaspy service via GraphQL API (CLI timed out)
-- **Migration 007** applied to Railway Postgres (clerk_org_id, contact_email columns)
-- **Local .env** updated: DATABASE_URL → Railway Postgres public URL, CANNASPY_PRIMARY_API_HOST set
+### Price Intelligence — Fully Wired to Real Data
+- **`packages/api/src/routes/pricing.ts`** `/matrix` endpoint rewritten:
+  - Was querying `price_observations` (empty — scraper never wrote there)
+  - Now queries `menu_items` (6,002 real rows from collector.py)
+  - Scopes to location via `tracked_competitors` subquery, no `active=TRUE` required (seeded competitors are inactive prospects)
+  - Category filter uses exact match (`mi.category = $N`)
+- **`packages/web/src/pages/PriceIntelligence.tsx`**:
+  - Fixed unauthenticated `fetch()` → `authFetch()` for locations call
+  - Updated `CATEGORIES` constant to match real DB values: `Concentrate`, `Indica`, `Hybrid`, `Edible`, `Preroll`, `Gear`, `Wax`, `Drink`, `Tincture`, `Topicals`
+  - (was `flower`, `vape`, etc. — none of which exist in DB)
 
-### Auth Fix (Critical)
-- All 8 route files were calling `getAuth(req)` and checking `!auth?.orgId`
-- Clerk Organizations not configured → orgId always undefined → every route returned 401
-- Fixed: removed redundant auth checks from all routes, rely on `req.auth` set by middleware
-- Committed: `fix(routes): remove redundant orgId auth checks`
+### Auth Fix — All Pages
+Three pages were using bare `fetch()` with no Clerk Authorization header.
+The production API returns 401 silently; pages showed as empty.
 
-### Scraper Pipeline — Fully Operational
-- **ip_pool.py**: removed browser User-Agent (API blocks browser UAs with 406), now uses default requests UA
-- **collector.py**: tested end-to-end with DB writes, jitter working
-- **4 competitors seeded** with real data:
-  - Off The Charts: 2,985 items
-  - Catalyst Cannabis Co.: 486 items
-  - Zen Dispensary: 944 items (50% off deals active)
-  - Caliva: 1,587 items
-  - Total: **6,002 menu items** in Railway Postgres
+Fixed files (all now use `authFetch`):
+- `packages/web/src/pages/CommandCenter.tsx` — locations count call
+- `packages/web/src/pages/AlertFeed.tsx` — locations filter call
+- `packages/web/src/pages/LocationDashboard.tsx` — location + competitors calls
 
-### Frontend
-- **CompetitorDiscovery.tsx**: added `scanned` state — shows "No rivals found yet" after empty scan instead of infinite loop; "Confirm & launch monitoring" now works without selections (Skip for now)
+### PriceCell Bug Fix (Was Crashing the Entire App)
+- `packages/web/src/components/intelligence/PriceCell.tsx`
+- Postgres `DECIMAL` columns serialize to JSON strings (`"20.00"` not `20.00`)
+- `price.toFixed(2)` threw `TypeError: price.toFixed is not a function`
+- React unmounted entire tree → black screen
+- Fix: `parseFloat(String(price))` on both `price` and `previousPrice`
 
-### DB State
-- Organization: auto-created on first Clerk auth (user_${userId} as tenant key)
-- Location: "Culture Cannabis Club", 23215 Temescal Canyon Rd, Corona, CA (`ffdefc3f-...`)
-- 4 competitors linked to location as inactive prospects
+### Deployed to Railway Production
+- Ran `railway up` twice this session — both builds completed
+- Production URL: `https://cannaspy-production.up.railway.app`
+- Commits `f075444` and `91e64cf` are live on production
+
+### Diagnostic Tooling Added/Removed
+- Added ErrorBoundary to `main.tsx` temporarily to surface the PriceCell crash
+- Removed ErrorBoundary after root cause identified — `main.tsx` is clean
+
+---
 
 ## What Is Working Right Now
-- Full onboarding flow: LocationWizard → CompetitorDiscovery → Command Center ✅
-- `POST /api/v1/locations` → 201 ✅
-- Primary data pipeline: collector.py fetches and persists real menu data ✅
-- 6,002 live menu items in DB with prices, deals, THC/CBD values ✅
+
+- **Price Intelligence** (`/prices`) — renders real competitor menu data, 6,002 items across 4 competitors, filterable by category
+- **Command Center** (`/command-center`) — renders, loads location count
+- **Alert Feed** (`/alerts`) — renders, loads location filter options
+- **Location Dashboard** (`/locations/:id`) — renders, loads location + competitors
+- **Location creation** (`/setup/locations`) — works, navigates to competitor discovery
+- **Auth flow** — all pages authenticated via Clerk token correctly
+
+---
 
 ## What Is NOT Done (Next Priorities)
 
-### Phase 3 — Frontend Wiring (highest value next)
-Wire the dashboard pages to real API data:
-1. **Command Center** (`/command-center`) — wire alerts feed, competitor activity
-2. **Price Intelligence** (`/price-intelligence`) — wire price matrix from `menu_items` table
-3. **Block Management** (`/blocks`) — wire to `block_list` table
-4. **LocationDashboard** — wire competitor cards to real tracked_competitors data
+### Phase 3 — Remaining Frontend Wiring
+1. **Command Center** — shows empty alert feed (no alerts generated yet, diff_engine not run)
+2. **Block Management** (`/blocks`) — not verified wired to real data
+3. **Location Dashboard** — loads but competitor cards use `CompetitorRow` component — verify it renders correctly
+4. **Promotions** — scaffold only, not wired
 
-### API Endpoints Needed for Frontend
-- `GET /api/v1/menu-items?competitor_id=&category=&on_sale=` — price intelligence table
-- `GET /api/v1/competitors/:id/deals` — current active deals per competitor
-- These don't exist yet — need to be added to routes
+### Phase 1 Remaining
+- `diff_engine.py` — not tested, required to generate `alerts` and `change_events`
+- `scheduler.py` — not wired, daily 2-5am scrape not running automatically
+- `IP_POOL` — still single local IP in dev, no proxies configured
 
-### Remaining Phase 1 Items
-- IP_POOL not configured (production risk — single IP, no rotation)
-- Google Places API key not set (GOOGLE_PLACES_API_KEY blank in .env)
-- Scheduler not wired (daily 2-5am scrape not running)
-- diff_engine.py not tested (price change detection)
+### Known Issues
+- `useEffect` dep arrays in pages use `[]` (empty) to avoid authFetch instability — meaning locations fetch on CommandCenter/AlertFeed won't re-run if auth changes mid-session. Acceptable for MVP.
+- `LocationDashboard` `useEffect` has no `.catch()` — if both API calls fail, `loading` stays `true` forever (stuck on "Loading location data...")
 
-## Key Credentials
+---
+
+## Key Lessons / Watch Out For
+
+1. **Postgres DECIMAL → JSON string**: Any component that does `.toFixed()` or arithmetic on a price from the DB must use `parseFloat()` first. Check `PriceIntelligence.tsx` `productMap` too — it stores `row.price` which is also a string.
+2. **`authFetch` in useEffect deps = infinite loop**: Clerk's `getToken` reference changes during auth load. Never put `authFetch` in a `useEffect` dependency array. Use `[]` and rely on mount-only behavior.
+3. **Railway deploy**: `railway up` uploads working directory (including uncommitted files). CLI often shows "Uploading..." then disconnects — the build continues on Railway's side. Wait 3-5 min then check the production URL.
+
+---
+
+## Uncommitted Changes (Present in Working Directory, Not in Git)
+
+- `packages/api/src/services/blocking.service.ts` — sender email changed from `alerts@cannaspy.com` to `onboarding@resend.dev` (Resend requires verified domain; `onboarding@resend.dev` is Resend's sandbox sender). Should be committed.
+- `packages/web/src/pages/CompetitorDiscovery.tsx` — `scanned` state already committed in `6642218`, but git shows it as modified. Check before next deploy.
+
+---
+
+## Key Credentials (Same as Session 2)
+
 ```
-Railway Postgres Public:  postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Railway Postgres Public:   postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
 Railway Postgres Internal: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@postgres.railway.internal:5432/railway
-CANNASPY_PRIMARY_API_HOST: api-g.weedmaps.com (in .env, never commit)
+Production API:            https://cannaspy-production.up.railway.app
+Frontend local:            http://localhost:3000
+Location ID (Corona):      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f
 ```
 
-## Key Files Changed This Session
-- `packages/api/src/routes/locations.ts` — auth fix
-- `packages/api/src/routes/alerts.ts` — auth fix
-- `packages/api/src/routes/billing.ts` — auth fix
-- `packages/api/src/routes/blocks.ts` — auth fix
-- `packages/api/src/routes/competitors.ts` — auth fix
-- `packages/api/src/routes/organizations.ts` — auth fix
-- `packages/api/src/routes/pricing.ts` — auth fix
-- `packages/api/src/routes/settings.ts` — auth fix
-- `packages/scraper/ip_pool.py` — UA fix
-- `packages/web/src/pages/CompetitorDiscovery.tsx` — scanned state + skip button
-- `.env` — DATABASE_URL + CANNASPY_PRIMARY_API_HOST updated
+Competitors with real menu data:
+- `d6e3dfd4` — Off The Charts
+- `5e631bd1` — Catalyst Cannabis Co.
+- `25a69f7c` — Zen Dispensary
+- `3ba421fb` — Caliva
+
+---
+
+## Session 4 Starting Point
+
+Start here: **verify Price Intelligence renders data in the browser**, then wire Block Management to real data, then run diff_engine to generate the first alerts so Command Center shows something real.
+
+```bash
+git status   # check for uncommitted blocking.service.ts + CompetitorDiscovery.tsx
+git log --oneline -5
+```

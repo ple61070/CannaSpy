@@ -6,7 +6,9 @@ interface PriceCellProps {
 }
 
 export default function PriceCell({ price, previousPrice, inStock, onPromo }: PriceCellProps) {
-  const delta = previousPrice ? ((price - previousPrice) / previousPrice) * 100 : null
+  const p = parseFloat(String(price))
+  const pp = previousPrice != null ? parseFloat(String(previousPrice)) : undefined
+  const delta = pp != null ? ((p - pp) / pp) * 100 : null
 
   return (
     <div style={{ textAlign: 'right' }}>
@@ -16,7 +18,7 @@ export default function PriceCell({ price, previousPrice, inStock, onPromo }: Pr
         color: inStock ? 'var(--text-primary)' : 'var(--text-muted)',
         textDecoration: inStock ? 'none' : 'line-through',
       }}>
-        {inStock ? `$${price.toFixed(2)}` : 'Out of stock'}
+        {inStock ? `$${p.toFixed(2)}` : 'Out of stock'}
       </div>
       {delta !== null && (
         <div style={{
