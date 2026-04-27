@@ -1,6 +1,6 @@
-import { Resend } from 'resend'
 import { query } from '../db/client'
 import * as billingService from './billing.service'
+import { crmAlertQueue } from '../scheduler'
 
 export class BlockNotFoundError extends Error {
   constructor(blockId: string) {
@@ -91,62 +91,20 @@ export async function cancelBlock(
     [orgId, userId, competitorId]
   )
 
-  // 4. Fire sales alert — fire-and-forget, NEVER awaited inline
-  setImmediate(() => {
-    sendSalesAlert(blockId, orgId, competitorId).catch((err) =>
-      console.error('[blocking.service] Sales alert failed:', err)
-    )
-  })
+  // 4. Enqueue CRM alert — at-least-once via crm.worker.ts
+  // Fire-and-forget enqueue: cancel DB changes are already committed above.
+  // If Redis is unavailable, the enqueue fails and logs — not blocking the cancel.
+  crmAlertQueue.add(
+    'send-sales-alert',
+    { blockId, orgId, competitorId },
+    {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 30_000 },
+      removeOnComplete: { count: 100 },
+      removeOnFail: { count: 1000 },
+    }
+  ).catch((err) => console.error('[blocking.service] Failed to enqueue CRM alert:', err))
 
   // 5. Billing
   await billingService.removeSlot(orgId)
-}
-
-async function sendSalesAlert(
-  blockId: string,
-  orgId: string,
-  competitorId: string
-): Promise<void> {
-  const salesEmail = process.env.SALES_ALERT_EMAIL
-  if (!salesEmail) {
-    console.warn('[blocking.service] SALES_ALERT_EMAIL not set — skipping sales alert')
-    return
-  }
-
-  const resend = new Resend(process.env.RESEND_API_KEY)
-
-  try {
-    const [orgResult, competitorResult] = await Promise.all([
-      query<{ name: string }>('SELECT name FROM organizations WHERE id = $1', [orgId]),
-      query<{ name: string; address: string }>('SELECT name, address FROM competitors WHERE id = $1', [competitorId]),
-    ])
-
-    const orgName = orgResult.rows[0]?.name ?? orgId
-    const competitorName = competitorResult.rows[0]?.name ?? competitorId
-    const city = competitorResult.rows[0]?.address?.split(',')[1]?.trim() ?? ''
-    const cancelledAt = new Date().toUTCString()
-
-    await resend.emails.send({
-      from: 'CannaSpy Alerts <alerts@cannaspy.com>',
-      to: [salesEmail],
-      subject: `Block released — ${competitorName} is now eligible for outreach`,
-      text: [
-        `${orgName} just cancelled their block on ${competitorName}${city ? ` (${city})` : ''}.`,
-        '',
-        `They're back on the prospect list. Follow up within 24-48 hours.`,
-        '',
-        `Block ID: ${blockId}`,
-        `Cancelled at: ${cancelledAt}`,
-      ].join('\n'),
-    })
-
-    await query(
-      'UPDATE block_list SET crm_notified_at = NOW() WHERE id = $1',
-      [blockId]
-    )
-
-    console.info(`[blocking.service] Sales alert sent for block ${blockId}`)
-  } catch (err) {
-    console.error('[blocking.service] Failed to send sales alert:', err)
-  }
 }

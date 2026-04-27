@@ -98,6 +98,11 @@ async function bootstrap() {
     } catch (err) {
       fastify.log.error({ err }, 'Billing worker failed to start — continuing without it')
     }
+    try {
+      await import('./workers/crm.worker')
+    } catch (err) {
+      fastify.log.error({ err }, 'CRM alert worker failed to start — continuing without it')
+    }
   }
 }
 

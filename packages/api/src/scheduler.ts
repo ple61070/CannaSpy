@@ -11,6 +11,7 @@ export const normalizeQueue = new Queue('normalize-queue', { connection })
 export const diffQueue = new Queue('diff-queue', { connection })
 export const alertQueue = new Queue('alert-queue', { connection })
 export const billingQueue = new Queue('billing-queue', { connection })
+export const crmAlertQueue = new Queue('crm-alert-queue', { connection })
 
 const SCHEDULES = {
   trackedCompetitors: '0 */4 * * *',
