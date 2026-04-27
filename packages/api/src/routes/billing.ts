@@ -84,4 +84,43 @@ export async function billingRoutes(fastify: FastifyInstance) {
 
     return { success: true, data: { url: session.url } }
   })
+
+  // POST /api/v1/billing/portal — create Stripe Customer Portal session
+  fastify.post('/portal', async (req: FastifyRequest, reply: FastifyReply) => {
+    const orgDbId = req.auth?.orgDbId
+    if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
+
+    const org = await query<{ stripe_id: string | null }>(
+      'SELECT stripe_id FROM organizations WHERE id = $1',
+      [orgDbId]
+    )
+
+    if (!org.rows.length) {
+      return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
+    }
+
+    const customerId = org.rows[0].stripe_id
+    if (!customerId) {
+      return reply.code(400).send({
+        success: false,
+        data: null,
+        error: 'No Stripe subscription configured for this organization',
+      })
+    }
+
+    try {
+      const session = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: `${process.env.WEB_URL}/command-center`,
+      })
+      return { success: true, data: { url: session.url }, error: null }
+    } catch (err: any) {
+      fastify.log.error(`[billing/portal] Stripe error for org ${orgDbId}: ${err.message}`)
+      return reply.code(500).send({
+        success: false,
+        data: null,
+        error: 'Failed to create billing portal session',
+      })
+    }
+  })
 }
