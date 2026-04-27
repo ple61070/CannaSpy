@@ -46,3 +46,11 @@ coverage/
 # Misc
 .cache/
 tmp/
+
+# === Sprint 0 setup additions (2026-04-27) ===
+CannaSpy_UI/audit_renders/
+/conor_*
+/brand_search*
+/build_*.py
+/HANDOFF_UI_2026-04-16.md
+.claude/worktrees/
