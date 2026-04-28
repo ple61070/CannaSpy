@@ -1,22 +1,21 @@
 # nixpacks.toml — Railway build config for CannaSpy API
 #
-# The API spawns python3 from packages/api/src/workers/scrape.worker.ts.
-# Without Python in the production image, that spawn raises ENOENT and
-# (until commit X) crashed the entire API process. We install Python 3.11
-# alongside Node 20 so the scraper subprocess can actually execute.
+# Goal: keep the API booting even though scrape.worker.ts spawns python3.
+# We install just the Python 3.11 binary so the spawn doesn't ENOENT.
+# Scraper dependencies (Playwright, etc.) are NOT installed in this image
+# — the primary collector pipeline isn't built yet, and a missing dep now
+# fails the worker gracefully (not the whole API) thanks to the spawn
+# 'error' handler in scrape.worker.ts.
 #
-# Playwright browsers are intentionally NOT installed here — the primary
-# collector pipeline uses HTTP, and the fallback Playwright scraper is
-# only run as a weekly cohort test from a separate worker environment.
+# When the primary collector lands, switch to a Dockerfile that does
+# `python3 -m ensurepip` then `pip install -r requirements.txt` — pip
+# isn't reliably on the module path in the Nixpacks Python environment.
 
 [phases.setup]
-nixPkgs = ["nodejs_20", "pnpm-9_x", "python311", "python311Packages.pip"]
+nixPkgs = ["nodejs_20", "pnpm-9_x", "python311"]
 
 [phases.install]
-cmds = [
-  "pnpm install --frozen-lockfile",
-  "python3 -m pip install --no-cache-dir --break-system-packages -r packages/scraper/requirements.txt || python3 -m pip install --no-cache-dir -r packages/scraper/requirements.txt"
-]
+cmds = ["pnpm install --frozen-lockfile"]
 
 [phases.build]
 cmds = [
