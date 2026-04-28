@@ -26,6 +26,9 @@ export default function LocationDashboard() {
       setLocation(loc)
       setCompetitors(comps.competitors || [])
       setLoading(false)
+    }).catch((err) => {
+      console.error('[LocationDashboard] Failed to load location data:', err)
+      setLoading(false)
     })
   }, [locationId, authFetch])
 

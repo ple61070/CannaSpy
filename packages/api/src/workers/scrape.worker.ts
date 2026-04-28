@@ -18,9 +18,19 @@ interface ScrapeJobData {
   trigger?: 'scheduled' | 'manual' | 'discovery'
 }
 
-interface ScrapeResult {
+// Primary pipeline (collector.py) writes to DB itself and returns a summary.
+// Fallback pipeline (dispensary_scraper.py) returns raw data for the worker to persist.
+interface PrimaryResult {
+  pipeline: 'primary'
+  success: boolean
+  item_count: number
+  snapshot_id: string | null
+  error?: string | null
+}
+
+interface FallbackResult {
+  pipeline: 'fallback'
   competitor_id: string
-  pipeline: 'primary' | 'fallback'
   prices: Array<{
     raw_name: string
     price: number
@@ -36,6 +46,8 @@ interface ScrapeResult {
     source_url?: string
   }>
 }
+
+type ScrapeResult = PrimaryResult | FallbackResult
 
 const PYTHON_BIN = process.env.PYTHON_BIN || 'python3'
 
@@ -143,49 +155,67 @@ async function processCompetitor(competitorId: string, trigger: string, jobId: s
   try {
     const result = await runScraper(competitorId, slug)
 
-    // Write price_observations
-    let recordsWritten = 0
-    const rawNames: string[] = []
+    if (result.pipeline === 'primary') {
+      // collector.py wrote directly to menu_items + menu_snapshots.
+      // Nothing to write here — just record the outcome and enqueue normalization.
+      const recordsWritten = result.item_count ?? 0
 
-    for (const price of result.prices) {
+      await query('UPDATE competitors SET last_scraped = NOW() WHERE id = $1', [competitorId])
       await query(
-        `INSERT INTO price_observations
-           (competitor_id, raw_name, price, in_stock, on_promo, promo_text, source_url)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [competitorId, price.raw_name, price.price, price.in_stock, price.on_promo, price.promo_text ?? null, price.source_url ?? null]
+        `UPDATE scrape_jobs SET status = 'completed', completed_at = NOW(), records_written = $1
+         WHERE id = $2`,
+        [recordsWritten, scrapeJobId]
       )
-      rawNames.push(price.raw_name)
-      recordsWritten++
-    }
 
-    // Write promotions
-    for (const promo of result.promotions) {
+      console.info(`[scrape.worker] ${competitorId} — ${recordsWritten} items via primary pipeline (snapshot: ${result.snapshot_id})`)
+
+      if (recordsWritten > 0) {
+        await normalizeQueue.add('normalize', { competitorId }, {
+          removeOnComplete: 100,
+          removeOnFail: 50,
+        })
+      }
+
+    } else {
+      // Fallback pipeline — raw data returned, write to price_observations.
+      let recordsWritten = 0
+      const rawNames: string[] = []
+
+      for (const price of result.prices) {
+        await query(
+          `INSERT INTO price_observations
+             (competitor_id, raw_name, price, in_stock, on_promo, promo_text, source_url)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [competitorId, price.raw_name, price.price, price.in_stock, price.on_promo, price.promo_text ?? null, price.source_url ?? null]
+        )
+        rawNames.push(price.raw_name)
+        recordsWritten++
+      }
+
+      for (const promo of result.promotions) {
+        await query(
+          `INSERT INTO promotions (competitor_id, promo_text, promo_type, category, source_url)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT DO NOTHING`,
+          [competitorId, promo.promo_text, promo.promo_type ?? null, promo.category ?? null, promo.source_url ?? null]
+        )
+      }
+
+      await query('UPDATE competitors SET last_scraped = NOW() WHERE id = $1', [competitorId])
       await query(
-        `INSERT INTO promotions (competitor_id, promo_text, promo_type, category, source_url)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT DO NOTHING`,
-        [competitorId, promo.promo_text, promo.promo_type ?? null, promo.category ?? null, promo.source_url ?? null]
+        `UPDATE scrape_jobs SET status = 'completed', completed_at = NOW(), records_written = $1
+         WHERE id = $2`,
+        [recordsWritten, scrapeJobId]
       )
-    }
 
-    // Update competitor last_scraped
-    await query('UPDATE competitors SET last_scraped = NOW() WHERE id = $1', [competitorId])
+      console.info(`[scrape.worker] ${competitorId} — ${recordsWritten} records via fallback pipeline`)
 
-    // Update scrape job as completed
-    await query(
-      `UPDATE scrape_jobs SET status = 'completed', completed_at = NOW(), records_written = $1
-       WHERE id = $2`,
-      [recordsWritten, scrapeJobId]
-    )
-
-    console.info(`[scrape.worker] ${competitorId} — ${recordsWritten} records via ${result.pipeline} pipeline`)
-
-    // Enqueue normalization for new raw names
-    if (rawNames.length > 0) {
-      await normalizeQueue.add('normalize', { competitorId, rawNames }, {
-        removeOnComplete: 100,
-        removeOnFail: 50,
-      })
+      if (rawNames.length > 0) {
+        await normalizeQueue.add('normalize', { competitorId, rawNames }, {
+          removeOnComplete: 100,
+          removeOnFail: 50,
+        })
+      }
     }
 
   } catch (err: any) {
