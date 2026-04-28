@@ -83,15 +83,47 @@ export const alertWorker = new Worker<AlertJobData>(
       alert.new_value
     )
 
-    for (const pref of prefs.rows) {
-      if (!pref.alert_types.includes(alert.alert_type)) continue
-      if (pref.digest_frequency !== 'realtime') continue
-      if (!pref.email_enabled) continue
+    // Get org contact email for delivery
+    const orgResult = await query<{ name: string; contact_email: string | null }>(
+      'SELECT name, contact_email FROM organizations WHERE id = $1',
+      [alert.org_id]
+    )
+    const orgName = orgResult.rows[0]?.name ?? alert.org_id
+    const contactEmail = orgResult.rows[0]?.contact_email
 
-      // In production: send via Resend to user's email
-      // For now: log the dispatch
-      console.log(`Alert dispatch: ${message} → org ${alert.org_id}`)
+    if (!contactEmail) {
+      console.warn(`[alert.worker] No contact_email for org ${alert.org_id} — skipping alert ${alertId}`)
+      return
     }
+
+    // Check if any pref allows realtime delivery for this alert type
+    const shouldSend = prefs.rows.length === 0
+      ? true // no prefs configured — default to sending
+      : prefs.rows.some((pref) =>
+          pref.email_enabled &&
+          pref.digest_frequency === 'realtime' &&
+          (pref.alert_types.length === 0 || pref.alert_types.includes(alert.alert_type))
+        )
+
+    if (!shouldSend) {
+      console.log(`[alert.worker] Alert ${alertId} suppressed by notification prefs for org ${alert.org_id}`)
+      return
+    }
+
+    await resend.emails.send({
+      from: 'onboarding@resend.dev',
+      to: [contactEmail],
+      subject: `CannaSpy Alert: ${message}`,
+      text: [
+        `Hi ${orgName},`,
+        '',
+        message,
+        '',
+        'Log in to review: https://app.cannaspy.com/alerts',
+      ].join('\n'),
+    })
+
+    console.log(`[alert.worker] Alert ${alertId} sent to ${contactEmail} — ${message}`)
   },
   { connection, concurrency: 10 }
 )

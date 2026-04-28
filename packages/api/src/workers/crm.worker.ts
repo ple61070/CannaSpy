@@ -51,7 +51,7 @@ export const crmWorker = new Worker<CrmAlertJobData>(
     const cancelledAt = new Date().toUTCString()
 
     await resend.emails.send({
-      from: 'CannaSpy Alerts <alerts@cannaspy.com>',
+      from: 'onboarding@resend.dev',
       to: [salesEmail],
       subject: `Block released — ${competitorName} is now eligible for outreach`,
       text: [

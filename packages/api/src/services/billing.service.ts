@@ -104,7 +104,7 @@ export async function sendDunningEmail(orgId: string): Promise<void> {
     return
   }
   await resend.emails.send({
-    from: 'CannaSpy Billing <billing@cannaspy.com>',
+    from: 'onboarding@resend.dev',
     to: [contactEmail],
     subject: `Action required: Payment failed for ${orgName}`,
     text: [
