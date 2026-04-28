@@ -36,6 +36,27 @@ const fastify = Fastify({
   },
 })
 
+// Tolerate empty JSON bodies on POST routes (e.g. POST /billing/portal sent
+// from the frontend with `Content-Type: application/json` but no payload).
+// Without this, Fastify's default parser throws FST_ERR_CTP_EMPTY_JSON_BODY
+// before the route handler runs, returning 500 + Sentry noise.
+fastify.addContentTypeParser(
+  'application/json',
+  { parseAs: 'string' },
+  (_req, body, done) => {
+    const raw = (body as string | Buffer | undefined)?.toString?.() ?? ''
+    if (raw.trim() === '') {
+      done(null, {})
+      return
+    }
+    try {
+      done(null, JSON.parse(raw))
+    } catch (err) {
+      done(err as Error, undefined)
+    }
+  }
+)
+
 async function bootstrap() {
   await fastify.register(cors, {
     origin: process.env.WEB_URL || 'http://localhost:3000',

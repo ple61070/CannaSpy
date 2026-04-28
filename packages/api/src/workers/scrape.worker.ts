@@ -37,17 +37,39 @@ interface ScrapeResult {
   }>
 }
 
+const PYTHON_BIN = process.env.PYTHON_BIN || 'python3'
+
 function spawnProcess(args: string[]): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve) => {
-    const proc = spawn('python3', args)
+    let proc
+    try {
+      proc = spawn(PYTHON_BIN, args)
+    } catch (err: any) {
+      // Synchronous spawn failure (e.g. invalid args). Resolve with non-zero code so caller treats as failure.
+      resolve({ stdout: '', stderr: `spawn ${PYTHON_BIN} threw: ${err?.message || String(err)}`, code: 127 })
+      return
+    }
+
     let stdout = ''
     let stderr = ''
+    let settled = false
+    const settle = (result: { stdout: string; stderr: string; code: number }) => {
+      if (settled) return
+      settled = true
+      resolve(result)
+    }
 
-    proc.stdout.on('data', (d: Buffer) => { stdout += d.toString() })
-    proc.stderr.on('data', (d: Buffer) => { stderr += d.toString() })
+    // CRITICAL: handle 'error' so a missing python binary (ENOENT) does not crash the API process.
+    proc.on('error', (err: NodeJS.ErrnoException) => {
+      console.error(`[scrape.worker] Failed to spawn ${PYTHON_BIN}: ${err.code || ''} ${err.message}`)
+      settle({ stdout: '', stderr: `spawn error: ${err.code || ''} ${err.message}`, code: 127 })
+    })
+
+    proc.stdout?.on('data', (d: Buffer) => { stdout += d.toString() })
+    proc.stderr?.on('data', (d: Buffer) => { stderr += d.toString() })
 
     proc.on('close', (code) => {
-      resolve({ stdout, stderr, code: code ?? 1 })
+      settle({ stdout, stderr, code: code ?? 1 })
     })
   })
 }
