@@ -105,6 +105,26 @@ async function bootstrap() {
     } catch (err) {
       fastify.log.error({ err }, 'CRM alert worker failed to start — continuing without it')
     }
+    try {
+      await import('./workers/scrape.worker')
+    } catch (err) {
+      fastify.log.error({ err }, 'Scrape worker failed to start — continuing without it')
+    }
+    try {
+      await import('./workers/normalize.worker')
+    } catch (err) {
+      fastify.log.error({ err }, 'Normalize worker failed to start — continuing without it')
+    }
+    try {
+      await import('./workers/diff.worker')
+    } catch (err) {
+      fastify.log.error({ err }, 'Diff worker failed to start — continuing without it')
+    }
+    try {
+      await import('./workers/alert.worker')
+    } catch (err) {
+      fastify.log.error({ err }, 'Alert worker failed to start — continuing without it')
+    }
   }
 }
 
