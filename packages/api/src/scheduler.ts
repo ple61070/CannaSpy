@@ -22,9 +22,6 @@ const SCHEDULES = {
 }
 
 export async function startScheduler() {
-  // Remove existing repeatable jobs and re-add
-  await scrapeQueue.obliterate({ force: true }).catch(() => {})
-
   // Every 4 hours: scrape active tracked competitors
   await scrapeQueue.add(
     'scrape-tracked',
