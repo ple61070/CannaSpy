@@ -24,6 +24,7 @@ import { alertsRoutes } from './routes/alerts'
 import { billingRoutes } from './routes/billing'
 import { billingWebhookRoute } from './routes/billing.webhook'
 import { settingsRoutes } from './routes/settings'
+import { adminRoutes } from './routes/admin'
 import { clerkAuthPreHandler } from './middleware/clerk'
 import { startScheduler } from './scheduler'
 
@@ -82,6 +83,7 @@ async function bootstrap() {
     instance.register(alertsRoutes, { prefix: '/api/v1/alerts' })
     instance.register(billingRoutes, { prefix: '/api/v1/billing' })
     instance.register(settingsRoutes, { prefix: '/api/v1/settings' })
+    instance.register(adminRoutes, { prefix: '/api/v1/admin' })
   })
 
   await fastify.listen({ port: PORT, host: '0.0.0.0' })
@@ -97,6 +99,11 @@ async function bootstrap() {
       await import('./workers/billing.worker')
     } catch (err) {
       fastify.log.error({ err }, 'Billing worker failed to start — continuing without it')
+    }
+    try {
+      await import('./workers/crm.worker')
+    } catch (err) {
+      fastify.log.error({ err }, 'CRM alert worker failed to start — continuing without it')
     }
   }
 }

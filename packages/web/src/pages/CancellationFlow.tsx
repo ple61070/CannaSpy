@@ -1,12 +1,18 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useBlocks } from '../hooks/useBlocks'
+import { useAuthFetch } from '../lib/useAuthFetch'
+
+const API = import.meta.env.VITE_API_URL ?? ''
 
 export default function CancellationFlow() {
   const navigate = useNavigate()
   const { blocks } = useBlocks()
   const [step, setStep] = useState(1)
   const [reason, setReason] = useState('')
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState<string | null>(null)
+  const authFetch = useAuthFetch()
 
   return (
     <div style={{ maxWidth: 560, margin: '40px auto' }}>
@@ -61,25 +67,9 @@ export default function CancellationFlow() {
       {/* Step 2: Alternatives */}
       {step === 2 && (
         <div>
-          <div style={{ marginBottom: 24 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 16 }}>
-              Consider these alternatives before canceling:
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[
-                { label: 'Pause for 30 days', desc: 'Monitoring stops but your blocks stay active and data is preserved.' },
-                { label: 'Reduce slot count', desc: 'Remove some tracked or blocked competitors to lower your monthly cost.' },
-                { label: 'Pause one location', desc: 'Suspend a specific location without affecting your others.' },
-              ].map((alt) => (
-                <div key={alt.label} className="card" style={{ cursor: 'pointer' }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 4 }}>
-                    {alt.label}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{alt.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Pause / reduce / pause-one-location alternatives removed for Sprint 0
+              — they had no onClick handlers and no backing implementation. Restored
+              in Sprint 6 when real handlers exist. */}
 
           <div style={{ marginBottom: 20 }}>
             <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
@@ -104,18 +94,37 @@ export default function CancellationFlow() {
             />
           </div>
 
+          {cancelError && (
+            <div style={{ marginBottom: 12, fontSize: 12, color: 'var(--accent-alert)' }}>
+              {cancelError}
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
             <button className="btn btn-ghost" onClick={() => navigate(-1)}>
               Keep subscription
             </button>
             <button
               className="btn btn-danger"
-              onClick={() => {
-                // TODO: Call cancellation API
-                navigate('/command-center')
+              disabled={cancelling}
+              onClick={async () => {
+                setCancelling(true)
+                setCancelError(null)
+                try {
+                  const res = await authFetch(`${API}/api/v1/billing/portal`, { method: 'POST' })
+                  const body = await res.json()
+                  if (!res.ok || !body.data?.url) {
+                    setCancelError(body.error ?? 'Failed to reach billing portal. Please try again.')
+                    setCancelling(false)
+                    return
+                  }
+                  window.location.href = body.data.url
+                } catch {
+                  setCancelError('Failed to reach billing portal. Please try again.')
+                  setCancelling(false)
+                }
               }}
             >
-              Cancel subscription
+              {cancelling ? 'Redirecting to Stripe...' : 'Cancel subscription'}
             </button>
           </div>
         </div>

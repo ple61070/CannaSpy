@@ -42,6 +42,19 @@ export async function billingWebhookRoute(fastify: FastifyInstance) {
       return reply.code(400).send({ error: 'Invalid signature' })
     }
 
+    // Idempotency: short-circuit if we've seen this event_id before.
+    const dup = await query(
+      'SELECT 1 FROM webhook_events WHERE event_id = $1',
+      [event.id]
+    )
+    if (dup.rowCount && dup.rowCount > 0) {
+      fastify.log.info(
+        { eventId: event.id, eventType: event.type },
+        'webhook duplicate, skipping'
+      )
+      return reply.send({ received: true, idempotent_skip: true })
+    }
+
     fastify.log.info(`[billing/webhook] Event: ${event.type}`)
 
     try {
@@ -123,9 +136,43 @@ export async function billingWebhookRoute(fastify: FastifyInstance) {
           break
         }
 
+        case 'invoice.payment_succeeded': {
+          const invoice = event.data.object as Stripe.Invoice
+          const customerField = invoice.customer
+          const customerId: string | null = typeof customerField === 'string'
+            ? customerField
+            : customerField != null && typeof customerField === 'object' && 'id' in customerField
+              ? (customerField as { id: string }).id
+              : null
+          if (!customerId) break
+
+          const cleared = await query<{ id: string }>(
+            `UPDATE organizations
+             SET grace_period_ends_at = NULL
+             WHERE stripe_id = $1 AND grace_period_ends_at IS NOT NULL
+             RETURNING id`,
+            [customerId]
+          )
+          if (cleared.rowCount && cleared.rowCount > 0) {
+            const orgId = cleared.rows[0].id
+            await query(
+              `INSERT INTO audit_log (org_id, action, entity_type, entity_id, metadata, created_at)
+               VALUES ($1, 'grace_period_cleared', 'organization', $1, $2::jsonb, NOW())`,
+              [orgId, JSON.stringify({ stripe_invoice_id: invoice.id, stripe_id: customerId })]
+            )
+            fastify.log.info(`[billing/webhook] Grace period cleared for org ${orgId}`)
+          }
+          break
+        }
+
         default:
           fastify.log.debug(`[billing/webhook] Unhandled event type: ${event.type}`)
       }
+
+      await query(
+        'INSERT INTO webhook_events (event_id, event_type) VALUES ($1, $2)',
+        [event.id, event.type]
+      )
     } catch (err) {
       fastify.log.error(`[billing/webhook] Error processing event ${event.type}: ${err}`)
       return reply.code(500).send({ error: 'Webhook processing failed' })
