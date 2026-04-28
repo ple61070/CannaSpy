@@ -3,6 +3,7 @@ import IORedis from 'ioredis'
 import Anthropic from '@anthropic-ai/sdk'
 import crypto from 'crypto'
 import { query } from '../db/client'
+import { redisCache as redis } from '../db/redis'
 import { diffQueue } from '../scheduler'
 
 const connection = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', {
@@ -13,8 +14,6 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const BATCH_SIZE = 20
 const CACHE_TTL = 60 * 60 * 24 * 30 // 30 days in seconds
-
-const redis = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379')
 
 interface NormalizeJobData {
   competitorId: string
