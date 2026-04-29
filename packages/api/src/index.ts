@@ -25,6 +25,7 @@ import { billingRoutes } from './routes/billing'
 import { billingWebhookRoute } from './routes/billing.webhook'
 import { settingsRoutes } from './routes/settings'
 import { adminRoutes } from './routes/admin'
+import { mapRoutes } from './routes/map'
 import { clerkAuthPreHandler } from './middleware/clerk'
 import { startScheduler } from './scheduler'
 
@@ -71,6 +72,9 @@ async function bootstrap() {
 
   // Stripe webhook — NO Clerk auth, raw body required for signature verification
   fastify.register(billingWebhookRoute, { prefix: '/api/v1/billing' })
+
+  // Map route — optional auth (Clerk token enriches track_state but not required)
+  fastify.register(mapRoutes, { prefix: '/api/v1/map' })
 
   // API v1 routes — all require Clerk org auth via preHandler
   fastify.register(async (instance) => {
