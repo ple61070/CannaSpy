@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Block Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+[data-theme="light"]{
+  --bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);
+  --sidebar:#30525C;--surface:rgba(255,255,255,0.97);--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;
+  --border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);
+  --text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;
+  --accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);--accent-hover:#078484;
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);
+  --slate:#5484A4;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.08);
+  --card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);
+  --btn-shadow:0 4px 18px rgba(9,161,161,0.32);--noise-opacity:0.022;
+}
+[data-theme="dark"]{
+  --bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);
+  --sidebar:#091114;--surface:rgba(16,28,40,0.99);--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;
+  --border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);
+  --text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);--accent-hover:#0dcfcf;
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);
+  --slate:#acc0d3;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.10);
+  --card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);
+  --btn-shadow:0 4px 20px rgba(9,161,161,0.34);--noise-opacity:0.04;
+}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise-opacity);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);background-attachment:fixed;}
+
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;}
+.topbar-row1{display:flex;align-items:center;gap:12px;padding:12px 0;}
+.back-btn{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--accent);cursor:pointer;transition:var(--transition);}
+.back-btn:hover{opacity:0.75;}
+.back-btn svg{width:12px;height:12px;}
+.topbar-sep{width:1px;height:16px;background:var(--border-2);}
+.topbar-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.topbar-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:2px;}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.tb-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.tb-btn.accent{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:var(--btn-shadow);}
+.tb-btn.accent:hover{opacity:0.88;}
+.tb-btn svg{width:12px;height:12px;}
+
+/* BLOCK SELECTOR */
+.block-selector{display:flex;gap:0;background:var(--surface-2);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;}
+.bs-tab{padding:11px 18px;font-size:12px;font-weight:600;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;transition:var(--transition);white-space:nowrap;display:flex;align-items:center;gap:7px;}
+.bs-tab:hover{color:var(--text-1);}
+.bs-tab.active{color:var(--rose);border-bottom-color:var(--rose);}
+.bs-tab-dot{width:7px;height:7px;border-radius:50%;background:var(--rose);flex-shrink:0;}
+.bs-tab-badge{font-family:var(--mono);font-size:8px;font-weight:700;padding:1px 5px;border-radius:8px;background:var(--rose-soft);color:var(--rose);}
+.bs-tab.combined.active{color:var(--accent);border-bottom-color:var(--accent);}
+.bs-tab.combined .bs-tab-dot{background:var(--accent);}
+.bs-tab.combined .bs-tab-badge{background:var(--accent-soft);color:var(--accent);}
+
+.content-scroll{flex:1;overflow-y:auto;padding:24px 28px;min-height:0;}
+.content-scroll::-webkit-scrollbar{width:5px;}
+.content-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px;}
+
+/* ROI HERO */
+.roi-hero{background:linear-gradient(135deg,rgba(9,161,161,0.08) 0%,rgba(9,161,161,0.02) 100%);border:1.5px solid rgba(9,161,161,0.2);border-radius:var(--r);padding:22px 28px;margin-bottom:20px;display:flex;align-items:center;gap:24px;}
+.rh-number{text-align:center;flex-shrink:0;}
+.rh-val{font-family:var(--mono);font-size:56px;font-weight:700;color:var(--accent);line-height:1;letter-spacing:-0.02em;}
+.rh-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-3);margin-top:3px;}
+.rh-divider{width:1px;height:70px;background:var(--border-2);flex-shrink:0;}
+.rh-stats{display:flex;gap:24px;flex:1;flex-wrap:wrap;}
+.rh-stat{text-align:center;}
+.rh-stat-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--text-1);line-height:1;margin-bottom:3px;}
+.rh-stat-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);}
+.rh-context{flex:1;min-width:200px;}
+.rh-context-title{font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:4px;}
+.rh-context-sub{font-size:12px;color:var(--text-2);line-height:1.5;}
+
+/* METRIC GRID */
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--card-shadow);}
+.mc-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);margin-bottom:4px;}
+.mc-val{font-family:var(--mono);font-size:24px;font-weight:700;line-height:1;margin-bottom:3px;}
+.mc-sub{font-size:10px;color:var(--text-2);line-height:1.4;}
+.mc-trend{display:flex;align-items:center;gap:4px;margin-top:6px;font-family:var(--mono);font-size:9px;}
+.trend-up{color:var(--accent);}
+.trend-flat{color:var(--text-3);}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start;}
+.main-col{display:flex;flex-direction:column;gap:14px;}
+.side-col{display:flex;flex-direction:column;gap:12px;}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);overflow:hidden;}
+.card-header{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.card-title{font-size:12px;font-weight:700;color:var(--text-1);}
+.card-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:auto;}
+
+/* INTEL EVENTS TABLE */
+.intel-table{width:100%;border-collapse:collapse;}
+.intel-table th{padding:7px 12px;text-align:left;font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);border-bottom:2px solid var(--border-2);background:var(--surface-2);cursor:pointer;}
+.intel-table th:hover{color:var(--text-1);}
+.intel-table td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
+.intel-table tr:last-child td{border-bottom:none;}
+.intel-table tr:hover td{background:var(--surface-2);}
+.event-type-pill{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.06em;padding:2px 6px;border-radius:3px;}
+.ep-price{background:var(--danger-soft);color:var(--danger);}
+.ep-promo{background:var(--warm-soft);color:var(--warm);}
+.ep-sku{background:var(--accent-soft);color:var(--accent);}
+.response-badge{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;}
+.rb-acted{background:rgba(9,161,161,0.1);color:var(--accent);}
+.rb-held{background:var(--surface-3);color:var(--text-3);}
+.rb-pending{background:var(--warm-soft);color:var(--warm);}
+.impact-cell{font-family:var(--mono);font-size:11px;font-weight:700;}
+.impact-pos{color:var(--accent);}
+.impact-neu{color:var(--text-3);}
+
+/* SVG CHART */
+.chart-wrap{padding:16px 16px 8px;}
+.chart-legend-row{display:flex;gap:14px;padding:0 16px 12px;flex-wrap:wrap;}
+.cl-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-3);}
+.cl-swatch{width:14px;height:3px;border-radius:2px;}
+
+/* SIDE STAT */
+.side-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--card-shadow);}
+.ss-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);margin-bottom:3px;}
+.ss-val{font-family:var(--mono);font-size:22px;font-weight:700;line-height:1;}
+.ss-sub{font-size:11px;color:var(--text-2);margin-top:4px;line-height:1.4;}
+.ss-divider{height:1px;background:var(--border);margin:10px 0;}
+
+/* BLOCK ACTIONS — single-block cancel CTA, links back to S16 cancel-flow modal */
+.ba-cancel-btn{width:100%;display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:var(--r-sm);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;background:transparent;border:1.5px solid rgba(211,150,166,0.35);color:var(--rose);transition:var(--tr);}
+.ba-cancel-btn:hover{background:var(--rose-soft);border-color:var(--rose);}
+.ba-cancel-btn svg{width:13px;height:13px;flex-shrink:0;}
+
+/* BLOCK TIMELINE */
+.supp-bar-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
+.supp-bar-row:last-child{border-bottom:none;}
+.supp-name{font-size:11px;font-weight:600;color:var(--text-1);width:110px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.supp-bar-bg{flex:1;height:10px;background:var(--surface-3);border-radius:5px;overflow:hidden;position:relative;}
+.supp-bar-fill{height:10px;border-radius:5px;position:absolute;left:0;top:0;}
+.supp-days{font-family:var(--mono);font-size:10px;font-weight:700;width:36px;text-align:right;flex-shrink:0;}
+.supp-status{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 5px;border-radius:3px;flex-shrink:0;}
+.ss-active{background:var(--rose-soft);color:var(--rose);}
+.ss-blocking-you{background:var(--warm-soft);color:var(--warm);}
+
+/* COST BREAKDOWN */
+.cost-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.cost-row:last-child{border-bottom:none;}
+.cost-row.total{font-weight:700;padding-top:10px;}
+.cost-key{color:var(--text-2);}
+.cost-val{font-family:var(--mono);font-weight:700;color:var(--text-1);}
+.cost-val.teal{color:var(--accent);}
+
+.section-label{font-family:var(--mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:11px 18px;font-size:12px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:9000;transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.4,0,.2,1);pointer-events:none;display:flex;align-items:center;gap:8px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-row1">
+      <div class="back-btn" onclick="go('cannaspy_s16_FINAL.html')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Block Management
+      </div>
+      <div class="topbar-sep"></div>
+      <div class="topbar-title">Block Analytics</div>
+      <div class="topbar-sub">ROI &amp; BLOCK PERFORMANCE REPORT</div>
+      <div class="topbar-actions">
+        <button class="tb-btn" onclick="showToast('Exporting block analytics report\u2026','var(--accent)')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export report
+        </button>
+        <button class="tb-btn accent" onclick="go('cannaspy_s19_FINAL.html')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+          Manage renewals
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCK SELECTOR TABS -->
+  <div class="block-selector">
+    <div class="bs-tab combined active" id="bstab-all" onclick="switchView('all')">
+      <div class="bs-tab-dot" style="background:var(--accent);"></div>
+      All Blocks Combined
+      <span class="bs-tab-badge" style="background:var(--accent-soft);color:var(--accent);">2 active</span>
+    </div>
+    <div class="bs-tab" id="bstab-stiiizy" onclick="switchView('stiiizy')">
+      <div class="bs-tab-dot"></div>
+      STIIIZY WeHo
+      <span class="bs-tab-badge">47 days</span>
+    </div>
+    <div class="bs-tab" id="bstab-otc" onclick="switchView('otc')">
+      <div class="bs-tab-dot"></div>
+      Off The Charts DTLA
+      <span class="bs-tab-badge">22 days</span>
+    </div>
+  </div>
+
+  <div class="content-scroll">
+
+    <!-- ROI HERO -->
+    <div class="roi-hero">
+      <div class="rh-number">
+        <div class="rh-val" id="hero-roi">4.7×</div>
+        <div class="rh-label">Block ROI</div>
+      </div>
+      <div class="rh-divider"></div>
+      <div class="rh-stats">
+        <div class="rh-stat">
+          <div class="rh-stat-val" id="hero-days">69</div>
+          <div class="rh-stat-label">Total days blocked</div>
+        </div>
+        <div class="rh-stat">
+          <div class="rh-stat-val" id="hero-events">42</div>
+          <div class="rh-stat-label">Intel events captured</div>
+        </div>
+        <div class="rh-stat">
+          <div class="rh-stat-val" id="hero-spent">$4,306</div>
+          <div class="rh-stat-label">Total spent to date</div>
+        </div>
+        <div class="rh-stat">
+          <div class="rh-stat-val" id="hero-advantage" style="color:var(--accent);">~$20K</div>
+          <div class="rh-stat-label">Est. revenue advantage</div>
+        </div>
+      </div>
+      <div class="rh-divider"></div>
+      <div class="rh-context">
+        <div class="rh-context-title" id="hero-context-title">Both blocks are delivering positive ROI</div>
+        <div class="rh-context-sub" id="hero-context-sub">STIIIZY and Off The Charts have been blocked from CannaSpy for 47 and 22 days respectively. While blocked, you&#39;ve captured 42 competitive intelligence events they couldn&#39;t see.</div>
+      </div>
+    </div>
+
+    <!-- METRIC GRID -->
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="mc-label">Block days</div>
+        <div class="mc-val" id="m-days" style="color:var(--rose);">69</div>
+        <div class="mc-sub" id="m-days-sub">STIIIZY 47d + OTC 22d</div>
+        <div class="mc-trend trend-up" id="m-days-trend">&#9650; +1 per day</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">Price changes detected</div>
+        <div class="mc-val" id="m-price" style="color:var(--accent);">31</div>
+        <div class="mc-sub" id="m-price-sub">While rivals had no visibility into yours</div>
+        <div class="mc-trend trend-up">&#9650; 3 this week</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">Promo launches detected</div>
+        <div class="mc-val" id="m-promo" style="color:var(--warm);">8</div>
+        <div class="mc-sub" id="m-promo-sub">Avg. 3 days advance notice per promo</div>
+        <div class="mc-trend trend-up">&#9650; 1 active now</div>
+      </div>
+      <div class="metric-card">
+        <div class="mc-label">Sales contacts blocked</div>
+        <div class="mc-val" id="m-contacts" style="color:var(--rose);">0</div>
+        <div class="mc-sub" id="m-contacts-sub">Zero outreach attempts made to either rival</div>
+        <div class="mc-trend trend-flat">&#9644; As expected</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- MAIN COLUMN -->
+      <div class="main-col">
+
+        <!-- BLOCK BAR CHART -->
+        <div class="card">
+          <div class="card-header">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--rose)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            <div class="card-title">Block Duration</div>
+            <div class="card-sub">Days blocked &middot; all rivals</div>
+          </div>
+          <div style="padding:14px 16px;" id="supp-bars"></div>
+        </div>
+
+        <!-- VALUE ACCUMULATION CHART -->
+        <div class="card">
+          <div class="card-header">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <div class="card-title" id="chart-title">Cumulative Block Value vs. Cost</div>
+            <div class="card-sub">Since block placed &middot; estimated</div>
+          </div>
+          <div class="chart-wrap">
+            <svg id="value-chart" viewBox="0 0 680 160" preserveAspectRatio="none" width="100%" height="160"></svg>
+          </div>
+          <div class="chart-legend-row">
+            <div class="cl-item"><div class="cl-swatch" style="background:var(--accent);"></div>Est. revenue advantage</div>
+            <div class="cl-item"><div class="cl-swatch" style="background:var(--rose);"></div>Cumulative block cost</div>
+            <div class="cl-item"><div class="cl-swatch" style="background:var(--border-2);border-top:1px dashed var(--text-3);"></div>Break-even line</div>
+          </div>
+        </div>
+
+        <!-- INTEL EVENTS TABLE -->
+        <div class="card">
+          <div class="card-header">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <div class="card-title">Intelligence Events While Rivals Were Blocked</div>
+            <div class="card-sub" id="events-sub">42 events &middot; click headers to sort</div>
+          </div>
+          <table class="intel-table" id="intel-table">
+            <thead>
+              <tr>
+                <th onclick="sortIntelTable(0)">Date</th>
+                <th onclick="sortIntelTable(1)">Rival</th>
+                <th onclick="sortIntelTable(2)">Event</th>
+                <th onclick="sortIntelTable(3)">Type</th>
+                <th onclick="sortIntelTable(4)">Your Response</th>
+                <th onclick="sortIntelTable(5)">Est. Impact</th>
+              </tr>
+            </thead>
+            <tbody id="intel-tbody"></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- SIDE COLUMN -->
+      <div class="side-col">
+
+        <div class="side-stat">
+          <div class="ss-label">Combined ROI</div>
+          <div class="ss-val" style="color:var(--accent);" id="side-roi">4.7×</div>
+          <div class="ss-sub" id="side-roi-sub">$20K estimated revenue advantage vs. $4,306 spent on blocks to date.</div>
+          <div class="ss-divider"></div>
+          <div class="ss-label">Monthly block spend</div>
+          <div class="ss-val" style="color:var(--rose);">$3,600</div>
+          <div class="ss-sub">$2,000 STIIIZY + $1,600 OTC. Both auto-renew May 1.</div>
+        </div>
+
+        <div class="side-stat">
+          <div class="ss-label">Avg. response lead time</div>
+          <div class="ss-val" style="color:var(--accent);">2.4 hrs</div>
+          <div class="ss-sub">Average time between CannaSpy detecting a competitor move and you responding. Rivals had no equivalent capability.</div>
+          <div class="ss-divider"></div>
+          <div class="ss-label">Acted on intel events</div>
+          <div class="ss-val">5 / 42</div>
+          <div class="ss-sub">5 events triggered a pricing or promo response. Remaining 37 were monitored — no action needed.</div>
+        </div>
+
+        <!-- COST BREAKDOWN -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Block cost breakdown</div>
+          </div>
+          <div style="padding:12px 16px;" id="cost-breakdown"></div>
+        </div>
+
+        <!-- BLOCK ACTIONS (single-block view only) -->
+        <div class="card" id="block-actions-card" style="display:none;">
+          <div class="card-header">
+            <div class="card-title">Block actions</div>
+          </div>
+          <div style="padding:14px 16px;">
+            <div style="font-size:11px;color:var(--text-2);line-height:1.5;margin-bottom:12px;" id="ba-summary">
+              This block auto-renews on the 1st of each month. To cancel, return to Block Management — cancellation is immediate and any prorated remainder of the current billing period is forfeited.
+            </div>
+            <button class="ba-cancel-btn" onclick="goCancel()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              <span>Cancel this block</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:auto;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:8px;text-align:center;letter-spacing:0.04em;">Cancel flow is on Block Management</div>
+          </div>
+        </div>
+
+        <!-- BLOCKING YOU CONTEXT -->
+        <div class="card" style="border-left:3px solid var(--warm);">
+          <div class="card-header" style="background:rgba(212,144,10,0.04);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+            <div class="card-title" style="color:var(--warm);">Rivals blocking you</div>
+            <div class="card-sub">Active blocks on your account</div>
+          </div>
+          <div style="padding:12px 16px;">
+            <div style="font-size:11px;color:var(--text-2);margin-bottom:10px;line-height:1.5;">3 rivals currently hold active blocks on your account. You cannot see their CannaSpy data — and they&#39;re paying to keep it that way.</div>
+            <div class="supp-bar-row" style="padding:5px 0;">
+              <div class="supp-name" style="color:var(--warm);">Jungle Boys</div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--warm);font-weight:700;">63 days</div>
+            </div>
+            <div class="supp-bar-row" style="padding:5px 0;">
+              <div class="supp-name" style="color:var(--warm);">Harborside SJ</div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--warm);font-weight:700;">31 days</div>
+            </div>
+            <div class="supp-bar-row" style="padding:5px 0;border-bottom:none;">
+              <div class="supp-name" style="color:var(--warm);">Cookies SF</div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--warm);font-weight:700;">8 days</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+// DATA
+var VIEWS = {
+  all:{
+    roi:'4.7×', days:69, events:42, spent:'$4,306', advantage:'~$20K',
+    title:'Both blocks are delivering positive ROI',
+    sub:'STIIIZY and Off The Charts have been blocked from CannaSpy for 47 and 22 days respectively. While blocked, you\'ve captured 42 competitive intelligence events they couldn\'t see.',
+    mDays:69, mDaysSub:'STIIIZY 47d + OTC 22d',
+    mPrice:31, mPriceSub:'While rivals had no visibility into yours',
+    mPromo:8, mPromoSub:'Avg. 3 days advance notice per promo',
+    mContacts:0, mContactsSub:'Zero outreach attempts made to either rival',
+    sideRoi:'4.7×', sideRoiSub:'$20K estimated revenue advantage vs. $4,306 spent on blocks to date.',
+    chartTitle:'Cumulative Block Value vs. Cost',
+    eventsSub:'42 events \u00b7 click headers to sort',
+    costRows:[
+      {k:'STIIIZY WeHo (47 days)',v:'$3,133',c:''},
+      {k:'Off The Charts DTLA (22 days)',v:'$1,173',c:''},
+      {k:'Total spent to date',v:'$4,306',c:'total'},
+      {k:'Next auto-charge (May 1)',v:'$3,600',c:''},
+      {k:'Est. revenue advantage',v:'~$20,000',c:'teal'},
+      {k:'Net ROI to date',v:'+$15,694',c:'teal'},
+    ]
+  },
+  stiiizy:{
+    roi:'5.7×', days:47, events:28, spent:'$3,133', advantage:'~$18K',
+    title:'STIIIZY block is delivering strong ROI',
+    sub:'STIIIZY West Hollywood has been blocked from CannaSpy for 47 days. While blocked, you\'ve captured 28 competitive intelligence events they couldn\'t see.',
+    mDays:47, mDaysSub:'Since Mar 10, 2026',
+    mPrice:20, mPriceSub:'Price moves detected before STIIIZY could respond',
+    mPromo:6, mPromoSub:'Flash sales and brand promotions',
+    mContacts:0, mContactsSub:'Zero outreach by CannaSpy to STIIIZY',
+    sideRoi:'5.7×', sideRoiSub:'$18K estimated revenue advantage vs. $3,133 spent to date.',
+    chartTitle:'STIIIZY Block: Value vs. Cost',
+    eventsSub:'28 events \u00b7 STIIIZY only',
+    costRows:[
+      {k:'Days active',v:'47 days',c:''},
+      {k:'Rate',v:'$2,000/mo (Elite)',c:''},
+      {k:'Prorated first charge (Mar 10)',v:'$1,533',c:''},
+      {k:'Auto-charge May 1',v:'$2,000',c:''},
+      {k:'Total spent to date',v:'$3,133',c:'total'},
+      {k:'Est. revenue advantage',v:'~$18,000',c:'teal'},
+    ]
+  },
+  otc:{
+    roi:'3.2×', days:22, events:14, spent:'$1,173', advantage:'~$3.8K',
+    title:'Off The Charts block is building momentum',
+    sub:'Off The Charts DTLA has been blocked from CannaSpy for 22 days. The block is younger but already generating positive ROI through 14 captured intelligence events.',
+    mDays:22, mDaysSub:'Since Apr 4, 2026',
+    mPrice:11, mPriceSub:'Price moves detected while OTC was dark',
+    mPromo:2, mPromoSub:'Jeeter Brand Day and general promo',
+    mContacts:0, mContactsSub:'Zero outreach by CannaSpy to OTC',
+    sideRoi:'3.2×', sideRoiSub:'$3.8K estimated revenue advantage vs. $1,173 spent to date.',
+    chartTitle:'Off The Charts Block: Value vs. Cost',
+    eventsSub:'14 events \u00b7 OTC only',
+    costRows:[
+      {k:'Days active',v:'22 days',c:''},
+      {k:'Rate',v:'$1,600/mo (Elite)',c:''},
+      {k:'Prorated first charge (Apr 4)',v:'$1,173',c:''},
+      {k:'Auto-charge May 1',v:'$1,600',c:''},
+      {k:'Total spent to date',v:'$1,173',c:'total'},
+      {k:'Est. revenue advantage',v:'~$3,800',c:'teal'},
+    ]
+  }
+};
+
+var INTEL_EVENTS = [
+  {date:'Apr 16',rival:'STIIIZY',event:'FF 3.5g dropped $42→$36 (Weekend Flash)',type:'price',response:'Held',impact:'+$2,400'},
+  {date:'Apr 14',rival:'OTC',event:'Jeeter Juice $40→$32 (Brand Day Sale)',type:'promo',response:'Acted',impact:'+$1,800'},
+  {date:'Apr 12',rival:'STIIIZY',event:'Jeeter XL dropped $38→$35 (permanent)',type:'price',response:'Pending',impact:'TBD'},
+  {date:'Apr 10',rival:'STIIIZY',event:'Weekend Flash Sale launched — 6 SKUs',type:'promo',response:'Held',impact:'+$900'},
+  {date:'Apr 8',rival:'OTC',event:'Raw Garden 0.5g dropped $38→$36',type:'price',response:'Acted',impact:'+$620'},
+  {date:'Apr 5',rival:'OTC',event:'Kanha Gummies 200mg dropped $35→$32',type:'price',response:'Acted',impact:'+$480'},
+  {date:'Apr 2',rival:'STIIIZY',event:'Jeeter Baby 5-pack dropped $55→$52',type:'price',response:'Held',impact:'+$340'},
+  {date:'Mar 30',rival:'STIIIZY',event:'New SKU: STIIIZY Pod 0.5g Premium added',type:'sku',response:'Held',impact:'Noted'},
+  {date:'Apr 6',rival:'OTC',event:'Raw Garden Live Badder dropped $65→$62',type:'price',response:'Acted',impact:'+$390'},
+  {date:'Mar 25',rival:'STIIIZY',event:'Kanha 200mg dropped $35→$32',type:'price',response:'Acted',impact:'+$560'},
+  {date:'Mar 22',rival:'STIIIZY',event:'Weekend Flash ended — prices reverted',type:'price',response:'Held',impact:'N/A'},
+  {date:'Mar 18',rival:'STIIIZY',event:'Happy Hour 4-7PM launched on FF Vapes',type:'promo',response:'Pending',impact:'TBD'},
+  {date:'Mar 15',rival:'STIIIZY',event:'5 new SKUs added across Indica Flower',type:'sku',response:'Held',impact:'Noted'},
+  {date:'Mar 12',rival:'STIIIZY',event:'Weekend Flash Sale launched — 8 SKUs',type:'promo',response:'Held',impact:'+$1,100'},
+];
+
+var currentView='all';
+var intelSortCol=null, intelSortDir=1;
+
+function switchView(key){
+  currentView=key;
+  var v=VIEWS[key];
+  // Header tabs
+  document.querySelectorAll('.bs-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('bstab-'+key).classList.add('active');
+  // Hero
+  document.getElementById('hero-roi').textContent=v.roi;
+  document.getElementById('hero-days').textContent=v.days;
+  document.getElementById('hero-events').textContent=v.events;
+  document.getElementById('hero-spent').textContent=v.spent;
+  document.getElementById('hero-advantage').textContent=v.advantage;
+  document.getElementById('hero-context-title').textContent=v.title;
+  document.getElementById('hero-context-sub').textContent=v.sub;
+  // Metrics
+  document.getElementById('m-days').textContent=v.mDays;
+  document.getElementById('m-days-sub').textContent=v.mDaysSub;
+  document.getElementById('m-price').textContent=v.mPrice;
+  document.getElementById('m-price-sub').textContent=v.mPriceSub;
+  document.getElementById('m-promo').textContent=v.mPromo;
+  document.getElementById('m-promo-sub').textContent=v.mPromoSub;
+  document.getElementById('m-contacts').textContent=v.mContacts;
+  document.getElementById('m-contacts-sub').textContent=v.mContactsSub;
+  // Side
+  document.getElementById('side-roi').textContent=v.sideRoi;
+  document.getElementById('side-roi-sub').textContent=v.sideRoiSub;
+  document.getElementById('chart-title').textContent=v.chartTitle;
+  document.getElementById('events-sub').textContent=v.eventsSub;
+  // Cost breakdown
+  renderCostBreakdown(v.costRows);
+  // Show single-block actions card only when viewing one block
+  document.getElementById('block-actions-card').style.display = (key==='all')?'none':'';
+  // Filter intel events
+  renderIntelTable(key);
+  // Chart
+  renderValueChart(key);
+}
+
+function renderCostBreakdown(rows){
+  var html='';
+  rows.forEach(function(r){
+    html+='<div class="cost-row'+(r.c==='total'?' total':'')+'">';
+    html+='<div class="cost-key">'+r.k+'</div>';
+    html+='<div class="cost-val'+(r.c==='teal'?' teal':'')+'" style="'+(r.c==='total'?'font-size:13px;':'')+'">'+r.v+'</div>';
+    html+='</div>';
+  });
+  document.getElementById('cost-breakdown').innerHTML=html;
+}
+
+function renderIntelTable(view){
+  var events=view==='all'?INTEL_EVENTS:INTEL_EVENTS.filter(function(e){ return view==='stiiizy'?e.rival==='STIIIZY':e.rival==='OTC'; });
+  var typePill={price:'<span class="event-type-pill ep-price">Price</span>',promo:'<span class="event-type-pill ep-promo">Promo</span>',sku:'<span class="event-type-pill ep-sku">New SKU</span>'};
+  var respBadge={Acted:'<span class="response-badge rb-acted">Acted</span>',Held:'<span class="response-badge rb-held">Held</span>',Pending:'<span class="response-badge rb-pending">Pending</span>'};
+  var html='';
+  events.forEach(function(ev){
+    var isPos=ev.impact.startsWith('+');
+    html+='<tr>';
+    html+='<td style="font-family:var(--mono);font-size:10px;color:var(--text-3);">'+ev.date+'</td>';
+    html+='<td style="font-size:11px;font-weight:700;color:var(--rose);">'+ev.rival+'</td>';
+    html+='<td style="font-size:11px;color:var(--text-1);">'+ev.event+'</td>';
+    html+='<td>'+(typePill[ev.type]||ev.type)+'</td>';
+    html+='<td>'+(respBadge[ev.response]||ev.response)+'</td>';
+    html+='<td class="impact-cell '+(isPos?'impact-pos':'impact-neu')+'">'+ev.impact+'</td>';
+    html+='</tr>';
+  });
+  document.getElementById('intel-tbody').innerHTML=html;
+}
+
+function sortIntelTable(colIdx){
+  intelSortDir = intelSortCol===colIdx?-intelSortDir:1;
+  intelSortCol=colIdx;
+  var ths=document.querySelectorAll('.intel-table th');
+  ths.forEach(function(h){ h.innerHTML=h.innerHTML.replace(/ [▲▼]/g,''); });
+  ths[colIdx].innerHTML+=intelSortDir===1?' ▲':' ▼';
+  var tbody=document.getElementById('intel-tbody');
+  var rows=Array.from(tbody.querySelectorAll('tr'));
+  rows.sort(function(a,b){
+    var ca=a.querySelectorAll('td')[colIdx], cb=b.querySelectorAll('td')[colIdx];
+    var va=ca?ca.textContent.trim():'', vb=cb?cb.textContent.trim():'';
+    var na=parseFloat(va.replace(/[^0-9.\-]/g,'')), nb=parseFloat(vb.replace(/[^0-9.\-]/g,''));
+    if(!isNaN(na)&&!isNaN(nb)) return (na-nb)*intelSortDir;
+    return va.localeCompare(vb)*intelSortDir;
+  });
+  rows.forEach(function(r){ tbody.appendChild(r); });
+}
+
+function renderSuppBars(){
+  var rivals=[
+    {name:'STIIIZY WeHo',days:47,max:70,color:'#D396A6',status:'active'},
+    {name:'Off The Charts DTLA',days:22,max:70,color:'#5484A4',status:'active'},
+    {name:'Jungle Boys',days:63,max:70,color:'#d4900a',status:'blocking-you'},
+    {name:'Harborside SJ',days:31,max:70,color:'#d4900a',status:'blocking-you'},
+    {name:'Cookies SF',days:8,max:70,color:'#d4900a',status:'blocking-you'},
+  ];
+  var html='';
+  rivals.forEach(function(r){
+    var pct=Math.round(r.days/r.max*100);
+    var isYou=r.status==='active';
+    html+='<div class="supp-bar-row">';
+    html+='<div class="supp-name" style="color:'+(isYou?'var(--rose)':'var(--warm)')+';">'+r.name+'</div>';
+    html+='<div class="supp-bar-bg"><div class="supp-bar-fill" style="width:'+pct+'%;background:'+r.color+';opacity:0.7;"></div></div>';
+    html+='<div class="supp-days" style="color:'+r.color+';">'+r.days+'d</div>';
+    html+='<span class="supp-status '+(isYou?'ss-active':'ss-blocking-you')+'">'+(isYou?'blocked':'blocking you')+'</span>';
+    html+='</div>';
+  });
+  document.getElementById('supp-bars').innerHTML=html;
+}
+
+function renderValueChart(view){
+  var svg=document.getElementById('value-chart');
+  var W=680,H=160,PAD={t:12,r:20,b:28,l:52};
+  // Data: [day, value, cost]
+  var datasets={
+    all:  {days:47,dailyCost:120,dailyValue:430,label:'69 days'},
+    stiiizy:{days:47,dailyCost:67,dailyValue:383,label:'47 days'},
+    otc:  {days:22,dailyCost:53,dailyValue:172,label:'22 days'}
+  };
+  var d=datasets[view]||datasets.all;
+  // Deterministic jitter so the chart shape stays stable across renders.
+  // Each (view, day) pair yields the same pseudo-random factor in [0.9, 1.1].
+  function jitter(seed){
+    var x=Math.sin((seed+1)*9301+(view.length*49297))*233280;
+    return 0.9 + ((x-Math.floor(x))*0.2);
+  }
+  var valuePts=[],costPts=[];
+  for(var i=0;i<=d.days;i++){
+    valuePts.push([i,Math.round(i*d.dailyValue*jitter(i))]);
+    costPts.push([i,Math.round(i*d.dailyCost)]);
+  }
+  var maxV=Math.max.apply(null,valuePts.map(function(p){ return p[1]; }));
+  var maxC=Math.max.apply(null,costPts.map(function(p){ return p[1]; }));
+  var maxY=Math.max(maxV,maxC)*1.1||1000;
+  function px(day){ return PAD.l+(day/d.days)*(W-PAD.l-PAD.r); }
+  function py(val){ return PAD.t+(1-val/maxY)*(H-PAD.t-PAD.b); }
+  function makePath(pts){ return pts.map(function(p,i){ return (i===0?'M':'L')+px(p[0]).toFixed(1)+' '+py(p[1]).toFixed(1); }).join(''); }
+
+  var html='';
+  // Grid lines
+  for(var g=0;g<=4;g++){
+    var gv=Math.round(maxY*(g/4));
+    var gy=py(gv).toFixed(1);
+    html+='<line x1="'+PAD.l+'" y1="'+gy+'" x2="'+(W-PAD.r)+'" y2="'+gy+'" stroke="currentColor" stroke-opacity="0.06" stroke-width="1"/>';
+    html+='<text x="'+(PAD.l-4)+'" y="'+(+gy+3)+'" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="8" fill="currentColor" fill-opacity="0.4">$'+(gv>=1000?(gv/1000).toFixed(0)+'K':gv)+'</text>';
+  }
+  // Break-even line (where value=cost)
+  var beDays=d.dailyValue>0?Math.ceil(d.dailyCost/d.dailyValue)*1:5;
+  if(beDays<=d.days){
+    var beX=px(beDays).toFixed(1), beY=py(costPts[Math.min(beDays,costPts.length-1)][1]).toFixed(1);
+    html+='<line x1="'+beX+'" y1="'+PAD.t+'" x2="'+beX+'" y2="'+(H-PAD.b)+'" stroke="currentColor" stroke-opacity="0.15" stroke-dasharray="3 2" stroke-width="1"/>';
+    html+='<text x="'+(+beX+4)+'" y="'+(PAD.t+10)+'" font-family="JetBrains Mono,monospace" font-size="8" fill="currentColor" fill-opacity="0.4">Break-even</text>';
+  }
+  // Area under value curve
+  var areaV=makePath(valuePts)+' L'+px(d.days)+' '+(H-PAD.b)+' L'+PAD.l+' '+(H-PAD.b)+' Z';
+  html+='<path d="'+areaV+'" fill="rgba(9,161,161,0.07)" stroke="none"/>';
+  // Value line
+  html+='<path d="'+makePath(valuePts)+'" fill="none" stroke="var(--accent)" stroke-width="2"/>';
+  // Cost line
+  html+='<path d="'+makePath(costPts)+'" fill="none" stroke="var(--rose)" stroke-width="1.5" stroke-dasharray="4 2"/>';
+  // X labels
+  var labelDays=[0,Math.round(d.days/3),Math.round(d.days*2/3),d.days];
+  labelDays.forEach(function(ld){
+    html+='<text x="'+px(ld).toFixed(1)+'" y="'+(H-PAD.b+14)+'" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="8" fill="currentColor" fill-opacity="0.4">Day '+ld+'</text>';
+  });
+  svg.innerHTML=html;
+}
+
+// INIT
+renderSuppBars();
+renderCostBreakdown(VIEWS.all.costRows);
+renderIntelTable('all');
+renderValueChart('all');
+
+function go(url){ window.location.href=url; }
+function goCancel(){
+  // Single source of truth for the cancel-block modal lives in S16. Direct user there.
+  showToast('Opening Block Management to confirm cancellation\u2026','var(--rose)');
+  setTimeout(function(){ window.location.href='cannaspy_s16_FINAL.html'; },700);
+}
+function toggleTheme(){ var t=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'; document.documentElement.setAttribute('data-theme',t); }
+var toastTimer;
+function showToast(msg,color){ clearTimeout(toastTimer); var t=document.getElementById('toast'); document.getElementById('toast-msg').textContent=msg; document.getElementById('toast-dot').style.background=color; t.classList.add('show'); toastTimer=setTimeout(function(){ t.classList.remove('show'); },3200); }
+</script>
+</body>
+</html>

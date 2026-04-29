@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Market Heat Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+[data-theme="light"]{
+  --bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);
+  --sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);--glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);--surface:rgba(255,255,255,0.97);--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;
+  --border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);--border-hot:rgba(9,161,161,0.38);
+  --text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;
+  --accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);
+  --slate:#5484A4;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.08);
+  --card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);
+  --btn-shadow:0 4px 18px rgba(9,161,161,0.32);--noise-opacity:0.022;
+}
+[data-theme="dark"]{
+  --bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);
+  --sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);--glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);--surface:rgba(16,28,40,0.99);--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;
+  --border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);--border-hot:rgba(11,184,184,0.5);
+  --text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);
+  --slate:#acc0d3;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.10);
+  --card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);
+  --btn-shadow:0 4px 20px rgba(9,161,161,0.34);--noise-opacity:0.04;
+}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise-opacity);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);background-attachment:fixed;}
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.nav-link.locked{opacity:0.45;pointer-events:none;}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;}
+.topbar-row1{display:flex;align-items:center;gap:12px;padding:12px 0;}
+.topbar-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.topbar-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:2px;}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.tb-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.tb-btn svg{width:12px;height:12px;}
+/* MARKET NAV TABS */
+.market-nav{display:flex;gap:0;background:var(--surface-2);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;overflow-x:auto;}
+.market-nav::-webkit-scrollbar{display:none;}
+.mn-tab{padding:10px 16px;font-size:12px;font-weight:600;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;transition:var(--transition);white-space:nowrap;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.mn-tab:hover{color:var(--text-1);}
+.mn-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.mn-tab svg{width:13px;height:13px;}
+/* LAYOUT */
+.map-layout{flex:1;display:flex;overflow:hidden;min-height:0;}
+.map-main{flex:1;position:relative;overflow:hidden;background:var(--surface-2);}
+.map-sidebar{width:320px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+/* SVG MAP */
+.map-svg-wrap{width:100%;height:100%;position:relative;}
+.map-svg-wrap svg{width:100%;height:100%;}
+/* MAP LEGEND */
+.map-legend{position:absolute;bottom:16px;left:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;box-shadow:var(--card-shadow);}
+.ml-title{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.10em;color:var(--text-3);margin-bottom:7px;}
+.ml-row{display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:11px;color:var(--text-2);}
+.ml-swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0;}
+/* MAP CONTROLS */
+.map-controls{position:absolute;top:16px;right:16px;display:flex;flex-direction:column;gap:6px;}
+.mc-btn{width:32px;height:32px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--card-shadow);color:var(--text-2);font-size:16px;font-weight:700;transition:var(--transition);}
+.mc-btn:hover{border-color:var(--accent);color:var(--accent);}
+/* MARKET TOOLTIP */
+.map-tooltip{position:absolute;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:10px 14px;box-shadow:0 8px 32px rgba(30,60,80,0.15);pointer-events:none;display:none;z-index:100;min-width:180px;}
+.mt-name{font-size:12px;font-weight:700;color:var(--text-1);margin-bottom:4px;}
+.mt-tier{font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;display:inline-block;margin-bottom:5px;}
+.mt-stat{display:flex;justify-content:space-between;font-size:11px;color:var(--text-2);margin-bottom:2px;}
+.mt-stat span:last-child{font-family:var(--mono);font-weight:700;color:var(--text-1);}
+/* SIDEBAR PANELS */
+.ms-header{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface-2);}
+.ms-title{font-size:13px;font-weight:700;color:var(--text-1);}
+.ms-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:2px;}
+.ms-scroll{flex:1;overflow-y:auto;padding:12px;}
+.ms-scroll::-webkit-scrollbar{width:4px;}
+.ms-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+/* MARKET CARDS */
+.market-card{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 13px;margin-bottom:7px;cursor:pointer;transition:var(--transition);border-left:3px solid transparent;}
+.market-card:hover{border-color:var(--border-2);background:var(--surface);}
+.market-card.selected{border-color:var(--border-2);background:var(--surface);border-left-color:var(--accent);}
+.mc-top{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.mc-name{font-size:12px;font-weight:700;color:var(--text-1);flex:1;}
+.tier-badge{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;}
+.tier-elite{background:rgba(224,90,106,0.12);color:var(--danger);}
+.tier-hot{background:rgba(212,144,10,0.12);color:var(--warm);}
+.tier-competitive{background:var(--accent-soft);color:var(--accent);}
+.tier-standard{background:var(--surface-3);color:var(--text-3);}
+.mc-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;}
+.mc-stat{background:var(--surface);border-radius:4px;padding:4px 6px;}
+.mc-stat-val{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text-1);}
+.mc-stat-label{font-family:var(--mono);font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;}
+.mc-rate{font-family:var(--mono);font-size:10px;color:var(--text-2);margin-top:5px;padding-top:5px;border-top:1px solid var(--border);}
+/* YOUR LOCATION BADGE */
+.your-loc-badge{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 6px;border-radius:8px;background:var(--accent-soft);color:var(--accent);margin-left:4px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);overflow:hidden;}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:11px 18px;font-size:12px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:9000;transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.4,0,.2,1);pointer-events:none;display:flex;align-items:center;gap:8px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+</style>
+</head>
+<body>
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-row1">
+      <div class="topbar-title">Market Heat Map</div>
+      <div class="topbar-sub">CALIFORNIA · DISPENSARY DENSITY &amp; SLOT PRICING</div>
+      <div class="topbar-actions">
+        <button class="tb-btn" onclick="showToast('Exporting market heat data…','var(--accent)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
+      </div>
+    </div>
+  </div>
+  <!-- MARKET NAV -->
+  <div class="market-nav">
+    <div class="mn-tab active" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Heat Map</div>
+    <div class="mn-tab" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+    <div class="mn-tab" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+    <div class="mn-tab" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+    <div class="mn-tab" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+  </div>
+
+  <!-- MAP LAYOUT -->
+  <div class="map-layout">
+    <div class="map-main">
+      <div class="map-svg-wrap">
+        <svg id="map-svg" viewBox="0 0 700 520" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <!-- LEGEND -->
+      <div class="map-legend">
+        <div class="ml-title">Market tier · slot rate</div>
+        <div class="ml-row"><div class="ml-swatch" style="background:#e05a6a;opacity:0.8;"></div>Elite — $250–300/slot</div>
+        <div class="ml-row"><div class="ml-swatch" style="background:#d4900a;opacity:0.8;"></div>Hot — $200/slot</div>
+        <div class="ml-row"><div class="ml-swatch" style="background:#09A1A1;opacity:0.8;"></div>Competitive — $150/slot</div>
+        <div class="ml-row"><div class="ml-swatch" style="background:#5484A4;opacity:0.65;"></div>Standard — $100/slot</div>
+        <div class="ml-row" style="margin-top:4px;"><div style="width:14px;height:14px;border-radius:50%;border:2px solid #09A1A1;flex-shrink:0;"></div>Your location</div>
+      </div>
+      <!-- CONTROLS -->
+      <div class="map-controls">
+        <div class="mc-btn" onclick="showToast('Zoomed in','var(--accent)')">+</div>
+        <div class="mc-btn" onclick="showToast('Zoomed out','var(--accent)')">−</div>
+      </div>
+      <!-- TOOLTIP -->
+      <div class="map-tooltip" id="map-tooltip">
+        <div class="mt-name" id="tt-name">West Hollywood</div>
+        <div><span class="mt-tier" id="tt-tier">Elite</span></div>
+        <div class="mt-stat"><span>Dispensaries</span><span id="tt-count">38</span></div>
+        <div class="mt-stat"><span>Slot rate</span><span id="tt-rate">$250/slot</span></div>
+        <div class="mt-stat"><span>Your locations</span><span id="tt-yours">1</span></div>
+        <div class="mt-stat"><span>Rivals tracked</span><span id="tt-rivals">5</span></div>
+      </div>
+    </div>
+    <!-- SIDEBAR -->
+    <div class="map-sidebar">
+      <div class="ms-header">
+        <div class="ms-title">California Markets</div>
+        <div class="ms-sub">Click a market to see details</div>
+      </div>
+      <div class="ms-scroll" id="market-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="toast-dot" id="toast-dot"></div><span id="toast-msg"></span></div>
+
+<script>
+var MARKETS = [
+  {id:'weho',name:'West Hollywood',tier:'elite',rate:'$250',dispensaries:38,yours:1,rivals:5,cx:205,cy:295,r:22},
+  {id:'dtla',name:'Downtown LA',tier:'elite',rate:'$250',dispensaries:45,yours:2,rivals:4,cx:230,cy:305,r:24},
+  {id:'sf',name:'San Francisco',tier:'elite',rate:'$250',dispensaries:42,yours:1,rivals:3,cx:108,cy:115,r:22},
+  {id:'oakland',name:'Oakland',tier:'hot',rate:'$200',dispensaries:31,yours:1,rivals:3,cx:118,cy:135,r:19},
+  {id:'sddowntown',name:'San Diego',tier:'hot',rate:'$200',dispensaries:28,yours:1,rivals:2,cx:270,cy:420,r:18},
+  {id:'longbeach',name:'Long Beach',tier:'competitive',rate:'$150',dispensaries:22,yours:1,rivals:3,cx:240,cy:320,r:16},
+  {id:'sacramento',name:'Sacramento',tier:'competitive',rate:'$150',dispensaries:19,yours:1,rivals:2,cx:165,cy:145,r:15},
+  {id:'anaheim',name:'Anaheim',tier:'competitive',rate:'$150',dispensaries:17,yours:0,rivals:2,cx:258,cy:308,r:14},
+  {id:'riverside',name:'Riverside/Corona',tier:'standard',rate:'$100',dispensaries:12,yours:1,rivals:1,cx:285,cy:305,r:13},
+  {id:'fresno',name:'Fresno',tier:'standard',rate:'$100',dispensaries:9,yours:0,rivals:0,cx:195,cy:225,r:11},
+  {id:'bakersfield',name:'Bakersfield',tier:'standard',rate:'$100',dispensaries:7,yours:0,rivals:0,cx:205,cy:270,r:10},
+  {id:'stockton',name:'Stockton',tier:'standard',rate:'$100',dispensaries:8,yours:0,rivals:0,cx:148,cy:168,r:10},
+];
+
+var TIER_COLORS = {elite:'#e05a6a',hot:'#d4900a',competitive:'#09A1A1',standard:'#5484A4'};
+var TIER_LABELS = {elite:'Elite',hot:'Hot',competitive:'Competitive',standard:'Standard'};
+var TIER_BADGE = {elite:'tier-elite',hot:'tier-hot',competitive:'tier-competitive',standard:'tier-standard'};
+var selectedMarket = null;
+
+function renderMap(){
+  var svg = document.getElementById('map-svg');
+  // CA outline (simplified)
+  var caPath = 'M 90 30 L 130 28 L 145 55 L 160 60 L 175 50 L 195 55 L 220 45 L 240 52 L 260 48 L 290 58 L 310 80 L 320 110 L 315 140 L 310 180 L 320 220 L 325 270 L 330 310 L 320 350 L 305 390 L 290 430 L 270 460 L 245 480 L 210 490 L 180 480 L 160 460 L 150 440 L 90 400 L 70 370 L 60 330 L 55 280 L 60 230 L 65 180 L 70 140 L 75 100 L 80 60 Z';
+  var html = '';
+  // State background
+  html += '<path d="'+caPath+'" fill="rgba(84,132,164,0.06)" stroke="var(--border-2)" stroke-width="1.5"/>';
+  // Market circles
+  MARKETS.forEach(function(m){
+    var col = TIER_COLORS[m.tier];
+    var hasYours = m.yours > 0;
+    html += '<circle cx="'+m.cx+'" cy="'+m.cy+'" r="'+m.r+'" fill="'+col+'" fill-opacity="0.18" stroke="'+col+'" stroke-width="1.5" style="cursor:pointer;" onclick="selectMarket(\''+m.id+'\')" onmouseenter="showTooltip(event,\''+m.id+'\')" onmouseleave="hideTooltip()"/>';
+    // Population density dots
+    var dotCount = Math.min(Math.floor(m.dispensaries/5), 8);
+    for(var i=0;i<dotCount;i++){
+      var angle = (i/dotCount)*Math.PI*2;
+      var dr = m.r * 0.55;
+      var dx = m.cx + Math.cos(angle)*dr;
+      var dy = m.cy + Math.sin(angle)*dr;
+      html += '<circle cx="'+dx.toFixed(1)+'" cy="'+dy.toFixed(1)+'" r="2" fill="'+col+'" fill-opacity="0.5"/>';
+    }
+    // Center label
+    html += '<text x="'+m.cx+'" y="'+(m.cy+1)+'" text-anchor="middle" dominant-baseline="middle" font-family="JetBrains Mono,monospace" font-size="8" font-weight="700" fill="'+col+'" fill-opacity="0.9" style="pointer-events:none;">'+m.dispensaries+'</text>';
+    // Your location ring
+    if(hasYours){
+      html += '<circle cx="'+m.cx+'" cy="'+m.cy+'" r="'+(m.r+5)+'" fill="none" stroke="#09A1A1" stroke-width="1.5" stroke-dasharray="3 2" style="pointer-events:none;"/>';
+    }
+  });
+  // City labels
+  MARKETS.forEach(function(m){
+    html += '<text x="'+m.cx+'" y="'+(m.cy+m.r+10)+'" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-size="9" font-weight="600" fill="currentColor" fill-opacity="0.55" style="pointer-events:none;">'+m.name.split('/')[0]+'</text>';
+  });
+  svg.innerHTML = html;
+}
+
+function renderMarketList(){
+  var sorted = MARKETS.slice().sort(function(a,b){
+    var order={elite:0,hot:1,competitive:2,standard:3};
+    return order[a.tier]-order[b.tier] || b.dispensaries-a.dispensaries;
+  });
+  var html='';
+  sorted.forEach(function(m){
+    var isSelected = m.id===selectedMarket;
+    html+='<div class="market-card'+(isSelected?' selected':'')+'" onclick="selectMarket(\''+m.id+'\')">';
+    html+='<div class="mc-top"><div class="mc-name">'+m.name+(m.yours>0?'<span class="your-loc-badge">'+m.yours+' loc</span>':'')+'</div>';
+    html+='<span class="tier-badge '+TIER_BADGE[m.tier]+'">'+TIER_LABELS[m.tier]+'</span></div>';
+    html+='<div class="mc-stats">';
+    html+='<div class="mc-stat"><div class="mc-stat-val">'+m.dispensaries+'</div><div class="mc-stat-label">Dispensaries</div></div>';
+    html+='<div class="mc-stat"><div class="mc-stat-val">'+m.rivals+'</div><div class="mc-stat-label">Rivals tracked</div></div>';
+    html+='<div class="mc-stat"><div class="mc-stat-val">'+m.rate+'</div><div class="mc-stat-label">Slot rate</div></div>';
+    html+='</div>';
+    html+='<div class="mc-rate">Slot rate: '+m.rate+'/slot &middot; '+TIER_LABELS[m.tier]+' tier</div>';
+    html+='</div>';
+  });
+  document.getElementById('market-list').innerHTML=html;
+}
+
+function selectMarket(id){
+  selectedMarket=id;
+  var m=MARKETS.find(function(x){return x.id===id;});
+  renderMarketList();
+  showToast(m.name+': '+m.dispensaries+' dispensaries · '+m.rate+'/slot','var(--accent)');
+}
+
+function showTooltip(event, id){
+  var m=MARKETS.find(function(x){return x.id===id;});
+  var tt=document.getElementById('map-tooltip');
+  document.getElementById('tt-name').textContent=m.name;
+  var tierEl=document.getElementById('tt-tier');
+  tierEl.textContent=TIER_LABELS[m.tier]+' · '+m.rate+'/slot';
+  tierEl.style.background=TIER_COLORS[m.tier]+'22';
+  tierEl.style.color=TIER_COLORS[m.tier];
+  document.getElementById('tt-count').textContent=m.dispensaries;
+  document.getElementById('tt-rate').textContent=m.rate+'/slot';
+  document.getElementById('tt-yours').textContent=m.yours||'None';
+  document.getElementById('tt-rivals').textContent=m.rivals;
+  tt.style.display='block';
+  tt.style.left=(event.offsetX+16)+'px';
+  tt.style.top=(event.offsetY-10)+'px';
+}
+function hideTooltip(){ document.getElementById('map-tooltip').style.display='none'; }
+
+function go(url){window.location.href=url;}
+function toggleTheme(){var t=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light';document.documentElement.setAttribute('data-theme',t);}
+var toastTimer;
+function showToast(msg,color){clearTimeout(toastTimer);var t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;document.getElementById('toast-dot').style.background=color;t.classList.add('show');toastTimer=setTimeout(function(){t.classList.remove('show');},3200);}
+
+renderMap();
+renderMarketList();
+</script>
+</body>
+</html>

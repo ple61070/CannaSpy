@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Competitor Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+
+[data-theme="light"]{
+  --bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);
+  --sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);--glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);--surface:rgba(255,255,255,0.97);--glass:rgba(255,255,255,0.88);--surface-solid:#ffffff;--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;
+  --border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);--border-hot:rgba(9,161,161,0.38);
+  --text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;
+  --accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);--accent-hover:#078484;
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);
+  --slate:#5484A4;--danger:#e05a6a;--positive:#09A1A1;
+  --card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);
+  --card-shadow-lg:0 8px 40px rgba(30,60,80,0.13);
+  --btn-shadow:0 4px 18px rgba(9,161,161,0.32);
+  --noise-opacity:0.022;
+}
+[data-theme="dark"]{
+  --bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);
+  --sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);--glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);--surface:rgba(16,28,40,0.99);--surface-solid:#14202a;--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;
+  --border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);--border-hot:rgba(11,184,184,0.5);
+  --text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);--accent-hover:#0dcfcf;
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);
+  --slate:#acc0d3;--danger:#e05a6a;--positive:#0bb8b8;
+  --card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);
+  --card-shadow-lg:0 12px 50px rgba(0,0,0,0.38);
+  --btn-shadow:0 4px 20px rgba(9,161,161,0.34);
+  --noise-opacity:0.04;
+}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--tr:all 0.2s cubic-bezier(.4,0,.2,1);--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise-opacity);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;transition:background 0.4s,color 0.3s;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);background-attachment:fixed;}
+
+/* ══ NAV SIDEBAR ══ */
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.nav-link.locked{opacity:0.45;pointer-events:none;}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+
+/* ══ MAIN CONTENT ══ */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+
+/* ══ RIVAL HEADER ══ */
+.rival-header{background:var(--surface);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);flex-shrink:0;padding:0 24px;}
+.rival-header-top{display:flex;align-items:center;gap:16px;padding:14px 0 12px;}
+.back-btn{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--accent);cursor:pointer;transition:var(--transition);flex-shrink:0;}
+.back-btn:hover{opacity:0.75;}
+.back-btn svg{width:12px;height:12px;}
+.rival-id{flex:1;min-width:0;}
+.rival-name-row{display:flex;align-items:center;gap:10px;margin-bottom:3px;}
+.rival-name{font-size:18px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.status-badge{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:3px 9px;border-radius:20px;}
+.sb-blocked{background:rgba(211,150,166,0.15);color:var(--rose);border:1px solid rgba(211,150,166,0.3);}
+.sb-tracking{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(9,161,161,0.2);}
+.rival-meta{font-family:var(--mono);font-size:10px;color:var(--text-3);letter-spacing:0.04em;}
+.block-strip-inline{display:flex;align-items:center;gap:7px;background:rgba(211,150,166,0.08);border:1px solid rgba(211,150,166,0.18);border-radius:20px;padding:4px 12px;flex-shrink:0;}
+.bsi-dot{width:6px;height:6px;border-radius:50%;background:var(--rose);flex-shrink:0;}
+.bsi-text{font-family:var(--mono);font-size:9px;font-weight:600;color:var(--rose);letter-spacing:0.06em;}
+.rival-stats-strip{display:flex;gap:6px;padding-bottom:14px;flex-wrap:wrap;}
+.rss{background:var(--surface-3);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 14px;flex-shrink:0;text-align:center;}
+.rss-n{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--text-1);line-height:1;font-variant-numeric:tabular-nums;}
+.rss-label{font-family:var(--mono);font-size:8px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;}
+.rss-n.c-danger{color:var(--danger);}
+.rss-n.c-teal{color:var(--accent);}
+.rss-n.c-rose{color:var(--rose);}
+.rss-n.c-warm{color:var(--warm);}
+
+/* ══ TABS ══ */
+.tabs-bar{display:flex;gap:0;border-bottom:2px solid var(--border);padding:0 24px;background:var(--surface);flex-shrink:0;}
+.tab{padding:10px 18px;font-size:12px;font-weight:600;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:var(--transition);white-space:nowrap;display:flex;align-items:center;gap:6px;user-select:none;}
+.tab:hover{color:var(--text-1);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-count{font-family:var(--mono);font-size:9px;background:var(--surface-3);border:1px solid var(--border);border-radius:10px;padding:1px 6px;color:var(--text-3);}
+.tab.active .tab-count{background:var(--accent-soft);border-color:rgba(9,161,161,0.2);color:var(--accent);}
+
+/* ══ TAB CONTENT AREA ══ */
+.tab-content{flex:1;overflow:hidden;display:flex;min-height:0;}
+.tab-pane{display:none;width:100%;height:100%;}
+.tab-pane.active{display:flex;}
+
+/* ══ SHARED BRANDS TAB ══ */
+.brands-list{width:340px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;height:100%;background:var(--surface);}
+.brands-list-head{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.blh-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px;}
+.blh-summary{display:flex;gap:5px;}
+.blh-chip{font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:12px;font-weight:500;}
+.blh-chip-shared{background:var(--accent-soft);color:var(--accent);}
+.blh-chip-excl{background:var(--surface-3);color:var(--text-2);}
+.blh-chip-theirs{background:var(--warm-soft);color:var(--warm);}
+.brands-scroll{flex:1;overflow-y:auto;min-height:0;}
+.brands-scroll::-webkit-scrollbar{width:3px;}
+.brands-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+.brand-divider{padding:6px 16px 3px;font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);background:var(--surface-2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;}
+.brand-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.14s;position:relative;user-select:none;}
+.brand-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent;transition:background 0.14s;}
+.brand-row:hover{background:var(--surface-2);}
+.brand-row:hover::before{background:var(--accent);}
+.brand-row.selected{background:var(--accent-soft);}
+.brand-row.selected::before{background:var(--accent);}
+.brand-row.alert-row{background:rgba(224,90,106,0.04);}
+.brand-row.alert-row::before{background:var(--danger);}
+.brand-row.alert-row.selected{background:var(--danger-soft);}
+.brand-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono);font-size:10px;font-weight:700;}
+.bi-shared{background:var(--accent-soft);color:var(--accent);}
+.bi-alert{background:var(--danger-soft);color:var(--danger);}
+.bi-excl{background:var(--surface-3);color:var(--text-2);}
+.bi-theirs{background:var(--warm-soft);color:var(--warm);}
+.brand-body{flex:1;min-width:0;}
+.brand-name{font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:2px;}
+.brand-sub{font-family:var(--mono);font-size:10px;color:var(--text-2);}
+.brand-gap{font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0;text-align:right;}
+.gap-danger{color:var(--danger);}
+.gap-teal{color:var(--accent);}
+.gap-even{color:var(--text-3);}
+.gap-new{color:var(--warm);}
+.alert-indicator{width:7px;height:7px;border-radius:50%;background:var(--danger);flex-shrink:0;}
+
+/* ══ BRAND DETAIL PANEL ══ */
+.brand-detail{flex:1;display:flex;flex-direction:column;height:100%;background:var(--surface-2);min-width:0;}
+.brand-detail-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-3);}
+.bde-icon{width:48px;height:48px;border-radius:14px;background:var(--surface-3);display:flex;align-items:center;justify-content:center;}
+.bde-label{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;}
+.brand-detail-head{padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);}
+.bdh-brand{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:4px;}
+.bdh-title{font-size:15px;font-weight:700;color:var(--text-1);letter-spacing:-0.01em;margin-bottom:8px;}
+.bdh-stats{display:flex;gap:6px;}
+.bdh-stat{background:var(--surface-3);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 12px;text-align:center;}
+.bdhs-n{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text-1);line-height:1;font-variant-numeric:tabular-nums;}
+.bdhs-label{font-family:var(--mono);font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-top:2px;}
+.brand-detail-scroll{flex:1;overflow-y:auto;padding:16px 20px;min-height:0;}
+.brand-detail-scroll::-webkit-scrollbar{width:3px;}
+.brand-detail-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+.section-label{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;}
+.sku-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:18px;}
+.sku-table th{font-family:var(--mono);font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);padding:5px 8px;border-bottom:2px solid var(--border);text-align:left;}
+.sku-table td{padding:8px;border-bottom:1px solid var(--border);color:var(--text-1);vertical-align:middle;}
+.sku-table tr:last-child td{border-bottom:none;}
+.sku-table tr:hover td{background:var(--surface-3);}
+.price-you{font-family:var(--mono);font-size:11px;color:var(--text-1);}
+.price-them{font-family:var(--mono);font-size:11px;font-weight:700;}
+.price-them.lower{color:var(--danger);}
+.price-them.higher{color:var(--accent);}
+.price-them.even{color:var(--text-3);}
+.gap-cell{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;display:inline-block;}
+.gap-negative{background:rgba(224,90,106,0.12);color:var(--danger);}
+.gap-positive{background:rgba(9,161,161,0.10);color:var(--accent);}
+.gap-zero{background:var(--surface-3);color:var(--text-3);}
+.brand-detail-footer{padding:12px 20px;border-top:1px solid var(--border);flex-shrink:0;background:var(--surface);display:flex;gap:8px;}
+.bd-btn{flex:1;padding:9px 14px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);text-align:center;}
+.bd-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.bd-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:var(--btn-shadow);}
+.bd-btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);}
+
+/* ══ CATEGORY TAB ══ */
+.category-pane{padding:20px 24px;overflow-y:auto;width:100%;}
+.category-pane::-webkit-scrollbar{width:4px;}
+.category-pane::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+.cat-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--card-shadow);margin-bottom:20px;}
+.cat-table{width:100%;border-collapse:collapse;}
+.cat-table th{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);padding:10px 16px;border-bottom:2px solid var(--border);text-align:left;background:var(--surface-2);}
+.cat-table th.right{text-align:right;}
+.cat-table td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.cat-table tr:last-child td{border-bottom:none;}
+.cat-table tr:hover td{background:var(--surface-2);}
+.cat-name{font-size:13px;font-weight:700;color:var(--text-1);}
+.cat-you-cell,.cat-them-cell{font-family:var(--mono);font-size:11px;}
+.cat-skus{color:var(--text-1);font-weight:600;}
+.cat-range{color:var(--text-3);font-size:10px;margin-top:1px;}
+.cat-shared-cell{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);text-align:right;}
+.cat-bar-cell{width:120px;}
+.cat-mini-bars{display:flex;flex-direction:column;gap:3px;}
+.cat-mini-bar{height:5px;border-radius:3px;transition:width 0.5s ease;}
+.cat-mini-label{font-family:var(--mono);font-size:8px;color:var(--text-3);margin-bottom:1px;}
+
+/* ══ BRAND GAPS TAB ══ */
+.gaps-pane{padding:20px 24px;overflow-y:auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-content:start;}
+.gaps-pane::-webkit-scrollbar{width:4px;}
+.gaps-pane::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+.gap-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--card-shadow);}
+.gap-card-head{padding:14px 16px 10px;border-bottom:1px solid var(--border);background:var(--surface-2);}
+.gch-badge{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:3px 9px;border-radius:12px;display:inline-block;margin-bottom:6px;}
+.badge-excl{background:var(--accent-soft);color:var(--accent);}
+.badge-watch{background:var(--warm-soft);color:var(--warm);}
+.gch-title{font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:3px;}
+.gch-sub{font-size:11px;color:var(--text-2);}
+.gap-brand-list{padding:8px 0;}
+.gap-brand-item{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--border);transition:background 0.12s;cursor:default;}
+.gap-brand-item:last-child{border-bottom:none;}
+.gap-brand-item:hover{background:var(--surface-2);}
+.gbi-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.gbi-name{flex:1;font-size:12px;font-weight:600;color:var(--text-1);}
+.gbi-detail{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+
+/* ══ ALERTS TAB ══ */
+.alerts-pane{padding:20px 24px;overflow-y:auto;width:100%;}
+.alerts-pane::-webkit-scrollbar{width:4px;}
+.alerts-pane::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+.alert-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;box-shadow:var(--card-shadow);cursor:pointer;transition:var(--transition);}
+.alert-card:hover{border-color:var(--accent);box-shadow:var(--card-shadow-lg);}
+.alert-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;}
+.ac-badge{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:2px 8px;border-radius:4px;}
+.ac-shared{background:var(--accent-soft);color:var(--accent);}
+.ac-promo{background:var(--warm-soft);color:var(--warm);}
+.ac-catalog{background:var(--surface-3);color:var(--text-2);}
+.ac-time{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.ac-title{font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:4px;}
+.ac-sub{font-size:11px;color:var(--text-2);}
+.ac-stats{display:flex;gap:6px;margin-top:8px;}
+.ac-stat{background:var(--surface-3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;text-align:center;}
+.ac-stat-n{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text-1);}
+.ac-stat-label{font-family:var(--mono);font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-top:1px;}
+
+/* ══ TOAST ══ */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surface-solid);border:1px solid var(--border-2);border-radius:24px;padding:9px 18px;font-size:12px;font-weight:500;color:var(--text-1);box-shadow:var(--card-shadow-lg);z-index:9998;display:flex;align-items:center;gap:7px;opacity:0;pointer-events:none;transition:all 0.28s cubic-bezier(.2,.8,.2,1);white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* ══ MODAL ══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9990;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.22s;}
+.modal-overlay.show{opacity:1;pointer-events:all;}
+.modal{background:var(--surface-solid);border:1px solid var(--border-2);border-radius:var(--r);padding:26px;width:400px;max-width:90vw;box-shadow:var(--card-shadow-lg);transform:scale(0.94) translateY(10px);transition:transform 0.26s cubic-bezier(.2,.8,.2,1);}
+.modal-overlay.show .modal{transform:scale(1) translateY(0);}
+.modal-title{font-size:15px;font-weight:700;color:var(--text-1);margin-bottom:8px;}
+.modal-body{font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:18px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+.modal-btn{padding:8px 16px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.modal-btn:hover{border-color:var(--accent);color:var(--accent);}
+.modal-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.modal-btn.danger{background:var(--danger);border-color:var(--danger);color:#fff;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.brand-row{animation:fadeUp 0.2s ease both;}
+.alert-card{animation:fadeUp 0.2s ease both;}
+</style>
+</head>
+<body>
+
+<!-- NAV SIDEBAR -->
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- RIVAL HEADER -->
+  <div class="rival-header">
+    <div class="rival-header-top">
+      <div class="back-btn" onclick="window.location.href='cannaspy_s05_FINAL.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        WeHo Flagship
+      </div>
+      <div class="rival-id">
+        <div class="rival-name-row">
+          <div class="rival-name">STIIIZY West Hollywood</div>
+          <div class="status-badge sb-blocked">Blocked</div>
+        </div>
+        <div class="rival-meta">1.2 mi · Last updated 47 min ago · Menu provider · 1,747 SKUs</div>
+      </div>
+      <div class="block-strip-inline">
+        <div class="bsi-dot"></div>
+        <div class="bsi-text">Blocked 47 days · cannot access CannaSpy</div>
+      </div>
+    </div>
+    <div class="rival-stats-strip">
+      <div class="rss"><div class="rss-n c-danger">3</div><div class="rss-label">Shared brands</div></div>
+      <div class="rss"><div class="rss-n">8</div><div class="rss-label">Your exclusives</div></div>
+      <div class="rss"><div class="rss-n c-warm">12</div><div class="rss-label">Their exclusives</div></div>
+      <div class="rss"><div class="rss-n c-danger">12</div><div class="rss-label">Changes today</div></div>
+      <div class="rss"><div class="rss-n">1,747</div><div class="rss-label">Total SKUs</div></div>
+      <div class="rss"><div class="rss-n c-teal">4</div><div class="rss-label">Active alerts</div></div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs-bar">
+    <div class="tab active" onclick="switchTab('shared',this)">Shared Brands <span class="tab-count">3</span></div>
+    <div class="tab" onclick="switchTab('category',this)">Category Overview</div>
+    <div class="tab" onclick="switchTab('gaps',this)">Brand Gaps <span class="tab-count">20</span></div>
+    <div class="tab" onclick="switchTab('alerts',this)">Recent Alerts <span class="tab-count">4</span></div>
+  </div>
+
+  <!-- TAB CONTENT -->
+  <div class="tab-content">
+
+    <!-- ── SHARED BRANDS ── -->
+    <div class="tab-pane active" id="pane-shared">
+      <div class="brands-list">
+        <div class="brands-list-head">
+          <div class="blh-label">Brands both dispensaries carry</div>
+          <div class="blh-summary">
+            <span class="blh-chip blh-chip-shared">3 shared</span>
+            <span class="blh-chip blh-chip-excl">8 your exclusives</span>
+            <span class="blh-chip blh-chip-theirs">12 their exclusives</span>
+          </div>
+        </div>
+        <div class="brands-scroll" id="brandsList"></div>
+      </div>
+      <div class="brand-detail" id="brandDetail">
+        <div class="brand-detail-empty" id="brandDetailEmpty">
+          <div class="bde-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" color="var(--text-3)"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div>
+          <div class="bde-label">Select a brand to compare SKUs</div>
+        </div>
+        <div id="brandDetailContent" style="display:none;flex-direction:column;height:100%;">
+          <div class="brand-detail-head">
+            <div class="bdh-brand" id="detBrand"></div>
+            <div class="bdh-title" id="detTitle"></div>
+            <div class="bdh-stats" id="detStats"></div>
+          </div>
+          <div class="brand-detail-scroll" id="detScroll"></div>
+          <div class="brand-detail-footer" id="detFooter"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CATEGORY OVERVIEW ── -->
+    <div class="tab-pane" id="pane-category">
+      <div class="category-pane">
+        <div class="cat-table-wrap">
+          <table class="cat-table">
+            <thead>
+              <tr>
+                <th style="width:110px;">Category</th>
+                <th>Your menu</th>
+                <th>Their menu</th>
+                <th>Visual</th>
+                <th class="right">Shared brands</th>
+              </tr>
+            </thead>
+            <tbody id="catTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BRAND GAPS ── -->
+    <div class="tab-pane" id="pane-gaps">
+      <div class="gaps-pane" id="gapsPaneContent"></div>
+    </div>
+
+    <!-- ── RECENT ALERTS ── -->
+    <div class="tab-pane" id="pane-alerts">
+      <div class="alerts-pane" id="alertsPaneContent"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><div class="toast-dot" id="toastDot"></div><span id="toastMsg"></span></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<script>
+/* ══ DATA ══ */
+const RIVAL = {
+  name: 'STIIIZY West Hollywood',
+  status: 'blocked',
+  blockedDays: 47,
+  distance: '1.2 mi',
+  totalSkus: 1747,
+  changesToday: 12,
+};
+
+const SHARED_BRANDS = [
+  {
+    key: 'ff', name: 'Friendly Farms', hasAlert: true, hasPromo: true, promoType: 'flash',
+    yourSkus: 3, theirSkus: 3,
+    yourRange: '$50\u2013$90', theirRange: '$42\u2013$82',
+    gapLabel: '\u2212$8', gapClass: 'gap-danger',
+    sub: '3 SKUs each · you’re higher on all · ⚩ flash sale active',
+    skus: [
+      { product: 'FF 3.5g Flower', yours: '$50', theirs: '$42', gap: '\u2212$8', dir: 'negative', promo:{ sale:'$36', type:'flash', label:'Weekend Flash Sale', ends:'Sun', effectiveGap:'\u2212$14' } },
+      { product: 'FF 7g Flower',   yours: '$90', theirs: '$82', gap: '\u2212$8', dir: 'negative' },
+      { product: 'FF 1g Vape',     yours: '$55', theirs: '$55', gap: 'Even',    dir: 'zero' },
+    ],
+  },
+  {
+    key: 'jeeter', name: 'Jeeter', hasAlert: false,
+    yourSkus: 5, theirSkus: 8,
+    yourRange: '$12\u2013$55', theirRange: '$12\u2013$52',
+    gapLabel: 'Even', gapClass: 'gap-even',
+    sub: '5 your SKUs \u00b7 8 theirs \u00b7 pricing at parity',
+    skus: [
+      { product: 'Jeeter Juice 1g',       yours: '$42', theirs: '$42', gap: 'Even',   dir: 'zero' },
+      { product: 'Jeeter Baby 0.5g',       yours: '$18', theirs: '$18', gap: 'Even',   dir: 'zero' },
+      { product: 'Jeeter Baby 5pk',        yours: '$55', theirs: '$52', gap: '+$3',    dir: 'positive' },
+      { product: 'Jeeter Infused Pre-Roll', yours: '$28', theirs: '$28', gap: 'Even',  dir: 'zero' },
+      { product: 'Jeeter XL Pre-Roll',     yours: '$38', theirs: '$35', gap: '+$3',    dir: 'positive' },
+    ],
+  },
+  {
+    key: 'kanha', name: 'Kanha', hasAlert: false,
+    yourSkus: 4, theirSkus: 4,
+    yourRange: '$18\u2013$35', theirRange: '$18\u2013$32',
+    gapLabel: '+$3', gapClass: 'gap-teal',
+    sub: '4 SKUs each \u00b7 you\u2019re cheaper on edibles',
+    skus: [
+      { product: 'Kanha Gummies 100mg', yours: '$22', theirs: '$22', gap: 'Even', dir: 'zero' },
+      { product: 'Kanha Gummies 200mg', yours: '$35', theirs: '$32', gap: '+$3',  dir: 'positive' },
+      { product: 'Kanha Nano 100mg',    yours: '$28', theirs: '$28', gap: 'Even', dir: 'zero' },
+      { product: 'Kanha Belts 100mg',   yours: '$18', theirs: '$18', gap: 'Even', dir: 'zero' },
+    ],
+  },
+];
+
+const CATEGORIES = [
+  { cat: 'Flower',       youSkus: 45, youRange: '$18\u2013$80', themSkus: 62, themRange: '$15\u2013$75', shared: 8,  youPct: 73, themPct: 100 },
+  { cat: 'Vapes',        youSkus: 28, youRange: '$22\u2013$60', themSkus: 41, themRange: '$18\u2013$58', shared: 4,  youPct: 68, themPct: 100 },
+  { cat: 'Edibles',      youSkus: 18, youRange: '$12\u2013$55', themSkus: 22, themRange: '$12\u2013$50', shared: 3,  youPct: 82, themPct: 100 },
+  { cat: 'Concentrates', youSkus: 12, youRange: '$25\u2013$80', themSkus: 18, themRange: '$22\u2013$75', shared: 2,  youPct: 67, themPct: 100 },
+  { cat: 'Pre-rolls',    youSkus: 22, youRange: '$8\u2013$45',  themSkus: 31, themRange: '$8\u2013$42',  shared: 5,  youPct: 71, themPct: 100 },
+  { cat: 'Accessories',  youSkus: 8,  youRange: '$5\u2013$30',  themSkus: 14, themRange: '$5\u2013$35',  shared: 0,  youPct: 57, themPct: 100 },
+];
+
+const YOUR_EXCLUSIVES = [
+  { name: 'Maven', detail: '6 SKUs \u00b7 Flower + Vapes', dot: 'var(--accent)' },
+  { name: 'Raw Garden', detail: '4 SKUs \u00b7 Vapes', dot: 'var(--accent)' },
+  { name: 'Gold Flora', detail: '3 SKUs \u00b7 Flower', dot: 'var(--accent)' },
+  { name: 'CBX', detail: '4 SKUs \u00b7 Flower', dot: 'var(--accent)' },
+  { name: 'Zkittlez', detail: '2 SKUs \u00b7 Flower', dot: 'var(--accent)' },
+  { name: 'Heavy Hitters', detail: '3 SKUs \u00b7 Vapes', dot: 'var(--accent)' },
+  { name: 'Alien Labs', detail: '3 SKUs \u00b7 Flower + Conc.', dot: 'var(--accent)' },
+  { name: 'Stiiizy Pods', detail: '8 SKUs \u00b7 Vapes', dot: 'var(--accent)' },
+];
+
+const THEIR_EXCLUSIVES = [
+  { name: 'Stiiizy Flower', detail: '18 SKUs \u00b7 Flower', dot: 'var(--warm)' },
+  { name: 'Stiiizy Edibles', detail: '8 SKUs \u00b7 Edibles', dot: 'var(--warm)' },
+  { name: 'Pac-Man Extracts', detail: '6 SKUs \u00b7 Concentrates', dot: 'var(--warm)' },
+  { name: 'Connected', detail: '5 SKUs \u00b7 Flower', dot: 'var(--warm)' },
+  { name: 'Dosist', detail: '4 SKUs \u00b7 Vapes', dot: 'var(--warm)' },
+  { name: 'Cannatique', detail: '4 SKUs \u00b7 Flower', dot: 'var(--warm)' },
+  { name: 'Lowell Herb Co.', detail: '4 SKUs \u00b7 Pre-rolls', dot: 'var(--warm)' },
+  { name: 'West Coast Cure', detail: '3 SKUs \u00b7 Concentrates', dot: 'var(--warm)' },
+  { name: 'Moxie', detail: '3 SKUs \u00b7 Concentrates', dot: 'var(--warm)' },
+  { name: 'Calyx Peaks', detail: '2 SKUs \u00b7 Concentrates', dot: 'var(--warm)' },
+  { name: 'Camino', detail: '4 SKUs \u00b7 Edibles', dot: 'var(--warm)' },
+  { name: 'Select', detail: '3 SKUs \u00b7 Vapes', dot: 'var(--warm)' },
+];
+
+const ALERTS = [
+  {
+    badge: 'SHARED BRAND ALERT', badgeClass: 'ac-shared',
+    title: 'Friendly Farms 3.5g dropped \u2212$8',
+    sub: 'You both carry this SKU \u2014 you are now $8 above their price',
+    time: '1h ago', urgent: true,
+    stats: [
+      { n: '$50', label: 'Your price' },
+      { n: '$42', label: 'Their price', color: 'var(--danger)' },
+      { n: '\u2212$8', label: "You're higher", color: 'var(--danger)' },
+    ],
+  },
+  {
+    badge: 'SHARED BRAND ALERT', badgeClass: 'ac-shared',
+    title: 'Jeeter Baby 5pk raised +$3 \u2014 opportunity',
+    sub: 'You both carry this SKU \u2014 you are now $3 cheaper',
+    time: '3h ago', urgent: false,
+    stats: [
+      { n: '$55', label: 'Your price' },
+      { n: '$52', label: 'Their price', color: 'var(--accent)' },
+      { n: '+$3', label: "You're cheaper", color: 'var(--accent)' },
+    ],
+  },
+  {
+    badge: 'CATALOG ALERT', badgeClass: 'ac-catalog',
+    title: '6 new Concentrates added overnight',
+    sub: 'None from brands you carry \u2014 watch list only',
+    time: '6h ago', urgent: false,
+    stats: [
+      { n: '+6', label: 'SKUs added' },
+      { n: '0', label: 'Shared brands' },
+    ],
+  },
+  {
+    badge: 'PROMO ALERT', badgeClass: 'ac-promo',
+    title: 'Buy 2 get 1 on all STIIIZY-brand vapes',
+    sub: 'Own-brand promotion only \u2014 does not affect your shared brands',
+    time: 'Yesterday', urgent: false,
+    stats: [
+      { n: 'BOGO', label: 'Promo type' },
+      { n: 'None', label: 'Shared brands' },
+    ],
+  },
+];
+
+/* ══ STATE ══ */
+let selectedBrand = null;
+
+/* ══ INIT ══ */
+function init() {
+  renderBrandsList();
+  renderCategoryTable();
+  renderGapsPane();
+  renderAlertsPane();
+  selectBrand('ff'); // open Friendly Farms by default — has active alert
+}
+
+/* ══ BRANDS LIST ══ */
+function renderBrandsList() {
+  var html = '';
+  html += '<div class="brand-divider">\u26a0 Alert \u2014 action needed</div>';
+  SHARED_BRANDS.filter(function(b){ return b.hasAlert; }).forEach(function(b, i) {
+    html += renderBrandRow(b, i, true);
+  });
+  html += '<div class="brand-divider">Shared brands \u2014 no active alert</div>';
+  SHARED_BRANDS.filter(function(b){ return !b.hasAlert; }).forEach(function(b, i) {
+    html += renderBrandRow(b, i, false);
+  });
+  document.getElementById('brandsList').innerHTML = html;
+}
+
+function renderBrandRow(b, i, isAlert) {
+  var selected = selectedBrand === b.key;
+  var rowClass = 'brand-row' + (isAlert ? ' alert-row' : '') + (selected ? ' selected' : '');
+  var iconClass = isAlert ? 'bi-alert' : 'bi-shared';
+  var initials = b.name.split(' ').map(function(w){ return w[0]; }).join('').substring(0,2);
+  return '<div class="' + rowClass + '" style="animation-delay:' + (i*0.04) + 's" onclick="selectBrand(\'' + b.key + '\')">' +
+    (isAlert ? '<div class="alert-indicator"></div>' : '<div style="width:7px;flex-shrink:0;"></div>') +
+    '<div class="brand-icon ' + iconClass + '">' + initials + '</div>' +
+    '<div class="brand-body">' +
+      '<div class="brand-name">' + b.name + '</div>' +
+      '<div class="brand-sub">' + b.sub + '</div>' +
+    '</div>' +
+    '<div class="brand-gap ' + b.gapClass + '">' + b.gapLabel + '</div>' +
+    '</div>';
+}
+
+/* ══ BRAND DETAIL ══ */
+function selectBrand(key) {
+  selectedBrand = key;
+  var b = SHARED_BRANDS.find(function(x){ return x.key === key; });
+  if (!b) return;
+
+  renderBrandsList();
+
+  document.getElementById('brandDetailEmpty').style.display = 'none';
+  var content = document.getElementById('brandDetailContent');
+  content.style.display = 'flex';
+
+  document.getElementById('detBrand').textContent = 'SHARED BRAND \u2014 STIIIZY WEST HOLLYWOOD';
+  document.getElementById('detTitle').textContent = b.name;
+
+  var statsHtml = '';
+  statsHtml += '<div class="bdh-stat"><div class="bdhs-n">' + b.yourSkus + '</div><div class="bdhs-label">Your SKUs</div></div>';
+  statsHtml += '<div class="bdh-stat"><div class="bdhs-n">' + b.theirSkus + '</div><div class="bdhs-label">Their SKUs</div></div>';
+  statsHtml += '<div class="bdh-stat"><div class="bdhs-n">' + b.yourRange + '</div><div class="bdhs-label">Your range</div></div>';
+  statsHtml += '<div class="bdh-stat"><div class="bdhs-n" style="color:' + (b.gapClass === 'gap-danger' ? 'var(--danger)' : b.gapClass === 'gap-teal' ? 'var(--accent)' : 'var(--text-3)') + '">' + b.theirRange + '</div><div class="bdhs-label">Their range</div></div>';
+  document.getElementById('detStats').innerHTML = statsHtml;
+
+  var scrollHtml = '';
+
+  // Alert banner if applicable
+  if (b.hasAlert) {
+    scrollHtml += '<div style="background:var(--danger-soft);border:1px solid rgba(224,90,106,0.2);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:14px;">';
+    scrollHtml += '<div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--danger);margin-bottom:3px;">SHARED BRAND ALERT \u2014 1H AGO</div>';
+    scrollHtml += '<div style="font-size:12px;color:var(--text-1);">They dropped prices on this brand. You are currently above their price on 2 of 3 shared SKUs.</div>';
+    scrollHtml += '</div>';
+  }
+
+  // Promo banner if any skus have promos
+  var hasPromoSkus = b.skus.some(function(s){ return s.promo; });
+  if (hasPromoSkus) {
+    var isFlash = b.skus.some(function(s){ return s.promo && s.promo.type === 'flash'; });
+    var promoColor = isFlash ? 'var(--danger)' : 'var(--warm)';
+    var promoBg = isFlash ? 'rgba(224,90,106,0.08)' : 'rgba(212,144,10,0.08)';
+    var promoBorder = isFlash ? 'rgba(224,90,106,0.2)' : 'rgba(212,144,10,0.2)';
+    var promoIcon = isFlash ? '&#9889;' : '&#8635;';
+    var promoLabel = isFlash ? 'FLASH SALE ACTIVE' : 'RECURRING DEAL ACTIVE';
+    var promoSku = b.skus.find(function(s){ return s.promo; });
+    scrollHtml += '<div style="background:' + promoBg + ';border:1px solid ' + promoBorder + ';border-radius:var(--r-sm);padding:9px 12px;margin-bottom:12px;display:flex;align-items:center;gap:8px;">';
+    scrollHtml += '<div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:' + promoColor + ';">' + promoIcon + ' ' + promoLabel + '</div>';
+    scrollHtml += '<div style="font-family:var(--mono);font-size:10px;color:var(--text-2);margin-left:4px;">' + promoSku.promo.label + ' · ends ' + promoSku.promo.ends + '</div>';
+    scrollHtml += '<div style="font-family:var(--mono);font-size:11px;font-weight:700;color:' + promoColor + ';margin-left:auto;">' + promoSku.promo.sale + ' <span style="font-weight:400;text-decoration:line-through;opacity:0.6;">' + promoSku.theirs + '</span></div>';
+    scrollHtml += '</div>';
+  }
+
+  // SKU table
+  scrollHtml += '<div class="section-label">SKU-level price comparison</div>';
+  scrollHtml += '<table class="sku-table">';
+  scrollHtml += '<tr><th>Product</th><th>Your price</th><th>Their price</th><th>Gap</th></tr>';
+  b.skus.forEach(function(sku) {
+    var themClass = sku.dir === 'negative' ? 'lower' : sku.dir === 'positive' ? 'higher' : 'even';
+    var gapClass = sku.dir === 'negative' ? 'gap-negative' : sku.dir === 'positive' ? 'gap-positive' : 'gap-zero';
+    scrollHtml += '<tr>';
+    scrollHtml += '<td>' + sku.product + '</td>';
+    scrollHtml += '<td class="price-you">' + sku.yours + '</td>';
+    if (sku.promo) {
+      var pIcon = sku.promo.type === 'flash' ? '&#9889;' : '&#8635;';
+      var pColor = sku.promo.type === 'flash' ? 'var(--danger)' : 'var(--warm)';
+      scrollHtml += '<td><div style="font-family:var(--mono);font-size:10px;color:var(--text-3);text-decoration:line-through;">' + sku.theirs + ' reg.</div>';
+      scrollHtml += '<div style="font-family:var(--mono);font-size:11px;font-weight:700;color:' + pColor + ';">' + pIcon + ' ' + sku.promo.sale + ' sale <span style="font-size:9px;opacity:0.7;">ends ' + sku.promo.ends + '</span></div></td>';
+      scrollHtml += '<td><span class="gap-cell gap-negative">' + sku.promo.effectiveGap + '</span> <span style="font-family:var(--mono);font-size:9px;color:var(--text-3);">during promo</span></td>';
+    } else {
+      scrollHtml += '<td class="price-them ' + themClass + '">' + sku.theirs + '</td>';
+      scrollHtml += '<td><span class="gap-cell ' + gapClass + '">' + sku.gap + '</span></td>';
+    }
+    scrollHtml += '</tr>';
+  });
+  scrollHtml += '</table>';
+
+  // Price trend note
+  scrollHtml += '<div style="background:var(--surface-3);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;margin-top:4px;">';
+  scrollHtml += '<div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-3);margin-bottom:4px;">30-day trend</div>';
+  scrollHtml += '<div style="font-size:11px;color:var(--text-2);">' + b.name + ' pricing at this rival has been stable for 28 days. The current price change was detected today and is new behavior.</div>';
+  scrollHtml += '</div>';
+
+  document.getElementById('detScroll').innerHTML = scrollHtml;
+
+  var footerHtml = '';
+  footerHtml += '<button class="bd-btn primary" onclick="showToast(\'Opening Price Intelligence \u2014 ' + b.name + ' view\u2026\',\'var(--accent)\')">View in price matrix \u2192</button>';
+  if (b.hasAlert) {
+    footerHtml += '<button class="bd-btn" style="border-color:var(--danger);color:var(--danger);" onclick="showModal(\'respond\',\'Respond to ' + b.name + ' price drop?\',\'Their price dropped $8. You can match at $42 or hold and monitor.\',\'Hold price\',\'Match their price\')">Respond \u2192</button>';
+  }
+  document.getElementById('detFooter').innerHTML = footerHtml;
+}
+
+/* ══ CATEGORY TABLE ══ */
+function renderCategoryTable() {
+  var html = '';
+  CATEGORIES.forEach(function(c) {
+    var maxSkus = Math.max(c.youSkus, c.themSkus);
+    var youW = Math.round((c.youSkus / maxSkus) * 100);
+    var themW = 100;
+    html += '<tr>';
+    html += '<td><div class="cat-name">' + c.cat + '</div></td>';
+    html += '<td><div class="cat-you-cell"><div class="cat-skus">' + c.youSkus + ' SKUs</div><div class="cat-range">' + c.youRange + '</div></div></td>';
+    html += '<td><div class="cat-them-cell"><div class="cat-skus">' + c.themSkus + ' SKUs</div><div class="cat-range">' + c.themRange + '</div></div></td>';
+    html += '<td class="cat-bar-cell"><div class="cat-mini-bars">';
+    html += '<div><div class="cat-mini-label" style="color:var(--accent);">YOU</div><div class="cat-mini-bar" style="width:' + youW + '%;background:var(--accent);"></div></div>';
+    html += '<div><div class="cat-mini-label" style="color:var(--rose);">THEM</div><div class="cat-mini-bar" style="width:' + themW + '%;background:var(--rose);"></div></div>';
+    html += '</div></td>';
+    html += '<td class="cat-shared-cell">' + (c.shared > 0 ? c.shared + ' brand' + (c.shared === 1 ? '' : 's') : '<span style="color:var(--text-3);">None</span>') + '</td>';
+    html += '</tr>';
+  });
+  document.getElementById('catTableBody').innerHTML = html;
+}
+
+/* ══ GAPS PANE ══ */
+function renderGapsPane() {
+  var html = '';
+
+  // Your exclusives
+  html += '<div class="gap-card">';
+  html += '<div class="gap-card-head">';
+  html += '<div class="gch-badge badge-excl">Your exclusives</div>';
+  html += '<div class="gch-title">Brands you carry \u2014 they don\'t</div>';
+  html += '<div class="gch-sub">Protect these. They carry none of these brands. Your competitive advantage.</div>';
+  html += '</div>';
+  html += '<div class="gap-brand-list">';
+  YOUR_EXCLUSIVES.forEach(function(b) {
+    html += '<div class="gap-brand-item">';
+    html += '<div class="gbi-dot" style="background:' + b.dot + ';"></div>';
+    html += '<div class="gbi-name">' + b.name + '</div>';
+    html += '<div class="gbi-detail">' + b.detail + '</div>';
+    html += '</div>';
+  });
+  html += '</div></div>';
+
+  // Their exclusives
+  html += '<div class="gap-card">';
+  html += '<div class="gap-card-head">';
+  html += '<div class="gch-badge badge-watch">Their exclusives</div>';
+  html += '<div class="gch-title">Brands they carry \u2014 you don\'t</div>';
+  html += '<div class="gch-sub">Watch list. If any of these gain traction, consider adding them to your menu.</div>';
+  html += '</div>';
+  html += '<div class="gap-brand-list">';
+  THEIR_EXCLUSIVES.forEach(function(b) {
+    html += '<div class="gap-brand-item">';
+    html += '<div class="gbi-dot" style="background:' + b.dot + ';"></div>';
+    html += '<div class="gbi-name">' + b.name + '</div>';
+    html += '<div class="gbi-detail">' + b.detail + '</div>';
+    html += '</div>';
+  });
+  html += '</div></div>';
+
+  document.getElementById('gapsPaneContent').innerHTML = html;
+}
+
+/* ══ ALERTS PANE ══ */
+function renderAlertsPane() {
+  var html = '';
+  ALERTS.forEach(function(a, i) {
+    var borderColor = a.urgent ? 'var(--danger)' : 'var(--border)';
+    html += '<div class="alert-card" style="animation-delay:' + (i*0.05) + 's;border-left:3px solid ' + borderColor + ';" onclick="showToast(\'Opening alert detail\u2026\',\'var(--accent)\')">';
+    html += '<div class="alert-card-top"><span class="ac-badge ' + a.badgeClass + '">' + a.badge + '</span><span class="ac-time">' + a.time + '</span></div>';
+    html += '<div class="ac-title">' + a.title + '</div>';
+    html += '<div class="ac-sub">' + a.sub + '</div>';
+    if (a.stats && a.stats.length) {
+      html += '<div class="ac-stats">';
+      a.stats.forEach(function(s) {
+        html += '<div class="ac-stat"><div class="ac-stat-n" style="' + (s.color ? 'color:' + s.color : '') + '">' + s.n + '</div><div class="ac-stat-label">' + s.label + '</div></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  document.getElementById('alertsPaneContent').innerHTML = html;
+}
+
+/* ══ TABS ══ */
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('active'); });
+  el.classList.add('active');
+  document.getElementById('pane-' + id).classList.add('active');
+}
+
+/* ══ TOAST ══ */
+var toastTimer;
+function showToast(msg, color) {
+  color = color || 'var(--accent)';
+  var t = document.getElementById('toast');
+  document.getElementById('toastDot').style.background = color;
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2800);
+}
+
+/* ══ MODAL ══ */
+function showModal(id, title, body, cancelLabel, confirmLabel) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').textContent = body;
+  document.getElementById('modalActions').innerHTML =
+    '<button class="modal-btn" onclick="closeModal()">' + cancelLabel + '</button>' +
+    '<button class="modal-btn primary" onclick="handleConfirm(\'' + id + '\')">' + confirmLabel + '</button>';
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function handleConfirm(id) {
+  closeModal();
+  if (id === 'respond') showToast('Price matched \u2014 Friendly Farms 3.5g updated to $42', 'var(--accent)');
+  else showToast('Action confirmed', 'var(--accent)');
+}
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modalOverlay')) return;
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+/* ══ THEME ══ */
+function toggleTheme() {
+  var html = document.documentElement;
+  var dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('themeLabel').textContent = dark ? 'Dark mode' : 'Light mode';
+}
+
+init();
+</script>
+</body>
+</html>

@@ -238,7 +238,7 @@ export default function MarketHeatMap() {
           {isMapConfigured() ? (
             <Map
               ref={mapRef}
-              mapboxApiAccessToken={MAPBOX_TOKEN}
+              mapboxAccessToken={MAPBOX_TOKEN}
               mapStyle={CANNASPY_STYLE_URL}
               initialViewState={{
                 longitude: CALIFORNIA_VIEWPORT.longitude,

@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Billing & Slot Usage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+[data-theme="light"]{
+  --bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);
+  --sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);--glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);--surface:rgba(255,255,255,0.97);--surface-solid:#ffffff;--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;
+  --border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);--border-hot:rgba(9,161,161,0.38);
+  --text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;
+  --accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);--accent-hover:#078484;
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);
+  --slate:#5484A4;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.08);
+  --card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);
+  --btn-shadow:0 4px 18px rgba(9,161,161,0.32);
+  --noise-opacity:0.022;
+}
+[data-theme="dark"]{
+  --bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);
+  --sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);--glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);--surface:rgba(16,28,40,0.99);--surface-solid:#14202a;--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;
+  --border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);--border-hot:rgba(11,184,184,0.5);
+  --text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);--accent-hover:#0dcfcf;
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);
+  --slate:#acc0d3;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.10);
+  --card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);
+  --btn-shadow:0 4px 20px rgba(9,161,161,0.34);
+  --noise-opacity:0.04;
+}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--tr:all 0.2s cubic-bezier(.4,0,.2,1);--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise-opacity);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;transition:background 0.4s,color 0.3s;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);background-attachment:fixed;}
+
+/* ── NAV ── */
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.nav-link.locked{opacity:0.45;pointer-events:none;}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+.topbar{background:var(--surface);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 28px;flex-shrink:0;}
+.topbar-inner{display:flex;align-items:center;gap:14px;padding:14px 0;}
+.back-btn{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--accent);cursor:pointer;transition:var(--transition);}
+.back-btn:hover{opacity:0.75;}
+.back-btn svg{width:12px;height:12px;}
+.topbar-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.topbar-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:2px;}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.tb-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.tb-btn svg{width:12px;height:12px;flex-shrink:0;}
+.tb-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:var(--btn-shadow);}
+.tb-btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);}
+
+/* ── SCROLL ── */
+.content-scroll{flex:1;overflow-y:auto;padding:24px 28px;min-height:0;}
+.content-scroll::-webkit-scrollbar{width:4px;}
+.content-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+
+/* ── LAYOUT ── */
+.billing-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;max-width:1100px;}
+.col-left{display:flex;flex-direction:column;gap:20px;}
+.col-right{display:flex;flex-direction:column;gap:20px;}
+
+/* ── SUMMARY HERO ── */
+.hero-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);padding:24px;position:relative;overflow:hidden;}
+.hero-card::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,var(--bg-g1),transparent 70%);pointer-events:none;}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;}
+.hero-plan{display:flex;flex-direction:column;gap:4px;}
+.plan-badge{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:rgba(9,161,161,0.12);color:var(--accent);border:1px solid rgba(9,161,161,0.22);display:inline-flex;align-items:center;gap:5px;width:fit-content;}
+.plan-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:lpulse 2s ease-in-out infinite;}
+@keyframes lpulse{0%,100%{opacity:1}50%{opacity:0.35}}
+.plan-name{font-size:20px;font-weight:800;color:var(--text-1);letter-spacing:-0.02em;margin-top:4px;}
+.plan-sub{font-size:12px;color:var(--text-2);}
+.hero-mrr{text-align:right;}
+.mrr-n{font-family:var(--mono);font-size:36px;font-weight:700;color:var(--text-1);letter-spacing:-0.03em;line-height:1;font-variant-numeric:tabular-nums;}
+.mrr-label{font-family:var(--mono);font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-top:3px;}
+.mrr-next{font-family:var(--mono);font-size:10px;color:var(--text-2);margin-top:2px;}
+
+/* ── SLOT BREAKDOWN ── */
+.slot-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.slot-card{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;position:relative;overflow:hidden;}
+.slot-card.track-card{border-left:3px solid var(--accent);}
+.slot-card.block-card{border-left:3px solid var(--rose);}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.sc-label{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;}
+.sc-label.track{color:var(--accent);}
+.sc-label.block{color:var(--rose);}
+.sc-n{font-family:var(--mono);font-size:28px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;}
+.sc-n.track{color:var(--accent);}
+.sc-n.block{color:var(--rose);}
+.sc-of{font-family:var(--mono);font-size:11px;color:var(--text-3);}
+.sc-price{font-family:var(--mono);font-size:11px;color:var(--text-2);margin-top:4px;}
+.sc-bar-wrap{margin-top:10px;height:5px;background:var(--surface-3);border-radius:3px;overflow:hidden;}
+.sc-bar{height:100%;border-radius:3px;transition:width 0.6s cubic-bezier(.4,0,.2,1);}
+.sc-bar.track{background:var(--accent);}
+.sc-bar.block{background:var(--rose);}
+
+/* ── LOCATION BREAKDOWN TABLE ── */
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);overflow:hidden;}
+.sc-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface-2);}
+.sc-head-title{font-size:13px;font-weight:700;color:var(--text-1);}
+.sc-head-sub{font-size:11px;color:var(--text-2);margin-left:4px;}
+.loc-bill-table{width:100%;border-collapse:collapse;}
+.lbt th{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);padding:9px 16px;border-bottom:1px solid var(--border);text-align:left;font-weight:500;background:var(--surface-2);}
+.lbt th.r{text-align:right;}
+.lbt-row{border-bottom:1px solid var(--border);transition:background 0.15s;cursor:default;}
+.lbt-row:last-child{border-bottom:none;}
+.lbt-row:hover{background:var(--accent-soft);}
+.lbt td{padding:11px 16px;vertical-align:middle;}
+.lbt td.r{text-align:right;}
+.loc-name-cell{font-size:13px;font-weight:600;color:var(--text-1);}
+.loc-market-cell{font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:1px;}
+.mkt-badge{font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.mkt-elite{background:rgba(211,150,166,0.14);color:var(--rose);}
+.mkt-hot{background:rgba(212,144,10,0.12);color:var(--warm);}
+.mkt-comp{background:rgba(84,132,164,0.12);color:var(--slate);}
+.mkt-std{background:var(--surface-3);color:var(--text-2);}
+.slot-chips{display:flex;align-items:center;gap:5px;}
+.slot-chip{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;}
+.chip-track{background:rgba(9,161,161,0.1);color:var(--accent);}
+.chip-block{background:rgba(211,150,166,0.14);color:var(--rose);}
+.price-cell{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text-1);}
+.rate-cell{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.lbt-total-row{background:var(--surface-2);border-top:2px solid var(--border-2);}
+.lbt-total-row td{padding:12px 16px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text-1);}
+.lbt-total-row td.r{text-align:right;color:var(--accent);font-size:14px;}
+
+/* ── RIGHT COLUMN ── */
+.invoice-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);overflow:hidden;}
+.ic-head{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface-2);display:flex;align-items:center;justify-content:space-between;}
+.ic-title{font-size:13px;font-weight:700;color:var(--text-1);}
+.ic-body{padding:16px 18px;}
+.invoice-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);}
+.invoice-row:last-child{border-bottom:none;}
+.ir-label{font-size:12px;color:var(--text-1);}
+.ir-sub{font-size:10px;color:var(--text-2);margin-top:1px;}
+.ir-amount{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text-1);flex-shrink:0;}
+.ir-amount.teal{color:var(--accent);}
+.invoice-divider{height:1px;background:var(--border-2);margin:8px 0;}
+.invoice-total{display:flex;align-items:center;justify-content:space-between;padding:10px 0 0;}
+.it-label{font-size:13px;font-weight:700;color:var(--text-1);}
+.it-amount{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent);}
+
+/* ── PAYMENT CARD ── */
+.payment-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);padding:16px 18px;}
+.payment-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;}
+.cc-display{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);}
+.cc-icon{width:36px;height:24px;background:linear-gradient(135deg,#1a1f71,#0047ab);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cc-num{font-family:var(--mono);font-size:12px;color:var(--text-1);font-weight:500;}
+.cc-exp{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:auto;}
+.payment-actions{display:flex;gap:8px;margin-top:10px;}
+
+/* ── NEXT BILLING ── */
+.billing-alert{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:var(--warm-soft);border:1px solid rgba(212,144,10,0.2);border-radius:var(--r-sm);margin-top:0;}
+.ba-icon{width:18px;height:18px;border-radius:50%;background:var(--warm);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.ba-text{font-size:11px;color:var(--text-1);line-height:1.55;}
+.ba-text strong{color:var(--warm);}
+
+/* ── INVOICE HISTORY ── */
+.hist-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.hist-row:last-child{border-bottom:none;}
+.hist-date{font-family:var(--mono);font-size:10px;color:var(--text-2);width:72px;flex-shrink:0;}
+.hist-desc{font-size:11px;color:var(--text-1);flex:1;min-width:0;}
+.hist-amount{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text-1);flex-shrink:0;}
+.hist-badge{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.06em;padding:2px 6px;border-radius:10px;flex-shrink:0;}
+.hb-paid{background:rgba(9,161,161,0.1);color:var(--accent);}
+.hb-pdf{background:var(--surface-3);color:var(--text-2);cursor:pointer;}
+.hb-pdf:hover{border:1px solid var(--accent);color:var(--accent);}
+
+/* ── VOLUME DISCOUNT ── */
+.discount-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);padding:16px 18px;}
+.discount-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;}
+.discount-tiers{display:flex;flex-direction:column;gap:6px;}
+.tier-row{display:flex;align-items:center;gap:10px;}
+.tier-range{font-family:var(--mono);font-size:10px;color:var(--text-2);width:90px;flex-shrink:0;}
+.tier-bar-wrap{flex:1;height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;}
+.tier-bar{height:100%;border-radius:3px;background:var(--accent);opacity:0.35;}
+.tier-bar.active{opacity:1;}
+.tier-pct{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text-3);width:32px;text-align:right;flex-shrink:0;}
+.tier-pct.active{color:var(--accent);}
+.tier-label{font-family:var(--mono);font-size:9px;color:var(--text-3);flex-shrink:0;}
+.tier-label.active{color:var(--accent);font-weight:700;}
+.you-are{font-family:var(--mono);font-size:9px;color:var(--accent);margin-top:8px;display:flex;align-items:center;gap:5px;}
+.you-are::before{content:'';display:block;width:8px;height:8px;border-radius:50%;background:var(--accent);}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text-1);color:var(--surface);padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;font-family:var(--mono);z-index:9000;transition:transform 0.3s cubic-bezier(.2,.8,.2,1),opacity 0.3s;opacity:0;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="back-btn" onclick="window.location.href='cannaspy_s04_v1.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Back
+      </div>
+      <div>
+        <div class="topbar-title">Billing & Slot Usage</div>
+        <div class="topbar-sub">Catalyst Group MSO · Next billing May 1</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="tb-btn" onclick="showToast('Invoice downloaded')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download invoice
+        </button>
+        <button class="tb-btn primary" onclick="showToast('Opening Stripe billing portal…')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Manage payment
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-scroll">
+    <div class="billing-grid">
+
+      <!-- ── LEFT COLUMN ── -->
+      <div class="col-left">
+
+        <!-- Hero MRR card -->
+        <div class="hero-card">
+          <div class="hero-top">
+            <div class="hero-plan">
+              <div class="plan-badge"><div class="plan-dot"></div>Active subscription</div>
+              <div class="plan-name">À La Carte Plan</div>
+              <div class="plan-sub">$100–$250 per slot · 10 active locations · 15% volume discount applied</div>
+            </div>
+            <div class="hero-mrr">
+              <div class="mrr-n">$14,025</div>
+              <div class="mrr-label">Monthly recurring</div>
+              <div class="mrr-next">Next charge May 1, 2026</div>
+            </div>
+          </div>
+
+          <!-- Slot breakdown -->
+          <div class="slot-row">
+            <div class="slot-card track-card">
+              <div class="sc-top">
+                <div class="sc-label track">Track slots</div>
+                <div class="sc-of">of 100 max</div>
+              </div>
+              <div class="sc-n track">63</div>
+              <div class="sc-price">63 slots × avg $148/slot = $9,324/mo</div>
+              <div class="sc-bar-wrap"><div class="sc-bar track" style="width:63%;"></div></div>
+            </div>
+            <div class="slot-card block-card">
+              <div class="sc-top">
+                <div class="sc-label block">Block slots</div>
+                <div class="sc-of">of 40 max</div>
+              </div>
+              <div class="sc-n block">18</div>
+              <div class="sc-price">18 slots × avg $205/slot = $3,690/mo</div>
+              <div class="sc-bar-wrap"><div class="sc-bar block" style="width:45%;"></div></div>
+            </div>
+          </div>
+
+          <!-- Discount callout -->
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--accent-soft);border:1px solid rgba(9,161,161,0.2);border-radius:var(--r-sm);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <div style="font-size:11px;color:var(--text-1);line-height:1.5;">
+              <strong>15% volume discount</strong> active on all 81 slots (50+ slot tier). You're saving <strong style="color:var(--accent);">$2,480/month</strong> vs standard rate.
+            </div>
+          </div>
+        </div>
+
+        <!-- Location breakdown table -->
+        <div class="section-card">
+          <div class="sc-head">
+            <div><span class="sc-head-title">Slot usage by location</span><span class="sc-head-sub">— 10 locations · Click to manage</span></div>
+          </div>
+          <table class="loc-bill-table lbt">
+            <thead>
+              <tr>
+                <th>Location</th>
+                <th>Market</th>
+                <th>Slots</th>
+                <th>Rate</th>
+                <th class="r">Monthly cost</th>
+              </tr>
+            </thead>
+            <tbody id="billTableBody"></tbody>
+          </table>
+        </div>
+
+      </div><!-- /col-left -->
+
+      <!-- ── RIGHT COLUMN ── -->
+      <div class="col-right">
+
+        <!-- Next invoice -->
+        <div class="invoice-card">
+          <div class="ic-head">
+            <div class="ic-title">Next invoice · May 1</div>
+            <span style="font-family:var(--mono);font-size:9px;color:var(--text-3);">16 days away</span>
+          </div>
+          <div class="ic-body">
+            <div class="invoice-row">
+              <div><div class="ir-label">63 track slots</div><div class="ir-sub">Avg $148/slot after discount</div></div>
+              <div class="ir-amount">$9,324</div>
+            </div>
+            <div class="invoice-row">
+              <div><div class="ir-label">18 block slots</div><div class="ir-sub">Avg $205/slot after discount</div></div>
+              <div class="ir-amount">$3,690</div>
+            </div>
+            <div class="invoice-row">
+              <div><div class="ir-label">Subtotal</div></div>
+              <div class="ir-amount">$13,014</div>
+            </div>
+            <div class="invoice-row">
+              <div><div class="ir-label">Volume discount (15%)</div><div class="ir-sub">50+ slots tier</div></div>
+              <div class="ir-amount teal">−$2,480</div>
+            </div>
+            <div class="invoice-divider"></div>
+            <div class="invoice-total">
+              <div class="it-label">Total due</div>
+              <div class="it-amount">$14,025</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Billing alert -->
+        <div class="billing-alert">
+          <div class="ba-icon"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="ba-text">You have <strong>2 active blocks auto-renewing May 1</strong> (STIIIZY WeHo, Off The Charts DTLA). Both slots continue automatically — cancel before Apr 30 if you want to stop either block. If a block lapses, the rival is added to the active prospect list within 24 hours.</div>
+        </div>
+
+        <!-- Payment method -->
+        <div class="payment-card">
+          <div class="payment-label">Payment method</div>
+          <div class="cc-display">
+            <div class="cc-icon">
+              <svg width="22" height="14" viewBox="0 0 38 24" fill="none"><circle cx="15" cy="12" r="10" fill="#EB001B" opacity="0.85"/><circle cx="23" cy="12" r="10" fill="#F79E1B" opacity="0.85"/><path d="M19 5.8A10 10 0 0 1 23 12a10 10 0 0 1-4 6.2A10 10 0 0 1 15 12a10 10 0 0 1 4-6.2z" fill="#FF5F00"/></svg>
+            </div>
+            <div class="cc-num">Mastercard ···· 4291</div>
+            <div class="cc-exp">Exp 09/28</div>
+          </div>
+          <div class="payment-actions">
+            <button class="tb-btn" style="flex:1;justify-content:center;" onclick="showToast('Opening payment portal…')">Update card</button>
+            <button class="tb-btn" style="flex:1;justify-content:center;" onclick="showToast('Invoice emailed')">Email invoice</button>
+          </div>
+        </div>
+
+        <!-- Volume discount ladder -->
+        <div class="discount-card">
+          <div class="discount-label">Volume discount tiers</div>
+          <div class="discount-tiers">
+            <div class="tier-row">
+              <div class="tier-range">1–9 slots</div>
+              <div class="tier-bar-wrap"><div class="tier-bar" style="width:15%;"></div></div>
+              <div class="tier-pct">0%</div>
+              <div class="tier-label">Standard</div>
+            </div>
+            <div class="tier-row">
+              <div class="tier-range">10–19 slots</div>
+              <div class="tier-bar-wrap"><div class="tier-bar" style="width:35%;"></div></div>
+              <div class="tier-pct">5%</div>
+              <div class="tier-label">off</div>
+            </div>
+            <div class="tier-row">
+              <div class="tier-range">20–49 slots</div>
+              <div class="tier-bar-wrap"><div class="tier-bar" style="width:65%;"></div></div>
+              <div class="tier-pct">10%</div>
+              <div class="tier-label">off</div>
+            </div>
+            <div class="tier-row">
+              <div class="tier-range">50+ slots</div>
+              <div class="tier-bar-wrap"><div class="tier-bar active" style="width:100%;"></div></div>
+              <div class="tier-pct active">15%</div>
+              <div class="tier-label active">← You are here (81 slots)</div>
+            </div>
+          </div>
+          <div class="you-are">Saving $2,480/month at current slot count</div>
+        </div>
+
+        <!-- Invoice history -->
+        <div class="invoice-card">
+          <div class="ic-head">
+            <div class="ic-title">Invoice history</div>
+            <span style="font-family:var(--mono);font-size:9px;color:var(--accent);cursor:pointer;" onclick="showToast('All invoices downloaded')">Download all</span>
+          </div>
+          <div class="ic-body" style="padding:8px 18px;">
+            <div class="hist-row">
+              <div class="hist-date">Apr 1</div>
+              <div class="hist-desc">81 slots · 15% discount</div>
+              <div class="hist-amount">$14,025</div>
+              <div class="hist-badge hb-paid">Paid</div>
+              <div class="hist-badge hb-pdf" onclick="showToast('Invoice downloaded')">PDF</div>
+            </div>
+            <div class="hist-row">
+              <div class="hist-date">Mar 1</div>
+              <div class="hist-desc">76 slots · 15% discount</div>
+              <div class="hist-amount">$13,158</div>
+              <div class="hist-badge hb-paid">Paid</div>
+              <div class="hist-badge hb-pdf" onclick="showToast('Invoice downloaded')">PDF</div>
+            </div>
+            <div class="hist-row">
+              <div class="hist-date">Feb 1</div>
+              <div class="hist-desc">68 slots · 10% discount</div>
+              <div class="hist-amount">$11,628</div>
+              <div class="hist-badge hb-paid">Paid</div>
+              <div class="hist-badge hb-pdf" onclick="showToast('Invoice downloaded')">PDF</div>
+            </div>
+            <div class="hist-row">
+              <div class="hist-date">Jan 1</div>
+              <div class="hist-desc">52 slots · 10% discount</div>
+              <div class="hist-amount">$9,234</div>
+              <div class="hist-badge hb-paid">Paid</div>
+              <div class="hist-badge hb-pdf" onclick="showToast('Invoice downloaded')">PDF</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /col-right -->
+    </div><!-- /billing-grid -->
+      <!-- Danger zone -->
+      <div style="margin-top:40px;padding-top:28px;border-top:1px solid var(--border);">
+        <div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;">Account</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--card-shadow);">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:3px;">Cancel subscription</div>
+            <div style="font-size:11px;color:var(--text-2);">Ends monitoring, releases all active blocks, and stops billing from next cycle.</div>
+          </div>
+          <button onclick="window.location.href='cannaspy_s33_FINAL.html'" style="padding:8px 18px;border-radius:var(--r-sm);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);border:1.5px solid rgba(224,90,106,0.35);background:transparent;color:var(--danger);transition:all 0.2s;flex-shrink:0;margin-left:20px;" onmouseover="this.style.background='var(--danger-soft)'" onmouseout="this.style.background='transparent'">
+            Cancel subscription
+          </button>
+        </div>
+      </div>
+
+  </div><!-- /content-scroll -->
+</div><!-- /main -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+var LOCS = [
+  { name:'WeHo Flagship',     market:'Elite',       mktClass:'mkt-elite', track:6, block:2, rate:250 },
+  { name:'DTLA Flagship',     market:'Hot',         mktClass:'mkt-hot',   track:7, block:2, rate:200 },
+  { name:'SoMa SF',           market:'Elite',       mktClass:'mkt-elite', track:5, block:1, rate:250 },
+  { name:'Mission SF',        market:'Elite',       mktClass:'mkt-elite', track:6, block:2, rate:250 },
+  { name:'Oakland Telegraph', market:'Hot',         mktClass:'mkt-hot',   track:7, block:2, rate:200 },
+  { name:'Long Beach DT',     market:'Competitive', mktClass:'mkt-comp',  track:6, block:2, rate:150 },
+  { name:'Sacramento',        market:'Competitive', mktClass:'mkt-comp',  track:5, block:2, rate:150 },
+  { name:'San Diego',         market:'Hot',         mktClass:'mkt-hot',   track:7, block:3, rate:200 },
+  { name:'Beverly Hills',     market:'Elite',       mktClass:'mkt-elite', track:6, block:2, rate:250 },
+  { name:'Riverside',         market:'Standard',    mktClass:'mkt-std',   track:4, block:0, rate:100 },
+];
+
+var DISCOUNT = 0.85;
+
+function renderTable() {
+  var tbody = document.getElementById('billTableBody');
+  var totalSlots = 0, totalCost = 0;
+  var rows = LOCS.map(function(l) {
+    var slots = l.track + l.block;
+    var cost = Math.round(slots * l.rate * DISCOUNT);
+    totalSlots += slots;
+    totalCost += cost;
+    return '<tr class="lbt-row" onclick="showToast(\'Managing '+l.name+'…\')">' +
+      '<td><div class="loc-name-cell">'+l.name+'</div></td>' +
+      '<td><span class="mkt-badge '+l.mktClass+'">'+l.market+'</span></td>' +
+      '<td><div class="slot-chips">' +
+        '<span class="slot-chip chip-track">'+l.track+' track</span>' +
+        (l.block > 0 ? '<span class="slot-chip chip-block">'+l.block+' block</span>' : '') +
+      '</div></td>' +
+      '<td><div class="rate-cell">$'+l.rate+'/slot</div></td>' +
+      '<td class="r"><div class="price-cell">$'+cost.toLocaleString()+'</div></td>' +
+    '</tr>';
+  }).join('');
+
+  rows += '<tr class="lbt-total-row">' +
+    '<td colspan="2" style="font-family:var(--mono);font-size:11px;color:var(--text-2);">Total · '+totalSlots+' slots · 15% discount applied</td>' +
+    '<td colspan="2"></td>' +
+    '<td class="r">$'+totalCost.toLocaleString()+'</td>' +
+  '</tr>';
+
+  tbody.innerHTML = rows;
+}
+
+var toastTimer;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2400);
+}
+
+function toggleTheme() {
+  var html = document.documentElement;
+  var isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeLabel').textContent = isDark ? 'Light mode' : 'Dark mode';
+}
+
+renderTable();
+</script>
+</body>
+</html>

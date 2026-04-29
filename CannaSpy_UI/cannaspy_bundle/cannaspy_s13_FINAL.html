@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Alert Detail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+[data-theme="light"]{
+  --bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);
+  --sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);
+  --glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);
+  --surface:rgba(255,255,255,0.97);--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;
+  --border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);--border-hot:rgba(9,161,161,0.38);
+  --text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;
+  --accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);
+  --slate:#5484A4;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.08);
+  --card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);
+  --btn-shadow:0 4px 18px rgba(9,161,161,0.32);--noise-opacity:0.022;
+}
+[data-theme="dark"]{
+  --bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);
+  --sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);
+  --glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);
+  --surface:rgba(16,28,40,0.99);--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;
+  --border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);--border-hot:rgba(11,184,184,0.5);
+  --text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);
+  --slate:#acc0d3;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.10);
+  --card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);
+  --btn-shadow:0 4px 20px rgba(9,161,161,0.34);--noise-opacity:0.04;
+}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise-opacity);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);background-attachment:fixed;}
+
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.nav-link.locked{opacity:0.45;pointer-events:none;}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;}
+.topbar-row1{display:flex;align-items:center;gap:14px;padding:12px 0 12px;}
+.back-btn{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--accent);cursor:pointer;transition:var(--transition);}
+.back-btn:hover{opacity:0.75;}
+.back-btn svg{width:12px;height:12px;}
+.topbar-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.tb-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.tb-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:var(--btn-shadow);}
+.tb-btn.primary:hover{opacity:0.88;}
+.tb-btn svg{width:12px;height:12px;}
+
+.content-scroll{flex:1;overflow-y:auto;padding:28px 32px;min-height:0;}
+.content-scroll::-webkit-scrollbar{width:5px;}
+.content-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px;}
+
+/* ALERT HERO */
+.alert-hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);padding:24px 28px;margin-bottom:20px;border-left:4px solid var(--danger);}
+.ah-breadcrumb{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.ah-type-badge{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--danger-soft);color:var(--danger);}
+.ah-title{font-size:22px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;margin-bottom:6px;line-height:1.25;}
+.ah-sub{font-size:13px;color:var(--text-2);margin-bottom:16px;}
+.ah-meta-row{display:flex;gap:20px;flex-wrap:wrap;}
+.ah-meta-item{display:flex;flex-direction:column;gap:2px;}
+.ah-meta-label{font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);}
+.ah-meta-val{font-size:12px;font-weight:600;color:var(--text-1);}
+.rival-name-colored{display:inline-flex;align-items:center;gap:5px;}
+.rival-color-dot{width:8px;height:8px;border-radius:50%;}
+
+/* PRICE DELTA BLOCK */
+.delta-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);padding:22px 28px;margin-bottom:20px;}
+.delta-visual{display:flex;align-items:center;gap:24px;margin:16px 0;}
+.price-box{text-align:center;padding:16px 28px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--border);}
+.pb-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);margin-bottom:6px;}
+.pb-price{font-family:var(--mono);font-size:32px;font-weight:700;line-height:1;}
+.pb-price.old{color:var(--text-3);text-decoration:line-through;}
+.pb-price.new-drop{color:var(--accent);}
+.pb-price.new-rise{color:var(--danger);}
+.pb-yours{font-family:var(--mono);font-size:13px;color:var(--text-2);}
+.delta-arrow{font-size:28px;color:var(--text-3);}
+.delta-result{text-align:center;}
+.dr-delta{font-family:var(--mono);font-size:28px;font-weight:700;}
+.dr-delta.drop{color:var(--accent);}
+.dr-delta.rise{color:var(--danger);}
+.dr-pct{font-family:var(--mono);font-size:13px;color:var(--text-3);margin-top:3px;}
+.dr-vs{font-size:11px;color:var(--text-3);margin-top:6px;}
+
+/* PROMO DETAIL */
+.promo-box{background:rgba(212,144,10,0.07);border:1px solid rgba(212,144,10,0.2);border-radius:var(--r-sm);padding:14px 18px;margin-top:12px;}
+.pb-promo-label{font-family:var(--mono);font-size:9px;letter-spacing:0.10em;text-transform:uppercase;color:var(--warm);margin-bottom:5px;}
+.pb-promo-title{font-size:13px;font-weight:700;color:var(--text-1);}
+.pb-promo-detail{font-size:12px;color:var(--text-2);margin-top:3px;}
+
+/* CONTEXT SECTION */
+.context-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.ctx-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--card-shadow);}
+.ctx-title{font-size:12px;font-weight:700;color:var(--text-1);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.ctx-title svg{width:13px;height:13px;color:var(--text-3);}
+.ctx-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;}
+.ctx-row:last-child{border-bottom:none;}
+.ctx-key{color:var(--text-3);}
+.ctx-val{font-weight:600;color:var(--text-1);font-family:var(--mono);font-size:11px;}
+.ctx-val.highlight{color:var(--accent);}
+.ctx-val.alert{color:var(--danger);}
+
+/* RESPONSE ACTIONS */
+.response-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);padding:20px 24px;margin-bottom:20px;}
+.rc-title{font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:14px;}
+.rc-options{display:flex;gap:10px;flex-wrap:wrap;}
+.rc-option{flex:1;min-width:160px;padding:12px 16px;border-radius:var(--r-sm);border:1.5px solid var(--border-2);background:var(--surface-2);cursor:pointer;transition:var(--transition);}
+.rc-option:hover{border-color:var(--accent);background:var(--accent-soft);}
+.rc-option.selected{border-color:var(--accent);background:var(--accent-soft);}
+.rc-opt-title{font-size:12px;font-weight:700;color:var(--text-1);margin-bottom:3px;}
+.rc-opt-sub{font-size:11px;color:var(--text-2);}
+.rc-opt-icon{font-size:16px;margin-bottom:6px;}
+
+/* RELATED ALERTS */
+.related-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--border);margin-bottom:5px;cursor:pointer;transition:var(--transition);}
+.related-row:hover{border-color:var(--border-2);background:var(--surface);}
+.rr-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.rr-text{font-size:12px;color:var(--text-1);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rr-time{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.section-label{font-family:var(--mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:11px 18px;font-size:12px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:9000;transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.4,0,.2,1);pointer-events:none;display:flex;align-items:center;gap:8px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-row1">
+      <div class="back-btn" onclick="go('cannaspy_s12_FINAL.html')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Alert Feed
+      </div>
+      <div style="width:1px;height:16px;background:var(--border-2);"></div>
+      <div class="topbar-title">Alert Detail</div>
+      <div class="topbar-actions">
+        <button class="tb-btn" onclick="showToast('Marking alert as reviewed','var(--accent)')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Mark reviewed
+        </button>
+        <button class="tb-btn" onclick="go('cannaspy_s14_FINAL.html')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Price deep dive
+        </button>
+        <button class="tb-btn primary" onclick="showRespondModal()">
+          Respond to this
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content-scroll">
+
+    <!-- ALERT HERO -->
+    <div class="alert-hero">
+      <div class="ah-breadcrumb">
+        <span>WEST HOLLYWOOD FLAGSHIP</span>
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>STIIIZY West Hollywood</span>
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="ah-type-badge">Price Drop</span>
+      </div>
+      <div class="ah-title">STIIIZY dropped Friendly Farms 3.5g from $42 to $36</div>
+      <div class="ah-sub">They&#39;re now <strong style="color:var(--danger);">$14 below your price</strong> on a shared SKU that moves volume — this is a competitive pricing event you should respond to.</div>
+      <div class="ah-meta-row">
+        <div class="ah-meta-item">
+          <div class="ah-meta-label">Rival</div>
+          <div class="ah-meta-val"><span class="rival-name-colored"><span class="rival-color-dot" style="background:#D396A6;"></span>STIIIZY West Hollywood</span></div>
+        </div>
+        <div class="ah-meta-item">
+          <div class="ah-meta-label">Status</div>
+          <div class="ah-meta-val" style="color:var(--rose);">● Blocked by you</div>
+        </div>
+        <div class="ah-meta-item">
+          <div class="ah-meta-label">Distance</div>
+          <div class="ah-meta-val">1.2 mi away</div>
+        </div>
+        <div class="ah-meta-item">
+          <div class="ah-meta-label">Detected</div>
+          <div class="ah-meta-val">Today, 6:18 AM</div>
+        </div>
+        <div class="ah-meta-item">
+          <div class="ah-meta-label">Duration</div>
+          <div class="ah-meta-val">Weekend Flash Sale</div>
+        </div>
+        <div class="ah-meta-item">
+          <div class="ah-meta-label">Ends</div>
+          <div class="ah-meta-val" style="color:var(--warm);">Sunday Apr 20</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICE DELTA -->
+    <div class="delta-block">
+      <div style="font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:4px;">Price Movement</div>
+      <div style="font-size:11px;color:var(--text-3);">Friendly Farms 3.5g Flower · Indica</div>
+      <div class="delta-visual">
+        <div class="price-box">
+          <div class="pb-label">Previous Price</div>
+          <div class="pb-price old">$42</div>
+        </div>
+        <div class="delta-arrow">→</div>
+        <div class="price-box" style="border-color:rgba(9,161,161,0.3);background:rgba(9,161,161,0.05);">
+          <div class="pb-label" style="color:var(--accent);">New Price</div>
+          <div class="pb-price new-drop">$36</div>
+        </div>
+        <div style="width:1px;height:60px;background:var(--border-2);margin:0 6px;"></div>
+        <div class="delta-result">
+          <div class="dr-delta drop">−$6</div>
+          <div class="dr-pct">−14.3%</div>
+          <div class="dr-vs">vs. your $50 = <span style="color:var(--danger);font-weight:700;">$14 gap</span></div>
+        </div>
+        <div class="price-box" style="border-color:rgba(84,132,164,0.2);">
+          <div class="pb-label">Your Price</div>
+          <div class="pb-yours" style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--slate);">$50</div>
+        </div>
+      </div>
+      <div class="promo-box">
+        <div class="pb-promo-label">Active Promotion</div>
+        <div class="pb-promo-title">Weekend Flash Sale — "Flash Deals This Weekend Only"</div>
+        <div class="pb-promo-detail">Sale pricing active Apr 18–20 · Applies to all Friendly Farms SKUs at this location · Pattern: STIIIZY runs this promotion approximately every 3–4 weeks</div>
+      </div>
+    </div>
+
+    <!-- CONTEXT CARDS -->
+    <div class="context-grid">
+      <div class="ctx-card">
+        <div class="ctx-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          90-Day Price Context
+        </div>
+        <div class="ctx-row"><span class="ctx-key">STIIIZY standard price</span><span class="ctx-val">$42</span></div>
+        <div class="ctx-row"><span class="ctx-key">STIIIZY flash low</span><span class="ctx-val alert">$36</span></div>
+        <div class="ctx-row"><span class="ctx-key">Previous flash sales</span><span class="ctx-val">3 in 90 days</span></div>
+        <div class="ctx-row"><span class="ctx-key">Avg flash duration</span><span class="ctx-val">3 days</span></div>
+        <div class="ctx-row"><span class="ctx-key">Market low (all rivals)</span><span class="ctx-val alert">$36 (STIIIZY)</span></div>
+        <div class="ctx-row"><span class="ctx-key">Market high (all rivals)</span><span class="ctx-val">$50 (MedMen, OTC)</span></div>
+        <div class="ctx-row"><span class="ctx-key">Your position</span><span class="ctx-val" style="color:var(--danger);">Market high ($50)</span></div>
+      </div>
+      <div class="ctx-card">
+        <div class="ctx-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          Location Context
+        </div>
+        <div class="ctx-row"><span class="ctx-key">STIIIZY distance</span><span class="ctx-val">1.2 mi</span></div>
+        <div class="ctx-row"><span class="ctx-key">Shared brands (this SKU)</span><span class="ctx-val">STIIIZY, MedMen, OTC</span></div>
+        <div class="ctx-row"><span class="ctx-key">Other rivals at this price</span><span class="ctx-val">None</span></div>
+        <div class="ctx-row"><span class="ctx-key">STIIIZY block age</span><span class="ctx-val highlight">47 days</span></div>
+        <div class="ctx-row"><span class="ctx-key">STIIIZY block renews</span><span class="ctx-val">May 15</span></div>
+        <div class="ctx-row"><span class="ctx-key">Flash pattern risk</span><span class="ctx-val" style="color:var(--warm);">Medium — 3-day window</span></div>
+      </div>
+    </div>
+
+    <!-- RESPONSE OPTIONS -->
+    <div class="response-card">
+      <div class="rc-title">How do you want to respond?</div>
+      <div class="rc-options">
+        <div class="rc-option" onclick="selectResponse(this,'hold')">
+          <div class="rc-opt-icon">⏸️</div>
+          <div class="rc-opt-title">Hold price</div>
+          <div class="rc-opt-sub">STIIIZY reverts in ~3 days. Wait it out — don&#39;t let a flash sale drag your margin down permanently.</div>
+        </div>
+        <div class="rc-option" onclick="selectResponse(this,'match')">
+          <div class="rc-opt-icon">🎯</div>
+          <div class="rc-opt-title">Match for the weekend</div>
+          <div class="rc-opt-sub">Set a temporary promo ($36 Fri–Sun) to protect volume, then restore Monday. Est. impact: −$56 weekend revenue.</div>
+        </div>
+        <div class="rc-option" onclick="selectResponse(this,'undercut')">
+          <div class="rc-opt-icon">⚡</div>
+          <div class="rc-opt-title">Undercut at $34</div>
+          <div class="rc-opt-sub">Go below STIIIZY&#39;s flash price. High aggression — only if this SKU is a weekend traffic driver for you.</div>
+        </div>
+        <div class="rc-option" onclick="selectResponse(this,'promo')">
+          <div class="rc-opt-icon">🎁</div>
+          <div class="rc-opt-title">Bundle promo instead</div>
+          <div class="rc-opt-sub">Keep your price but add a buy-2-get-1-free on FF. Protects margin while offering value.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RELATED ALERTS -->
+    <div class="section-label">Related alerts from STIIIZY</div>
+    <div class="related-row" onclick="go('cannaspy_s13_FINAL.html')">
+      <div class="rr-dot" style="background:var(--danger);"></div>
+      <div class="rr-text">STIIIZY dropped Jeeter XL Pre-Roll from $38 to $35 — $3 below your price</div>
+      <div class="rr-time">2h ago</div>
+    </div>
+    <div class="related-row" onclick="go('cannaspy_s13_FINAL.html')">
+      <div class="rr-dot" style="background:var(--warn,#d4900a);"></div>
+      <div class="rr-text">STIIIZY started Weekend Flash promotion — affects 6 shared SKUs</div>
+      <div class="rr-time">6h ago</div>
+    </div>
+    <div class="related-row" onclick="go('cannaspy_s13_FINAL.html')">
+      <div class="rr-dot" style="background:var(--accent);"></div>
+      <div class="rr-text">STIIIZY ran identical flash sale on Mar 28 — lasted 3 days, reverted Apr 1</div>
+      <div class="rr-time">Mar 28</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- RESPOND MODAL -->
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:800;backdrop-filter:blur(4px);" onclick="closeModal()"></div>
+<div id="modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:801;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r);box-shadow:0 20px 60px rgba(0,0,0,0.25);padding:28px 32px;width:480px;max-width:90vw;">
+  <div style="font-size:15px;font-weight:700;color:var(--text-1);margin-bottom:6px;" id="modal-title">Respond: Hold Price</div>
+  <div style="font-size:12px;color:var(--text-2);margin-bottom:20px;" id="modal-body">You&#39;ve chosen to hold your price through the STIIIZY flash sale. CannaSpy will re-alert you if the sale extends beyond Sunday or if other rivals follow STIIIZY&#39;s lead.</div>
+  <div style="display:flex;gap:10px;justify-content:flex-end;">
+    <button class="tb-btn" onclick="closeModal()">Cancel</button>
+    <button class="tb-btn primary" onclick="closeModal();showToast('Response logged — you&#39;ll be re-alerted Monday if needed','var(--accent)')">Confirm</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+var selectedOption = null;
+function selectResponse(el, type) {
+  document.querySelectorAll('.rc-option').forEach(function(o){ o.classList.remove('selected'); });
+  el.classList.add('selected');
+  var titles = {hold:'Confirm: Hold Price',match:'Confirm: Match Weekend',undercut:'Confirm: Undercut at $34',promo:'Confirm: Bundle Promo'};
+  var bodies = {
+    hold:'You&#39;ve chosen to hold your price. CannaSpy will re-alert Monday if STIIIZY doesn&#39;t revert.',
+    match:'Set Friendly Farms 3.5g to $36 Friday through Sunday, restoring $50 on Monday.',
+    undercut:'Set Friendly Farms 3.5g to $34 Friday through Sunday. This undercuts STIIIZY by $2.',
+    promo:'Create a Buy 2 Get 1 on Friendly Farms this weekend while holding your $50 unit price.'
+  };
+  document.getElementById('modal-title').textContent = titles[type]||'Confirm Response';
+  document.getElementById('modal-body').innerHTML = bodies[type]||'';
+  document.getElementById('modal-overlay').style.display='block';
+  document.getElementById('modal').style.display='block';
+}
+function closeModal(){
+  document.getElementById('modal-overlay').style.display='none';
+  document.getElementById('modal').style.display='none';
+}
+function showRespondModal(){
+  if(!selectedOption){
+    showToast('Select a response option below first','var(--warm)');
+  }
+}
+function go(url){ window.location.href=url; }
+function toggleTheme(){ var t=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'; document.documentElement.setAttribute('data-theme',t); }
+var toastTimer;
+function showToast(msg,color){ clearTimeout(toastTimer); var t=document.getElementById('toast'); document.getElementById('toast-msg').textContent=msg; document.getElementById('toast-dot').style.background=color; t.classList.add('show'); toastTimer=setTimeout(function(){ t.classList.remove('show'); },3200); }
+</script>
+</body>
+</html>

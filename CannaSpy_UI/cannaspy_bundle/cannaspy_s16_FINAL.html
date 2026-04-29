@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Block Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+[data-theme="light"]{
+  --bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);
+  --sidebar:#30525C;
+  --surface:rgba(255,255,255,0.98);--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;
+  --border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);
+  --text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;
+  --accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);--accent-hover:#078484;
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);--rose-hover:#c07a92;
+  --slate:#5484A4;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.08);
+  --card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);
+  --card-lg:0 8px 40px rgba(30,60,80,0.13);
+  --btn-shadow:0 4px 18px rgba(9,161,161,0.32);
+  --btn-rose-shadow:0 4px 18px rgba(211,150,166,0.40);
+  --noise:0.022;
+}
+[data-theme="dark"]{
+  --bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);
+  --sidebar:#091114;
+  --surface:rgba(16,28,40,0.99);--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;
+  --border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);
+  --text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);--accent-hover:#0dcfcf;
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);--rose-hover:#e8a8c0;
+  --slate:#acc0d3;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.10);
+  --card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);
+  --card-lg:0 12px 50px rgba(0,0,0,0.38);
+  --btn-shadow:0 4px 20px rgba(9,161,161,0.34);
+  --btn-rose-shadow:0 4px 20px rgba(211,150,166,0.32);
+  --noise:0.04;
+}
+:root{
+  --sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:12px;--r-sm:8px;--detail-w:400px;
+  --tr:all 0.2s cubic-bezier(.4,0,.2,1);
+  --transition:all 0.32s cubic-bezier(.2,.8,.2,1);
+  --ease-spring:cubic-bezier(.2,.8,.2,1);
+}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);background-attachment:fixed;}
+
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;}
+.tb-inner{display:flex;align-items:center;gap:14px;padding:12px 0;}
+.back{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--accent);cursor:pointer;flex-shrink:0;transition:var(--tr);}
+.back:hover{opacity:0.75;}
+.back svg{width:12px;height:12px;}
+.tb-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.tb-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.tb-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--tr);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn svg{width:12px;height:12px;flex-shrink:0;}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:var(--btn-shadow);}
+.btn.primary:hover{background:var(--accent-hover);}
+.btn.rose{background:var(--rose);border-color:var(--rose);color:#fff;box-shadow:var(--btn-rose-shadow);}
+.btn.rose:hover{background:var(--rose-hover);}
+
+/* ── FILTER BAR ── */
+.filter-bar{padding:8px 24px;border-bottom:1px solid var(--border);background:var(--surface-2);display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.fb-sep{width:1px;height:20px;background:var(--border-2);flex-shrink:0;margin:0 2px;}
+.dg{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.dg-lbl{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);}
+.dw{position:relative;display:inline-block;}
+.db{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:var(--r-sm);font-size:11px;font-weight:600;border:1.5px solid var(--border-2);background:var(--surface);color:var(--text-1);cursor:pointer;font-family:var(--sans);transition:var(--tr);white-space:nowrap;}
+.db:hover{border-color:var(--accent);color:var(--accent);}
+.db.active{background:var(--rose);border-color:var(--rose);color:#fff;}
+.db svg{width:10px;height:10px;flex-shrink:0;opacity:0.55;}
+.dp{position:absolute;top:calc(100% + 5px);left:0;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);box-shadow:var(--card-lg);z-index:200;min-width:160px;padding:5px;display:none;}
+.dp.open{display:block;}
+.do{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;font-size:12px;color:var(--text-1);cursor:pointer;user-select:none;font-family:var(--sans);}
+.do:hover{background:var(--surface-3);}
+.do.sel{color:var(--accent);font-weight:700;}
+.do.sel::after{content:"\2713";margin-left:auto;}
+.ddiv{height:1px;background:var(--border);margin:4px 0;}
+.fb-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.fb-count{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+
+/* ── BODY: list + detail ── */
+.body{flex:1;display:flex;overflow:hidden;min-height:0;}
+
+/* ── BLOCK LIST ── */
+.list-panel{flex:1;overflow-y:auto;min-height:0;padding:20px 24px;}
+.list-panel::-webkit-scrollbar{width:4px;}
+.list-panel::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+
+/* ── SUMMARY CARDS ── */
+.summary{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--card-shadow);padding:14px 18px;flex:1;}
+.sc.active-blocks{border-left:3px solid var(--rose);}
+.sc.slots-used{border-left:3px solid var(--accent);}
+.sc.monthly-cost{border-left:3px solid var(--warm);}
+.sc.expiring{border-left:3px solid var(--danger);}
+.sc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;}
+.sc-n{font-family:var(--mono);font-size:28px;font-weight:700;line-height:1;}
+.sc-n.rose{color:var(--rose);}
+.sc-n.teal{color:var(--accent);}
+.sc-n.warm{color:var(--warm);}
+.sc-n.danger{color:var(--danger);}
+.sc-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sc-ico svg{width:14px;height:14px;}
+.sc-ico.rose{background:var(--rose-soft);}
+.sc-ico.rose svg{color:var(--rose);}
+.sc-ico.teal{background:var(--accent-soft);}
+.sc-ico.teal svg{color:var(--accent);}
+.sc-ico.warm{background:var(--warm-soft);}
+.sc-ico.warm svg{color:var(--warm);}
+.sc-ico.danger{background:var(--danger-soft);}
+.sc-ico.danger svg{color:var(--danger);}
+.sc-label{font-family:var(--mono);font-size:9px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);}
+.sc-sub{font-size:10px;color:var(--text-2);margin-top:3px;}
+
+/* ── SECTION HEADER ── */
+.section-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.sh-label{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-2);}
+.sh-line{flex:1;height:1px;background:var(--border);}
+.sh-count{font-family:var(--mono);font-size:9px;color:var(--text-3);}
+
+/* ── BLOCK CARD ── */
+.block-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--card-shadow);margin-bottom:10px;cursor:pointer;transition:box-shadow 0.15s,transform 0.15s,border-color 0.15s;overflow:hidden;}
+.block-card:hover{box-shadow:var(--card-lg);transform:translateY(-1px);}
+.block-card.selected{border-color:var(--rose);box-shadow:0 0 0 2px rgba(211,150,166,0.2),var(--card-shadow);}
+.bc-header{display:flex;align-items:center;gap:14px;padding:14px 16px 12px;}
+.bc-avatar{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;flex-shrink:0;color:#fff;}
+.bc-main{flex:1;min-width:0;}
+.bc-name{font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:2px;}
+.bc-meta{font-family:var(--mono);font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:8px;}
+.bc-dot{width:3px;height:3px;border-radius:50%;background:var(--border-2);}
+.bc-right{flex-shrink:0;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.bc-duration{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--rose);}
+.bc-cost{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+
+/* Block card body — location pills + stats */
+.bc-body{padding:0 16px 14px;border-top:1px solid var(--border);margin-top:0;padding-top:12px;}
+.bc-locs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.loc-pill{font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 8px;border-radius:20px;background:rgba(211,150,166,0.1);color:var(--rose);border:1px solid rgba(211,150,166,0.25);}
+.bc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.bs{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 8px;text-align:center;}
+.bs-n{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--text-1);line-height:1;margin-bottom:2px;}
+.bs-n.rose{color:var(--rose);}
+.bs-n.warn{color:var(--warm);}
+.bs-n.teal{color:var(--accent);}
+.bs-l{font-family:var(--mono);font-size:8px;color:var(--text-3);letter-spacing:0.06em;text-transform:uppercase;}
+
+/* Activity strip */
+.bc-activity{display:flex;align-items:center;gap:10px;}
+.activity-bar{flex:1;height:4px;border-radius:2px;background:var(--surface-3);overflow:hidden;}
+.activity-fill{height:100%;border-radius:2px;background:var(--rose);transition:width 0.4s cubic-bezier(.4,0,.2,1);}
+.activity-lbl{font-family:var(--mono);font-size:9px;color:var(--text-3);flex-shrink:0;}
+
+/* Activity sparkline — 14-day change-volume on rival while blocked */
+.spark{display:flex;align-items:flex-end;gap:2px;height:22px;flex-shrink:0;}
+.spark-bar{width:4px;border-radius:1.5px;background:var(--rose);opacity:0.85;transition:transform 0.15s,opacity 0.15s;}
+.spark-bar:hover{opacity:1;transform:scaleY(1.08);}
+.spark-bar.dim{background:var(--border-2);opacity:1;}
+.bc-spark-row{display:flex;align-items:center;gap:12px;padding-top:4px;}
+.bc-spark-label{font-family:var(--mono);font-size:9px;color:var(--text-3);letter-spacing:0.04em;text-transform:uppercase;flex-shrink:0;}
+.bc-spark-count{font-family:var(--mono);font-size:10px;color:var(--rose);font-weight:600;flex-shrink:0;margin-left:auto;}
+
+/* Footer actions */
+.bc-footer{display:flex;gap:7px;padding:0 16px 14px;}
+.bcf-btn{flex:1;padding:7px 12px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--tr);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);text-align:center;}
+.bcf-btn:hover{border-color:var(--accent);color:var(--accent);}
+.bcf-btn.cancel{border-color:rgba(211,150,166,0.35);color:var(--rose);}
+.bcf-btn.cancel:hover{background:var(--rose-soft);border-color:var(--rose);}
+
+/* Expiry warning strip */
+.expiry-strip{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(224,90,106,0.07);border:1px solid rgba(224,90,106,0.2);border-radius:var(--r-sm);margin-bottom:10px;}
+.es-dot{width:7px;height:7px;border-radius:50%;background:var(--danger);flex-shrink:0;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.es-text{font-size:11px;color:var(--text-1);flex:1;}
+.es-btn{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--danger);cursor:pointer;flex-shrink:0;padding:3px 8px;border:1px solid rgba(224,90,106,0.3);border-radius:4px;}
+.es-btn:hover{background:var(--danger-soft);}
+
+/* ── DETAIL PANEL ── */
+.detail-panel{width:0;overflow:hidden;flex-shrink:0;background:var(--surface);border-left:1px solid transparent;display:flex;flex-direction:column;height:100%;transition:width 0.32s cubic-bezier(.2,.8,.2,1);}
+.detail-panel.open{width:var(--detail-w);border-left-color:var(--border);}
+.detail-inner{width:var(--detail-w);display:flex;flex-direction:column;height:100%;overflow:hidden;flex-shrink:0;}
+.dp-head{padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface-2);display:flex;align-items:flex-start;gap:10px;flex-shrink:0;}
+.dp-close{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border-2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);transition:var(--tr);flex-shrink:0;}
+.dp-close:hover{border-color:var(--danger);color:var(--danger);}
+.dp-close svg{width:12px;height:12px;}
+.dp-avatar{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;color:#fff;flex-shrink:0;}
+.dp-title{font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:2px;}
+.dp-sub{font-family:var(--mono);font-size:9px;color:var(--text-3);letter-spacing:0.06em;}
+.dp-scroll{flex:1;overflow-y:auto;padding:18px 20px;min-height:0;}
+.dp-scroll::-webkit-scrollbar{width:3px;}
+.dp-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+
+/* Detail sections */
+.ds{margin-bottom:18px;}
+.ds-lbl{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;}
+.ds-txt{font-size:12px;color:var(--text-2);line-height:1.7;}
+.stat4{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;}
+.stc{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 10px;text-align:center;}
+.stn{font-family:var(--mono);font-size:20px;font-weight:700;line-height:1;margin-bottom:3px;}
+.stl{font-family:var(--mono);font-size:8px;color:var(--text-3);letter-spacing:0.06em;text-transform:uppercase;}
+.stn.rose{color:var(--rose);}
+.stn.warn{color:var(--warm);}
+.stn.teal{color:var(--accent);}
+.stn.danger{color:var(--danger);}
+
+/* ── Block ROI snapshot ── */
+.roi-card{background:linear-gradient(135deg,var(--accent-soft),transparent 70%);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--r-sm);padding:14px 14px 12px;margin-bottom:16px;}
+.roi-head{font-family:var(--mono);font-size:9px;letter-spacing:0.10em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.roi-head svg{width:11px;height:11px;}
+.roi-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.roi-stat{text-align:left;}
+.roi-stat:not(:last-child){padding-right:10px;border-right:1px solid var(--border);}
+.roi-n{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--text-1);line-height:1.1;margin-bottom:3px;}
+.roi-l{font-family:var(--mono);font-size:8px;color:var(--text-3);letter-spacing:0.06em;text-transform:uppercase;}
+.roi-link{display:flex;align-items:center;justify-content:space-between;margin-top:11px;padding-top:9px;border-top:1px dashed var(--border);font-family:var(--sans);font-size:11px;color:var(--accent);font-weight:600;cursor:pointer;transition:var(--tr);}
+.roi-link:hover{color:var(--accent-hover);}
+.roi-link svg{width:13px;height:13px;flex-shrink:0;}
+
+/* Churn lock warning */
+.churn-warning{background:rgba(211,150,166,0.07);border:1px solid rgba(211,150,166,0.25);border-left:3px solid var(--rose);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:16px;}
+.cw-head{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--rose);margin-bottom:5px;}
+.cw-body{font-size:11px;color:var(--text-1);line-height:1.6;}
+
+/* Activity timeline */
+.timeline{display:flex;flex-direction:column;gap:0;}
+.tl-row{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);}
+.tl-row:last-child{border-bottom:none;}
+.tl-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.tl-icon svg{width:11px;height:11px;}
+.tl-icon.down{background:var(--danger-soft);}
+.tl-icon.down svg{color:var(--danger);}
+.tl-icon.up{background:var(--accent-soft);}
+.tl-icon.up svg{color:var(--accent);}
+.tl-icon.new{background:var(--warm-soft);}
+.tl-icon.new svg{color:var(--warm);}
+.tl-body{flex:1;min-width:0;}
+.tl-title{font-size:11px;font-weight:600;color:var(--text-1);margin-bottom:1px;}
+.tl-sub{font-size:10px;color:var(--text-2);}
+.tl-time{font-family:var(--mono);font-size:9px;color:var(--text-3);flex-shrink:0;margin-top:2px;}
+
+/* Location breakdown table */
+.loc-table{width:100%;border-collapse:collapse;font-size:11px;}
+.loc-table th{font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;}
+.loc-table td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text-1);}
+.loc-table tr:last-child td{border-bottom:none;}
+.loc-market-tag{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(84,132,164,0.1);color:var(--slate);}
+.price-cell{font-family:var(--mono);font-weight:600;color:var(--text-1);text-align:right;}
+
+/* Footer */
+.dp-footer{padding:14px 20px;border-top:1px solid var(--border);background:var(--surface-2);display:flex;flex-direction:column;gap:7px;flex-shrink:0;}
+.df-row{display:flex;gap:7px;}
+.df-btn{flex:1;padding:8px 12px;border-radius:var(--r-sm);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:var(--tr);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);text-align:center;}
+.df-btn:hover{border-color:var(--accent);color:var(--accent);}
+.df-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.df-btn.primary:hover{background:var(--accent-hover);}
+.df-btn.cancel{border-color:rgba(211,150,166,0.35);color:var(--rose);}
+.df-btn.cancel:hover{background:var(--rose-soft);border-color:var(--rose);}
+
+/* ── EMPTY STATE ── */
+.empty{padding:60px 24px;text-align:center;}
+.empty-icon{width:48px;height:48px;border-radius:14px;background:var(--rose-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.empty-icon svg{width:22px;height:22px;color:var(--rose);}
+.empty-title{font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:6px;}
+.empty-sub{font-size:12px;color:var(--text-2);max-width:320px;margin:0 auto 20px;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border-radius:var(--r);padding:28px;max-width:420px;width:90%;box-shadow:var(--card-lg);transform:translateY(8px);transition:transform 0.25s cubic-bezier(.4,0,.2,1);}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-icon{width:44px;height:44px;border-radius:12px;background:var(--rose-soft);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.modal-icon svg{width:20px;height:20px;color:var(--rose);}
+.modal-title{font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:8px;}
+.modal-body{font-size:12px;color:var(--text-2);line-height:1.7;margin-bottom:20px;}
+.modal-body strong{color:var(--text-1);}
+.modal-actions{display:flex;gap:8px;}
+.modal-btn{flex:1;padding:10px;border-radius:var(--r-sm);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:var(--tr);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);text-align:center;}
+.modal-btn:hover{border-color:var(--accent);color:var(--accent);}
+.modal-btn.confirm-cancel{background:var(--rose);border-color:var(--rose);color:#fff;}
+.modal-btn.confirm-cancel:hover{background:var(--rose-hover);}
+
+/* ── BLOCKED-BY SECTION ── */
+.blocked-by-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--card-shadow);position:relative;overflow:hidden;}
+.blocked-by-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--warm);}
+.bb-badge{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 7px;border-radius:8px;background:var(--warm-soft);color:var(--warm);border:1px solid rgba(212,144,10,0.25);white-space:nowrap;flex-shrink:0;}
+.bb-days{font-family:var(--mono);font-size:10px;color:var(--text-3);flex-shrink:0;}
+.notify-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;padding:5px 10px;border-radius:var(--r-sm);border:1.5px solid var(--border-2);background:var(--surface-3);transition:var(--tr);flex-shrink:0;}
+.notify-toggle:hover{border-color:var(--accent);background:var(--accent-soft);}
+.notify-toggle.on{border-color:var(--accent);background:var(--accent-soft);}
+.notify-toggle svg{width:11px;height:11px;color:var(--text-3);flex-shrink:0;transition:var(--tr);}
+.notify-toggle.on svg{color:var(--accent);}
+.notify-toggle-label{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--text-3);transition:var(--tr);}
+.notify-toggle.on .notify-toggle-label{color:var(--accent);}
+.bb-info{flex:1;min-width:0;}
+.bb-name{font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:2px;}
+.bb-meta{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.sh-label-warm{color:var(--warm);}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text-1);color:var(--surface);padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;font-family:var(--mono);z-index:9000;transition:transform 0.3s cubic-bezier(.2,.8,.2,1),opacity 0.3s;opacity:0;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+</style>
+<link rel="stylesheet" href="cannaspy_design_v3.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-inner">
+      <div class="back" onclick="go('cannaspy_s04_FINAL.html')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Back
+      </div>
+      <div>
+        <div class="tb-title">Block Management</div>
+        <div class="tb-sub">2 active blocks &middot; 18 slots &middot; $3,600/mo</div>
+      </div>
+      <div class="tb-actions">
+        <button class="btn" onclick="go('cannaspy_s28_FINAL.html')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Billing &amp; slots
+        </button>
+        <button class="btn rose" onclick="showBlockModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          Block a rival
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <div class="dg"><span class="dg-lbl">Location</span>
+      <div class="dw">
+        <button class="db" id="locBtn" onclick="toggleDD('locPop')">All locations <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="dp" id="locPop">
+          <div class="do sel" data-dd="locBtn" data-pop="locPop" data-val="all" data-label="All locations">All locations</div>
+          <div class="ddiv"></div>
+          <div class="do" data-dd="locBtn" data-pop="locPop" data-val="weho" data-label="WeHo Flagship">WeHo Flagship</div>
+          <div class="do" data-dd="locBtn" data-pop="locPop" data-val="dtla" data-label="DTLA Flagship">DTLA Flagship</div>
+          <div class="do" data-dd="locBtn" data-pop="locPop" data-val="sf" data-label="SoMa SF">SoMa SF</div>
+          <div class="do" data-dd="locBtn" data-pop="locPop" data-val="oak" data-label="Oakland">Oakland</div>
+        </div>
+      </div>
+    </div>
+    <div class="fb-sep"></div>
+    <div class="dg"><span class="dg-lbl">Sort</span>
+      <div class="dw">
+        <button class="db" id="sortBtn" onclick="toggleDD('sortPop')">Longest active <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="dp" id="sortPop">
+          <div class="do sel" data-dd="sortBtn" data-pop="sortPop" data-val="days" data-label="Longest active">Longest active first</div>
+          <div class="do" data-dd="sortBtn" data-pop="sortPop" data-val="cost" data-label="Highest cost">Highest monthly cost</div>
+          <div class="do" data-dd="sortBtn" data-pop="sortPop" data-val="activity" data-label="Most active">Most rival activity</div>
+          <div class="do" data-dd="sortBtn" data-pop="sortPop" data-val="expiring" data-label="Auto-renewing soonest">Auto-renewing soonest</div>
+        </div>
+      </div>
+    </div>
+    <div class="fb-right">
+      <div class="fb-count">2 blocks &middot; 18 slots</div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+    <div class="list-panel" id="listPanel">
+
+      <!-- Summary cards -->
+      <div class="summary">
+        <div class="sc active-blocks">
+          <div class="sc-top"><div class="sc-n rose">2</div><div class="sc-ico rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div></div>
+          <div class="sc-label">Active blocks</div><div class="sc-sub">Across 10 locations</div>
+        </div>
+        <div class="sc slots-used">
+          <div class="sc-top"><div class="sc-n teal">18</div><div class="sc-ico teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div></div>
+          <div class="sc-label">Block slots used</div><div class="sc-sub">18 of 18 &middot; plan maxed</div>
+        </div>
+        <div class="sc monthly-cost">
+          <div class="sc-top"><div class="sc-n warm">$3,600</div><div class="sc-ico warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div>
+          <div class="sc-label">Monthly block cost</div><div class="sc-sub">$200/slot &middot; Elite rate</div>
+        </div>
+        <div class="sc expiring">
+          <div class="sc-top"><div class="sc-n danger">2</div><div class="sc-ico danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div>
+          <div class="sc-label">Next billing date</div><div class="sc-sub">Auto-renews May 1</div>
+        </div>
+        <div class="sc" style="border-left:3px solid var(--warm);">
+          <div class="sc-top"><div class="sc-n" style="color:var(--warm);">3</div><div class="sc-ico" style="color:var(--warm);background:var(--warm-soft);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div></div>
+          <div class="sc-label" style="color:var(--warm);">Blocking you</div><div class="sc-sub">3 rivals are blocking you</div>
+        </div>
+      </div>
+
+      <!-- Expiry warning -->
+      <div class="expiry-strip">
+        <div class="es-dot"></div>
+        <div class="es-text"><strong>2 blocks auto-renew May 1.</strong> Slots continue automatically unless you cancel. Cancellation is immediate and any prorated remainder of the current billing period is forfeited.</div>
+        <div class="es-btn" onclick="toast('Block settings opened')">Manage blocks</div>
+      </div>
+
+      <!-- Active blocks section -->
+      <div class="section-hdr">
+        <div class="sh-label">Active blocks</div>
+        <div class="sh-line"></div>
+        <div class="sh-count">2 rivals blocked</div>
+      </div>
+
+      <!-- Block card 1: STIIIZY -->
+      <div class="block-card" id="card-stiiizy" onclick="openDetail('stiiizy')">
+        <div class="bc-header">
+          <div class="bc-avatar" style="background:#3d7a8a;">ST</div>
+          <div class="bc-main">
+            <div class="bc-name">STIIIZY West Hollywood</div>
+            <div class="bc-meta">
+              1.2 mi <div class="bc-dot"></div> WeHo, DTLA, SoMa SF
+              <div class="bc-dot"></div>
+              <span style="font-family:var(--mono);font-size:8px;background:var(--rose-soft);color:var(--rose);padding:1px 6px;border-radius:8px;font-weight:700;">BLOCKED 47 DAYS</span>
+            </div>
+          </div>
+          <div class="bc-right">
+            <div class="bc-duration">47 days</div>
+            <div class="bc-cost">$2,000/mo &middot; 10 slots</div>
+          </div>
+        </div>
+        <div class="bc-body">
+          <div class="bc-locs">
+            <span class="loc-pill">WeHo Flagship</span>
+            <span class="loc-pill">DTLA Flagship</span>
+            <span class="loc-pill">SoMa SF</span>
+            <span class="loc-pill" style="opacity:0.55;">+7 more locations</span>
+          </div>
+          <div class="bc-stats">
+            <div class="bs"><div class="bs-n rose">47</div><div class="bs-l">Days blocked</div></div>
+            <div class="bs"><div class="bs-n warn">28</div><div class="bs-l">Changes while blocked</div></div>
+            <div class="bs"><div class="bs-n teal">10</div><div class="bs-l">Locations covered</div></div>
+            <div class="bs"><div class="bs-n">May 1</div><div class="bs-l">Auto-renews</div></div>
+          </div>
+          <div class="bc-spark-row">
+            <div class="bc-spark-label">Activity — last 14 days</div>
+            <div class="spark" title="Changes per day on STIIIZY while blocked">
+              <div class="spark-bar" style="height:8px;" title="Apr 13 — 1 change"></div>
+              <div class="spark-bar" style="height:14px;" title="Apr 14 — 2 changes"></div>
+              <div class="spark-bar" style="height:20px;" title="Apr 15 — 3 changes"></div>
+              <div class="spark-bar dim" style="height:5px;" title="Apr 16 — 0 changes"></div>
+              <div class="spark-bar dim" style="height:5px;" title="Apr 17 — 0 changes"></div>
+              <div class="spark-bar" style="height:14px;" title="Apr 18 — 2 changes"></div>
+              <div class="spark-bar" style="height:18px;" title="Apr 19 — 3 changes"></div>
+              <div class="spark-bar" style="height:22px;" title="Apr 20 — 4 changes"></div>
+              <div class="spark-bar" style="height:14px;" title="Apr 21 — 2 changes"></div>
+              <div class="spark-bar" style="height:8px;" title="Apr 22 — 1 change"></div>
+              <div class="spark-bar dim" style="height:5px;" title="Apr 23 — 0 changes"></div>
+              <div class="spark-bar" style="height:14px;" title="Apr 24 — 2 changes"></div>
+              <div class="spark-bar" style="height:20px;" title="Apr 25 — 3 changes"></div>
+              <div class="spark-bar" style="height:22px;" title="Apr 26 — 4 changes"></div>
+            </div>
+            <div class="bc-spark-count">28 intercepted</div>
+          </div>
+        </div>
+        <div class="bc-footer">
+          <div class="bcf-btn" onclick="event.stopPropagation();go('cannaspy_s06_FINAL.html')">View profile →</div>
+          <div class="bcf-btn" onclick="event.stopPropagation();go('cannaspy_s20_FINAL.html')">Block analytics →</div>
+          <div class="bcf-btn cancel" onclick="event.stopPropagation();openCancelModal('stiiizy','STIIIZY West Hollywood')">Cancel block</div>
+        </div>
+      </div>
+
+      <!-- Block card 2: Off The Charts -->
+      <div class="block-card" id="card-otc" onclick="openDetail('otc')">
+        <div class="bc-header">
+          <div class="bc-avatar" style="background:#6b5b95;">OT</div>
+          <div class="bc-main">
+            <div class="bc-name">Off The Charts DTLA</div>
+            <div class="bc-meta">
+              2.9 mi <div class="bc-dot"></div> DTLA
+              <div class="bc-dot"></div>
+              <span style="font-family:var(--mono);font-size:8px;background:var(--rose-soft);color:var(--rose);padding:1px 6px;border-radius:8px;font-weight:700;">BLOCKED 22 DAYS</span>
+            </div>
+          </div>
+          <div class="bc-right">
+            <div class="bc-duration">22 days</div>
+            <div class="bc-cost">$1,600/mo &middot; 8 slots</div>
+          </div>
+        </div>
+        <div class="bc-body">
+          <div class="bc-locs">
+            <span class="loc-pill">DTLA Flagship</span>
+            <span class="loc-pill">Koreatown</span>
+            <span class="loc-pill">Long Beach</span>
+            <span class="loc-pill" style="opacity:0.55;">+5 more locations</span>
+          </div>
+          <div class="bc-stats">
+            <div class="bs"><div class="bs-n rose">22</div><div class="bs-l">Days blocked</div></div>
+            <div class="bs"><div class="bs-n warn">14</div><div class="bs-l">Changes while blocked</div></div>
+            <div class="bs"><div class="bs-n teal">8</div><div class="bs-l">Locations covered</div></div>
+            <div class="bs"><div class="bs-n">May 1</div><div class="bs-l">Auto-renews</div></div>
+          </div>
+          <div class="bc-spark-row">
+            <div class="bc-spark-label">Activity — last 14 days</div>
+            <div class="spark" title="Changes per day on Off The Charts while blocked">
+              <div class="spark-bar dim" style="height:5px;" title="Apr 13 — 0 changes"></div>
+              <div class="spark-bar" style="height:8px;" title="Apr 14 — 1 change"></div>
+              <div class="spark-bar" style="height:14px;" title="Apr 15 — 2 changes"></div>
+              <div class="spark-bar" style="height:8px;" title="Apr 16 — 1 change"></div>
+              <div class="spark-bar dim" style="height:5px;" title="Apr 17 — 0 changes"></div>
+              <div class="spark-bar dim" style="height:5px;" title="Apr 18 — 0 changes"></div>
+              <div class="spark-bar" style="height:14px;" title="Apr 19 — 2 changes"></div>
+              <div class="spark-bar" style="height:8px;" title="Apr 20 — 1 change"></div>
+              <div class="spark-bar" style="height:8px;" title="Apr 21 — 1 change"></div>
+              <div class="spark-bar dim" style="height:5px;" title="Apr 22 — 0 changes"></div>
+              <div class="spark-bar" style="height:14px;" title="Apr 23 — 2 changes"></div>
+              <div class="spark-bar" style="height:8px;" title="Apr 24 — 1 change"></div>
+              <div class="spark-bar" style="height:14px;" title="Apr 25 — 2 changes"></div>
+              <div class="spark-bar" style="height:8px;" title="Apr 26 — 1 change"></div>
+            </div>
+            <div class="bc-spark-count">14 intercepted</div>
+          </div>
+        </div>
+        <div class="bc-footer">
+          <div class="bcf-btn" onclick="event.stopPropagation();toast('Off The Charts profile opened')">View profile →</div>
+          <div class="bcf-btn" onclick="event.stopPropagation();go('cannaspy_s20_FINAL.html')">Block analytics →</div>
+          <div class="bcf-btn cancel" onclick="event.stopPropagation();openCancelModal('otc','Off The Charts DTLA')">Cancel block</div>
+        </div>
+      </div>
+
+      <!-- Rivals blocking you section -->
+      <div class="section-hdr" style="margin-top:28px;">
+        <div class="sh-label sh-label-warm">Rivals blocking you</div>
+        <div class="sh-line"></div>
+        <div class="sh-count" style="color:var(--warm);">3 rivals are blocking you</div>
+      </div>
+
+      <!-- Blocked-by explanation strip -->
+      <div style="background:var(--warm-soft);border:1px solid rgba(212,144,10,0.22);border-radius:var(--r-sm);padding:9px 13px;margin-bottom:10px;display:flex;gap:9px;align-items:flex-start;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div style="font-size:11px;color:var(--text-2);line-height:1.6;">These dispensaries are paying CannaSpy customers who have placed a block on your account. You cannot access their data on this platform while the block is active. Enable notifications to be alerted the moment a block is released.</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+
+        <!-- Blocked-by 1: Jungle Boys -->
+        <div class="blocked-by-card">
+          <div class="bc-avatar" style="background:#2a7a45;width:36px;height:36px;font-size:11px;flex-shrink:0;">JB</div>
+          <div class="bb-info">
+            <div class="bb-name">Jungle Boys DTLA</div>
+            <div class="bb-meta">0.4 mi &middot; DTLA &middot; Blocking you at 4 of your locations</div>
+          </div>
+          <div class="bb-days">63 days</div>
+          <div class="bb-badge">BLOCKING YOU</div>
+          <div class="notify-toggle on" id="notif-jb" onclick="toggleNotify('jb')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notify-toggle-label">Notify on unblock</span>
+          </div>
+        </div>
+
+        <!-- Blocked-by 2: Harborside -->
+        <div class="blocked-by-card">
+          <div class="bc-avatar" style="background:#5a4a7a;width:36px;height:36px;font-size:11px;flex-shrink:0;">HS</div>
+          <div class="bb-info">
+            <div class="bb-name">Harborside San Jose</div>
+            <div class="bb-meta">12.1 mi &middot; SJ market &middot; Blocking you at 2 of your locations</div>
+          </div>
+          <div class="bb-days">31 days</div>
+          <div class="bb-badge">BLOCKING YOU</div>
+          <div class="notify-toggle" id="notif-hs" onclick="toggleNotify('hs')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notify-toggle-label">Notify on unblock</span>
+          </div>
+        </div>
+
+        <!-- Blocked-by 3: Cookies SF -->
+        <div class="blocked-by-card">
+          <div class="bc-avatar" style="background:#8b4513;width:36px;height:36px;font-size:11px;flex-shrink:0;">CK</div>
+          <div class="bb-info">
+            <div class="bb-name">Cookies SF Haight</div>
+            <div class="bb-meta">8.3 mi &middot; SF market &middot; Blocking you at 3 of your locations</div>
+          </div>
+          <div class="bb-days">8 days</div>
+          <div class="bb-badge">BLOCKING YOU</div>
+          <div class="notify-toggle on" id="notif-ck" onclick="toggleNotify('ck')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notify-toggle-label">Notify on unblock</span>
+          </div>
+        </div>
+
+      </div><!-- /blocked-by cards -->
+
+      <!-- Available to block section -->
+      <div class="section-hdr" style="margin-top:28px;">
+        <div class="sh-label" style="color:var(--text-3);">Tracked rivals — not blocked</div>
+        <div class="sh-line"></div>
+        <div class="sh-count">3 rivals trackable</div>
+      </div>
+
+      <!-- Tracked rival rows -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--card-shadow);">
+          <div class="bc-avatar" style="background:#c88a20;width:36px;height:36px;font-size:11px;">MM</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:2px;">MedMen West Hollywood</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);">0.8 mi &middot; WeHo &middot; Tracking &middot; 12 changes this week</div>
+          </div>
+          <div style="text-align:right;margin-right:12px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);">$200/mo to block</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);">1 slot per location</div>
+          </div>
+          <button class="btn rose" style="font-size:10px;padding:5px 12px;" onclick="showBlockRivalModal('MedMen West Hollywood','$200/mo')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            Block
+          </button>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--card-shadow);">
+          <div class="bc-avatar" style="background:#2d8a6b;width:36px;height:36px;font-size:11px;">CA</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:2px;">Catalyst Cannabis Co. DTLA</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);">1.9 mi &middot; DTLA &middot; Tracking &middot; 8 changes this week</div>
+          </div>
+          <div style="text-align:right;margin-right:12px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);">$200/mo to block</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);">1 slot per location</div>
+          </div>
+          <button class="btn rose" style="font-size:10px;padding:5px 12px;" onclick="showBlockRivalModal('Catalyst Cannabis Co.','$200/mo')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            Block
+          </button>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--card-shadow);">
+          <div class="bc-avatar" style="background:#5a4a7a;width:36px;height:36px;font-size:11px;">JB</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:2px;">Jungle Boys DTLA</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);">2.4 mi &middot; DTLA &middot; Tracking &middot; 5 changes this week</div>
+          </div>
+          <div style="text-align:right;margin-right:12px;">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);">$200/mo to block</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);">1 slot per location</div>
+          </div>
+          <button class="btn rose" style="font-size:10px;padding:5px 12px;" onclick="showBlockRivalModal('Jungle Boys DTLA','$200/mo')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            Block
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /list-panel -->
+
+    <!-- Detail panel -->
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-inner">
+        <div class="dp-head">
+          <button class="dp-close" onclick="closeDetail()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          <div class="dp-avatar" id="dpAvatar" style="background:#3d7a8a;">ST</div>
+          <div>
+            <div class="dp-title" id="dpTitle">STIIIZY West Hollywood</div>
+            <div class="dp-sub" id="dpSub">BLOCKED &middot; 47 days &middot; 10 locations</div>
+          </div>
+        </div>
+        <div class="dp-scroll" id="dpScroll"></div>
+        <div class="dp-footer" id="dpFooter"></div>
+      </div>
+    </div>
+  </div><!-- /body -->
+</div><!-- /main -->
+
+<!-- Cancel block modal -->
+<div class="modal-overlay" id="cancelModal">
+  <div class="modal">
+    <div class="modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+    <div class="modal-title" id="cancelModalTitle">Cancel block on STIIIZY?</div>
+    <div class="modal-body" id="cancelModalBody"></div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeModal()">Keep blocking</button>
+      <button class="modal-btn confirm-cancel" onclick="confirmCancel()">Cancel block →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Block new rival modal -->
+<div class="modal-overlay" id="blockModal">
+  <div class="modal">
+    <div class="modal-icon" style="background:var(--rose-soft);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--rose);width:20px;height:20px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+    <div class="modal-title" id="blockModalTitle">Block a rival</div>
+    <div class="modal-body" id="blockModalBody"></div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="document.getElementById('blockModal').classList.remove('open')">Cancel</button>
+      <button class="modal-btn confirm-cancel" onclick="document.getElementById('blockModal').classList.remove('open');toast('Block activated — rival contacted within 24 hours')">Confirm block →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+/* ══ DATA ══ */
+var BLOCKS = {
+  stiiizy: {
+    name:'STIIIZY West Hollywood', initials:'ST', color:'#3d7a8a',
+    dist:'1.2 mi', market:'WeHo', days:47, slots:10, cost:2000, renews:'May 1',
+    locs:['WeHo Flagship','DTLA Flagship','SoMa SF','Oakland','San Diego','Koreatown','Long Beach','Culver City','Pasadena','Corona'],
+    activity:78, changes:28,
+    narrative:'STIIIZY has been blocked for 47 days. They have made 28 price and catalog changes during this period — none of which they can see your response to. They last attempted to contact CannaSpy 12 days ago and received no response.',
+    timeline:[
+      {type:'down', title:'Blue Dream dropped 22%', sub:'$45 → $35 · WeHo · 2h ago', time:'2h ago'},
+      {type:'new',  title:'14 new SKUs added overnight', sub:'Flower category · DTLA · 6h ago', time:'6h ago'},
+      {type:'down', title:'Gelato #41 7g cut 25%', sub:'$80 → $60 · DTLA · 3h ago', time:'Yesterday'},
+      {type:'up',   title:'Kanha edibles restocked', sub:'22 SKUs · WeHo · Yesterday', time:'Yesterday'},
+      {type:'down', title:'Raw Garden vapes repriced', sub:'−12% across all 1g SKUs · SoMa SF', time:'3 days ago'},
+      {type:'new',  title:'New weekly happy hour launched', sub:'20% off all concentrates 4–7pm', time:'5 days ago'},
+    ]
+  },
+  otc: {
+    name:'Off The Charts DTLA', initials:'OT', color:'#6b5b95',
+    dist:'2.9 mi', market:'DTLA', days:22, slots:8, cost:1600, renews:'May 1',
+    locs:['DTLA Flagship','Koreatown','Long Beach','Culver City','Pasadena','Riverside','Ontario','Pomona'],
+    activity:54, changes:14,
+    narrative:'Off The Charts has been blocked for 22 days. They have made 14 price changes during the block period, primarily in their premium flower and concentrate categories.',
+    timeline:[
+      {type:'down', title:'Gelato #41 7g cut 25%', sub:'$80 → $60 · Weekend push · 3h ago', time:'3h ago'},
+      {type:'new',  title:'CBX Cherries added', sub:'New brand addition · 8 SKUs · DTLA', time:'Yesterday'},
+      {type:'down', title:'Concentrate category priced down', sub:'−10% across concentrates', time:'4 days ago'},
+      {type:'up',   title:'Premium flower restocked', sub:'Jungle Boys + Maven restock', time:'1 week ago'},
+    ]
+  }
+};
+
+var selectedBlock = null;
+var cancelTarget  = null;
+
+/* ── Detail panel ── */
+function openDetail(key) {
+  selectedBlock = key;
+  var b = BLOCKS[key];
+  document.querySelectorAll('.block-card').forEach(function(c){ c.classList.toggle('selected', c.id === 'card-'+key); });
+  document.getElementById('dpAvatar').textContent  = b.initials;
+  document.getElementById('dpAvatar').style.background = b.color;
+  document.getElementById('dpTitle').textContent = b.name;
+  document.getElementById('dpSub').textContent   = 'BLOCKED \u00b7 '+b.days+' days \u00b7 '+b.slots+' locations';
+
+  // Location breakdown table
+  var locRows = b.locs.map(function(l,i){
+    var tier = l.includes('WeHo')||l.includes('DTLA')||l.includes('SoMa')||l.includes('Oakland') ? 'Elite' :
+               l.includes('Long Beach')||l.includes('Koreatown') ? 'Competitive' : 'Standard';
+    var rate = tier==='Elite'?'$200':tier==='Competitive'?'$150':'$100';
+    return '<tr><td>'+l+'</td><td><span class="loc-market-tag">'+tier+'</span></td><td class="price-cell">'+rate+'/mo</td></tr>';
+  }).join('');
+
+  // Timeline HTML
+  var ICONS = {
+    down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+    up:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>',
+    new: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  };
+  var tlHtml = b.timeline.map(function(t){
+    return '<div class="tl-row"><div class="tl-icon '+t.type+'">'+ICONS[t.type]+'</div>'+
+      '<div class="tl-body"><div class="tl-title">'+t.title+'</div><div class="tl-sub">'+t.sub+'</div></div>'+
+      '<div class="tl-time">'+t.time+'</div></div>';
+  }).join('');
+
+  // ROI math — block has cost X/mo, has run for N days, intercepted M changes
+  var spentSoFar = Math.round((b.cost / 30) * b.days);
+  var costPerChange = b.changes > 0 ? Math.round(spentSoFar / b.changes) : 0;
+
+  document.getElementById('dpScroll').innerHTML =
+    '<div class="stat4">'+
+      '<div class="stc"><div class="stn rose">'+b.days+'</div><div class="stl">Days blocked</div></div>'+
+      '<div class="stc"><div class="stn warn">'+b.changes+'</div><div class="stl">Changes detected</div></div>'+
+      '<div class="stc"><div class="stn teal">'+b.slots+'</div><div class="stl">Locations</div></div>'+
+      '<div class="stc"><div class="stn">$'+b.cost.toLocaleString()+'</div><div class="stl">Monthly cost</div></div>'+
+    '</div>'+
+    '<div class="roi-card">'+
+      '<div class="roi-head">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>'+
+        'Block ROI snapshot'+
+      '</div>'+
+      '<div class="roi-row">'+
+        '<div class="roi-stat"><div class="roi-n">$'+spentSoFar.toLocaleString()+'</div><div class="roi-l">Spent so far</div></div>'+
+        '<div class="roi-stat"><div class="roi-n">'+b.changes+'</div><div class="roi-l">Intercepted</div></div>'+
+        '<div class="roi-stat"><div class="roi-n">$'+costPerChange+'</div><div class="roi-l">Per intercept</div></div>'+
+      '</div>'+
+      '<div class="roi-link" onclick="go(\'cannaspy_s20_FINAL.html\')">'+
+        '<span>View full block analytics</span>'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>'+
+      '</div>'+
+    '</div>'+
+    '<div class="churn-warning">'+
+      '<div class="cw-head">\u26a0 Cancellation consequence</div>'+
+      '<div class="cw-body">If you cancel this block, <strong>'+b.name+'</strong> will be added back to the active prospect list and contacted by our sales team within <strong>24\u201348 hours</strong>. They will immediately be able to access CannaSpy. This cannot be undone without re-purchasing the block.</div>'+
+    '</div>'+
+    '<div class="ds"><div class="ds-lbl">Block summary</div><div class="ds-txt">'+b.narrative+'</div></div>'+
+    '<div class="ds"><div class="ds-lbl">Locations covered</div>'+
+      '<table class="loc-table">'+
+        '<tr><th>Location</th><th>Market tier</th><th>Rate</th></tr>'+
+        locRows+
+      '</table>'+
+    '</div>'+
+    '<div class="ds"><div class="ds-lbl">Activity while blocked (last 14 days)</div>'+
+      '<div class="bc-activity" style="margin-bottom:14px;">'+
+        '<div class="activity-lbl">Activity level</div>'+
+        '<div class="activity-bar" style="flex:1;"><div class="activity-fill" style="width:'+b.activity+'%;"></div></div>'+
+        '<div class="activity-lbl">'+b.activity+'%</div>'+
+      '</div>'+
+      '<div class="timeline">'+tlHtml+'</div>'+
+    '</div>';
+
+  document.getElementById('dpFooter').innerHTML =
+    '<div class="df-row">'+
+      '<button class="df-btn" onclick="go(\'cannaspy_s06_FINAL.html\')">View competitor profile \u2192</button>'+
+      '<button class="df-btn primary" onclick="toast(\'Block analytics opened\')">Block analytics →</button>'+
+    '</div>'+
+    '<div class="df-row">'+
+      '<button class="df-btn cancel" onclick="openCancelModal(\''+key+'\',\''+b.name+'\')">Cancel block \u2014 consequences disclosed \u2192</button>'+
+    '</div>';
+
+  document.getElementById('detailPanel').classList.add('open');
+}
+
+function closeDetail() {
+  selectedBlock = null;
+  document.querySelectorAll('.block-card').forEach(function(c){ c.classList.remove('selected'); });
+  document.getElementById('detailPanel').classList.remove('open');
+}
+
+/* ── Cancel modal ── */
+function openCancelModal(key, name) {
+  cancelTarget = key;
+  document.getElementById('cancelModalTitle').textContent = 'Cancel block on '+name+'?';
+  document.getElementById('cancelModalBody').innerHTML =
+    '<strong>This is irreversible without re-purchasing the block slot.</strong><br><br>'+
+    'The moment you confirm, the block on <strong>'+name+'</strong> lifts and they will be added back to our active prospect outreach queue. '+
+    'Our sales team will contact them <strong>within 24\u201348 hours</strong> to offer them CannaSpy access.<br><br>'+
+    'They will be able to track your pricing, promotions, and catalog changes immediately upon subscribing.<br><br>'+
+    '<span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">Billing: cancellation is effective immediately. Any prorated remainder of the current billing period is forfeited \u2014 no refund or credit is issued.</span>';
+  document.getElementById('cancelModal').classList.add('open');
+}
+function confirmCancel() {
+  document.getElementById('cancelModal').classList.remove('open');
+  toast('\u26a0\ufe0f Block cancelled \u2014 rival being contacted by sales team');
+}
+function closeModal() {
+  document.getElementById('cancelModal').classList.remove('open');
+  document.getElementById('blockModal').classList.remove('open');
+}
+
+function toggleNotify(key) {
+  var el = document.getElementById('notif-' + key);
+  if (!el) return;
+  var on = el.classList.toggle('on');
+  var label = el.querySelector('.notify-toggle-label');
+  if (label) label.textContent = on ? 'Notify on unblock' : 'Notify on unblock';
+  toast(on
+    ? 'You will be notified when this block is released'
+    : 'Notifications off for this rival'
+  );
+}
+
+function showBlockRivalModal(name, cost) {
+  document.getElementById('blockModalTitle').textContent = 'Block '+name+'?';
+  document.getElementById('blockModalBody').innerHTML =
+    'Blocking <strong>'+name+'</strong> will add <strong>1 block slot</strong> at <strong>'+cost+'/location/month</strong> to your billing.<br><br>'+
+    'Once confirmed, they will be removed from the active prospect list and will receive no response if they contact CannaSpy. '+
+    'The block activates immediately.';
+  document.getElementById('blockModal').classList.add('open');
+}
+function showBlockModal() {
+  document.getElementById('blockModalTitle').textContent = 'Block a rival';
+  document.getElementById('blockModalBody').innerHTML =
+    'Use the competitor discovery screen to add a rival to your block list. '+
+    'Blocking prevents them from ever accessing CannaSpy intelligence while your block is active.<br><br>'+
+    'Cost: <strong>$200/slot/month</strong> (Elite market rate).<br>'+
+    'Effect: Immediate. They receive no outreach, no response, no access.';
+  document.getElementById('blockModal').classList.add('open');
+}
+
+/* ── Dropdowns ── */
+function toggleDD(id) {
+  var isOpen = document.getElementById(id).classList.contains('open');
+  document.querySelectorAll('.dp').forEach(function(p){ p.classList.remove('open'); });
+  if (!isOpen) document.getElementById(id).classList.add('open');
+}
+document.addEventListener('click', function(e) {
+  // Dropdown options
+  var opt = e.target.closest('.do[data-dd]');
+  if (opt) {
+    var pop = document.getElementById(opt.dataset.pop);
+    var btn = document.getElementById(opt.dataset.dd);
+    pop.querySelectorAll('.do').forEach(function(o){ o.classList.remove('sel'); });
+    opt.classList.add('sel');
+    var svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px;height:10px;opacity:0.55;"><polyline points="6 9 12 15 18 9"/></svg>';
+    btn.innerHTML = opt.dataset.label + ' ' + svg;
+    pop.classList.remove('open');
+    return;
+  }
+  // Cancel modal backdrop
+  if (e.target === document.getElementById('cancelModal')) closeModal();
+  if (e.target === document.getElementById('blockModal'))  closeModal();
+  // Close dropdowns on outside click
+  if (!e.target.closest('.dw')) {
+    document.querySelectorAll('.dp').forEach(function(p){ p.classList.remove('open'); });
+  }
+});
+
+/* ── Misc ── */
+var toastTmr;
+function toast(msg) {
+  var t = document.getElementById('toastEl'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTmr); toastTmr = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+}
+function go(url) { window.location.href = url; }
+function toggleTheme() {
+  var h = document.documentElement; var d = h.getAttribute('data-theme') === 'dark';
+  h.setAttribute('data-theme', d ? 'light' : 'dark');
+  document.getElementById('themeLabel').textContent = d ? 'Light mode' : 'Dark mode';
+}
+</script>
+</body>
+</html>

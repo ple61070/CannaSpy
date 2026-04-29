@@ -1,0 +1,3091 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Command Center</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>/* latin-ext */
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("dacf10fb-094e-404b-977c-3947c0d96b7b") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("086eb8f8-6ded-4c44-af3f-869f1c0451d3") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("12336c6d-abeb-400d-842d-7a307823d1aa") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("aad4f89d-e49d-4f1f-ad20-95bccf35553f") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("e61922d3-b113-46c0-93a1-ec5567c6f480") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("ed67056a-44a5-4985-83b8-6500dd1544f4") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("9da479bb-52d3-41ce-b026-6e4cf87b68bf") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("86622b46-91b1-4a74-90f5-164d8b876d8f") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("378aa774-e2a6-44b6-a37e-02f5bf12ef75") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("ead1a58f-0cc2-4f4c-966a-627abbf3d518") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("e61922d3-b113-46c0-93a1-ec5567c6f480") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("ed67056a-44a5-4985-83b8-6500dd1544f4") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("9da479bb-52d3-41ce-b026-6e4cf87b68bf") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("86622b46-91b1-4a74-90f5-164d8b876d8f") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("378aa774-e2a6-44b6-a37e-02f5bf12ef75") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("ead1a58f-0cc2-4f4c-966a-627abbf3d518") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("e61922d3-b113-46c0-93a1-ec5567c6f480") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("ed67056a-44a5-4985-83b8-6500dd1544f4") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("9da479bb-52d3-41ce-b026-6e4cf87b68bf") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("86622b46-91b1-4a74-90f5-164d8b876d8f") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("378aa774-e2a6-44b6-a37e-02f5bf12ef75") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("ead1a58f-0cc2-4f4c-966a-627abbf3d518") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("e61922d3-b113-46c0-93a1-ec5567c6f480") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("ed67056a-44a5-4985-83b8-6500dd1544f4") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("9da479bb-52d3-41ce-b026-6e4cf87b68bf") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("86622b46-91b1-4a74-90f5-164d8b876d8f") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("378aa774-e2a6-44b6-a37e-02f5bf12ef75") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("ead1a58f-0cc2-4f4c-966a-627abbf3d518") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("9811a218-9487-4ab2-baef-9fc1bdb4a575") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("d61c473d-67c0-43ff-b877-ad89d1f90d31") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("cc6b29f7-9968-4087-aed6-8324a4b4d91a") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("cd815c37-1a5c-4e65-916c-7e1c9f4ba7f5") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("9811a218-9487-4ab2-baef-9fc1bdb4a575") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("d61c473d-67c0-43ff-b877-ad89d1f90d31") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("cc6b29f7-9968-4087-aed6-8324a4b4d91a") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("cd815c37-1a5c-4e65-916c-7e1c9f4ba7f5") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("9811a218-9487-4ab2-baef-9fc1bdb4a575") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("d61c473d-67c0-43ff-b877-ad89d1f90d31") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("cc6b29f7-9968-4087-aed6-8324a4b4d91a") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("cd815c37-1a5c-4e65-916c-7e1c9f4ba7f5") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("9811a218-9487-4ab2-baef-9fc1bdb4a575") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("d61c473d-67c0-43ff-b877-ad89d1f90d31") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("cc6b29f7-9968-4087-aed6-8324a4b4d91a") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("cd815c37-1a5c-4e65-916c-7e1c9f4ba7f5") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("9811a218-9487-4ab2-baef-9fc1bdb4a575") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("d61c473d-67c0-43ff-b877-ad89d1f90d31") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("cc6b29f7-9968-4087-aed6-8324a4b4d91a") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("cd815c37-1a5c-4e65-916c-7e1c9f4ba7f5") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("9811a218-9487-4ab2-baef-9fc1bdb4a575") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("d61c473d-67c0-43ff-b877-ad89d1f90d31") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("cc6b29f7-9968-4087-aed6-8324a4b4d91a") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("cd815c37-1a5c-4e65-916c-7e1c9f4ba7f5") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+
+/* ══ AURORA+ TOKENS ══ */
+[data-theme="light"]{
+  --bg:#eef1f5;
+  --bg-g1:rgba(9,161,161,0.0);--bg-g2:rgba(211,150,166,0.0);--bg-g3:rgba(246,201,146,0.0);
+  --sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);
+  --surface:#ffffff;--surface-solid:#ffffff;--surface-2:#f7f8fa;--surface-3:#eef1f5;
+  --glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);
+  --border:rgba(13,31,46,0.06);--border-2:rgba(13,31,46,0.12);--border-hot:rgba(9,161,161,0.38);
+  --text-1:#0d1f2e;--text-2:#3a617d;--text-3:#6b8299;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.10);--accent-hover:#078484;
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --warning:#985000;--warning-soft:rgba(234,150,90,0.14);
+  --rose:#a85a7a;--rose-strong:#a85a7a;--rose-soft:rgba(211,150,166,0.16);--rose-border:rgba(211,150,166,0.35);
+  --slate:#5484A4;--positive:#077575;--danger:#c43b4e;
+  --card-shadow:0 1px 2px rgba(13,31,46,0.04),0 4px 16px -4px rgba(13,31,46,0.08),0 24px 48px -24px rgba(13,31,46,0.10);
+  --card-shadow-lg:0 2px 4px rgba(13,31,46,0.06),0 12px 32px -6px rgba(13,31,46,0.14),0 32px 72px -20px rgba(13,31,46,0.18);
+  --map-bg:#eaf2f5;--map-grid:rgba(9,161,161,0.08);
+  --map-road:rgba(255,255,255,0.92);--map-road-minor:rgba(255,255,255,0.65);
+  --map-block:rgba(210,224,232,0.65);--map-block-2:rgba(194,214,222,0.55);--map-park:rgba(185,218,190,0.55);
+  --mesh-anim-1:rgba(9,161,161,0.0);--mesh-anim-2:rgba(211,150,166,0.0);
+  --stat-bg:linear-gradient(180deg,rgba(9,161,161,0.04),#ffffff);
+  --stat-border:rgba(13,31,46,0.08);
+  --cta-fg-on-pos:#ffffff;
+  --cta-shadow:0 10px 30px -10px rgba(9,161,161,0.35);
+  --cta-danger-shadow:0 10px 30px -10px rgba(224,90,106,0.35);
+}
+[data-theme="dark"]{
+  --bg:#081018;
+  --bg-g1:rgba(11,184,184,0.14);--bg-g2:rgba(211,150,166,0.18);--bg-g3:rgba(246,201,146,0.10);
+  --sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);
+  --surface:rgba(18,32,46,0.65);--surface-solid:#14202a;--surface-2:rgba(22,38,55,0.82);--surface-3:#1a2a38;
+  --glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);
+  --border:rgba(11,184,184,0.16);--border-2:rgba(11,184,184,0.28);--border-hot:rgba(11,184,184,0.5);
+  --text-1:#e6f0f7;--text-2:rgba(230,240,247,0.78);--text-3:rgba(230,240,247,0.58);
+  --accent:#0bd5d5;--accent-soft:rgba(11,213,213,0.12);--accent-hover:#3aefef;
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.12);
+  --warning:#ef9a4f;--warning-soft:rgba(234,150,90,0.16);
+  --rose:#D396A6;--rose-strong:#e6afc0;--rose-soft:rgba(211,150,166,0.14);--rose-border:rgba(211,150,166,0.32);
+  --slate:#acc0d3;--positive:#0bd5d5;--danger:#ff6b7d;
+  --card-shadow:0 2px 12px rgba(0,0,0,0.30),0 24px 60px -24px rgba(0,0,0,0.55);
+  --card-shadow-lg:0 24px 60px -20px rgba(0,0,0,0.65);
+  --map-bg:#0a1822;--map-grid:rgba(11,184,184,0.08);
+  --map-road:rgba(28,46,62,0.8);--map-road-minor:rgba(22,38,52,0.7);
+  --map-block:rgba(16,30,42,0.75);--map-block-2:rgba(13,26,38,0.65);--map-park:rgba(10,28,18,0.7);
+  --mesh-anim-1:rgba(11,184,184,0.10);--mesh-anim-2:rgba(211,150,166,0.12);
+  --stat-bg:linear-gradient(180deg,rgba(11,184,184,0.08),rgba(20,35,50,0.5));
+  --stat-border:rgba(11,184,184,0.2);
+  --cta-fg-on-pos:#061017;
+  --cta-shadow:0 10px 30px -10px rgba(11,184,184,0.45);
+  --cta-danger-shadow:0 10px 30px -10px rgba(224,90,106,0.45);
+}
+:root{
+  --sans:'Plus Jakarta Sans',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --display:'Instrument Serif','Plus Jakarta Sans',serif;
+  --r:18px;--r-sm:12px;--r-xs:8px;
+  --nav-w:250px;--list-w:360px;--detail-w:420px;
+  --transition:all 0.32s cubic-bezier(.2,.8,.2,1);
+  --ease-spring:cubic-bezier(.2,.8,.2,1);
+  /* TWEAKABLE */
+  --tw-glass-blur:20px;--tw-glass-sat:1.4;
+  --tw-mesh-alpha:1;--tw-mesh-size:220%;
+  --tw-stat-size:44px;--tw-stat-italic:italic;--tw-stat-weight:400;
+  --tw-spacing:1;
+  --tw-spark-width:1.6;--tw-spark-speed:1.2s;
+  --tw-conic-play:paused;--tw-conic-speed:6s;--tw-conic-opacity:0.55;
+  --r-tw-lg:18px;--r-tw-md:14px;--r-tw-sm:12px;
+}
+/* Tweak overrides */
+.nav-sidebar{backdrop-filter:blur(calc(var(--tw-glass-blur)*1.2)) saturate(var(--tw-glass-sat))!important;-webkit-backdrop-filter:blur(calc(var(--tw-glass-blur)*1.2)) saturate(var(--tw-glass-sat))!important;}
+.detail-panel,.modal{backdrop-filter:blur(calc(var(--tw-glass-blur)*1.6)) saturate(calc(var(--tw-glass-sat) + 0.2))!important;-webkit-backdrop-filter:blur(calc(var(--tw-glass-blur)*1.6)) saturate(calc(var(--tw-glass-sat) + 0.2))!important;}
+.list-panel,.list-item,.map-title-pill,.map-stat-pill,.freshness-pill,.zoom-btn,.map-legend,.pin-tag{backdrop-filter:blur(var(--tw-glass-blur)) saturate(var(--tw-glass-sat))!important;-webkit-backdrop-filter:blur(var(--tw-glass-blur)) saturate(var(--tw-glass-sat))!important;}
+.list-item,.det-stat,.billing-terms{border-radius:var(--r-tw-md)!important;}
+.modal{border-radius:calc(var(--r-tw-lg) + 4px)!important;}
+.zoom-btn,.li-icon{border-radius:var(--r-tw-sm)!important;}
+.nav-link,.loc-dd-btn,.flt-dd-btn,.loc-dd-pop,.flt-dd-pop,.theme-row{border-radius:var(--r-tw-sm)!important;}
+.det-stat-n{font-size:var(--tw-stat-size)!important;font-style:var(--tw-stat-italic)!important;font-weight:var(--tw-stat-weight)!important;}
+.detail-head{padding:calc(20px*var(--tw-spacing)) calc(22px*var(--tw-spacing)) calc(18px*var(--tw-spacing))!important;}
+.detail-scroll{padding:calc(16px*var(--tw-spacing)) calc(18px*var(--tw-spacing))!important;}
+.detail-footer{padding:calc(16px*var(--tw-spacing)) calc(22px*var(--tw-spacing)) calc(20px*var(--tw-spacing))!important;}
+.list-scroll{padding:calc(10px*var(--tw-spacing)) calc(10px*var(--tw-spacing)) calc(16px*var(--tw-spacing))!important;}
+.list-item{padding:calc(14px*var(--tw-spacing)) calc(16px*var(--tw-spacing))!important;margin-bottom:calc(8px*var(--tw-spacing))!important;gap:calc(12px*var(--tw-spacing))!important;}
+.det-section{margin-bottom:calc(18px*var(--tw-spacing))!important;}
+.det-stats{gap:calc(10px*var(--tw-spacing))!important;margin-bottom:calc(22px*var(--tw-spacing))!important;}
+.det-stat{padding:calc(16px*var(--tw-spacing)) calc(14px*var(--tw-spacing)) calc(14px*var(--tw-spacing))!important;}
+.li-sparkline path.line{stroke-width:var(--tw-spark-width)!important;animation-duration:var(--tw-spark-speed)!important;}
+body::before,body::after{opacity:var(--tw-mesh-alpha);}
+body::after{background-size:var(--tw-mesh-size) var(--tw-mesh-size)!important;}
+/* ══ LAYOUT: SEVERITY-DRIVEN SIZING ══ */
+body.lv-sev .list-item{transition:padding .3s,transform .3s;}
+body.lv-sev .list-item[data-sev="critical"]{padding:calc(18px*var(--tw-spacing)) calc(18px*var(--tw-spacing))!important;box-shadow:0 2px 8px rgba(224,90,106,0.08),0 20px 48px -20px rgba(224,90,106,0.25);border-color:rgba(224,90,106,0.25);}
+body.lv-sev .list-item[data-sev="critical"] .li-title{font-size:15px;}
+body.lv-sev .list-item[data-sev="critical"] .li-icon{width:40px;height:40px;}
+body.lv-sev .list-item[data-sev="high"]{padding:calc(12px*var(--tw-spacing)) calc(16px*var(--tw-spacing))!important;}
+body.lv-sev .list-item[data-sev="medium"],body.lv-sev .list-item[data-sev="info"]{padding:calc(9px*var(--tw-spacing)) calc(14px*var(--tw-spacing))!important;opacity:0.88;}
+body.lv-sev .list-item[data-sev="medium"] .li-title,body.lv-sev .list-item[data-sev="info"] .li-title{font-size:12.5px;font-weight:600;}
+body.lv-sev .list-item[data-sev="medium"] .li-sparkline,body.lv-sev .list-item[data-sev="info"] .li-sparkline{display:none;}
+body.lv-sev .list-item[data-sev="medium"] .li-icon,body.lv-sev .list-item[data-sev="info"] .li-icon{width:26px;height:26px;}
+body.lv-sev .list-item[data-sev="medium"] .li-icon svg,body.lv-sev .list-item[data-sev="info"] .li-icon svg{width:12px;height:12px;}
+body.lv-sev .list-item[data-sev="medium"] .li-chips,body.lv-sev .list-item[data-sev="info"] .li-chips{display:none;}
+body.lv-sev .list-item[data-sev="blocking-you"]{border-color:rgba(212,144,10,0.35);box-shadow:0 2px 8px rgba(212,144,10,0.08),0 20px 48px -20px rgba(212,144,10,0.22);}
+
+/* ══ LAYOUT VARIANT: 24H TIME RIBBON ══ */
+/* threat timeline removed 2026-04-26 — see HANDOFF for rationale */
+
+/* ══ LAYOUT VARIANT: MAP HEAT OVERLAY ══ */
+body.lv-heat .map-area::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:5;background:
+  radial-gradient(circle at 32% 36%, rgba(224,90,106,0.32), transparent 18%),
+  radial-gradient(circle at 63% 38%, rgba(224,90,106,0.28), transparent 16%),
+  radial-gradient(circle at 24% 43%, rgba(234,150,90,0.22), transparent 14%),
+  radial-gradient(circle at 56% 59%, rgba(11,184,184,0.22), transparent 14%),
+  radial-gradient(circle at 20% 60%, rgba(212,144,10,0.25), transparent 14%),
+  radial-gradient(circle at 57% 72%, rgba(212,144,10,0.25), transparent 14%);
+mix-blend-mode:multiply;animation:heatBreathe 6s ease-in-out infinite;}
+[data-theme="dark"] body.lv-heat .map-area::before{mix-blend-mode:screen;}
+@keyframes heatBreathe{0%,100%{opacity:0.85}50%{opacity:1}}
+body.lv-heat .comp-pin .pin-head{box-shadow:0 0 0 6px color-mix(in srgb,currentColor 18%,transparent),0 10px 28px -8px currentColor!important;}
+
+/* ══ LAYOUT: PROGRESSIVE DISCLOSURE — inline expand instead of side panel ══ */
+body.lv-inline .detail-panel{width:0!important;}
+body.lv-inline .list-item.selected{padding-bottom:0!important;}
+body.lv-inline .list-item.selected .li-inline{display:block;}
+.li-inline{display:none;padding:14px 2px 4px;margin-top:10px;border-top:1px solid var(--border);}
+.li-inline .det-stats{grid-template-columns:1fr 1fr!important;gap:8px!important;margin-bottom:12px!important;}
+.li-inline .det-stat{padding:10px 10px!important;}
+.li-inline .det-stat-n{font-size:26px!important;line-height:1!important;margin-bottom:4px!important;}
+.li-inline .det-stat-label{font-size:9px;letter-spacing:0.08em;}
+.li-inline .det-section{margin-bottom:10px!important;}
+.li-inline .det-narrative{font-size:11px;line-height:1.55;}
+.li-inline .price-table{font-size:10px;}
+.li-inline .price-table th,.li-inline .price-table td{padding:5px 6px;}
+.li-inline .block-status-strip{padding:8px 10px;margin-bottom:10px;font-size:10px;}
+.li-inline .footer-row{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
+.li-inline .footer-btn{padding:9px 10px;font-size:11px;min-width:0;flex:1;}
+
+/* ══ AMBIENT GRADIENT MESH ══ (replaces noise) */
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse 1100px 700px at 12% -5%,var(--bg-g1),transparent 45%),radial-gradient(ellipse 900px 600px at 88% 15%,var(--bg-g2),transparent 45%),radial-gradient(ellipse 800px 500px at 50% 105%,var(--bg-g3),transparent 45%);pointer-events:none;z-index:0;transition:opacity 0.4s ease;}
+body::after{content:"";position:fixed;inset:0;background-image:radial-gradient(circle at 22% 32%,var(--mesh-anim-1),transparent 38%),radial-gradient(circle at 78% 72%,var(--mesh-anim-2),transparent 38%);background-size:220% 220%;animation:meshShift 24s ease-in-out infinite;pointer-events:none;z-index:0;}
+@keyframes meshShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes conicRotate{to{transform:rotate(1turn)}}
+@keyframes priceFlash{0%{background:var(--warning-soft);transform:scale(1)}40%{background:var(--warning-soft);transform:scale(1.03)}100%{background:transparent;transform:scale(1)}}
+@keyframes countUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes sparklineDraw{to{stroke-dashoffset:0}}
+@keyframes fadeStagger{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* Make sure content sits ABOVE the ambient mesh */
+.nav-sidebar,.workspace,.toast,.modal-overlay{position:relative;z-index:1;}
+
+/* ══ FOCUS VISIBLE ══ Keyboard-only focus rings. No change for mouse users. */
+*:focus{outline:none;}
+*:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px;}
+.nav-link:focus-visible{outline-color:rgba(255,255,255,0.85);outline-offset:2px;}
+.comp-pin:focus-visible .pin-head{outline:3px solid var(--accent);outline-offset:3px;}
+.list-item:focus-visible{outline:none;background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent);}
+.modal-btn:focus-visible,.footer-btn:focus-visible{outline-offset:3px;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;transition:background 0.4s,color 0.3s;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);background-attachment:fixed;}
+
+/* ══ NAV SIDEBAR ══ glass */
+.nav-sidebar{width:var(--nav-w);background:var(--sidebar);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);border-right:1px solid var(--border);height:100vh;display:flex;flex-direction:column;flex-shrink:0;position:relative;overflow:hidden;z-index:20;color:var(--sidebar-fg);}
+.nav-sidebar::after{content:'';position:absolute;top:-60px;left:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(11,184,184,0.14),transparent 70%);pointer-events:none;}
+.nav-sidebar::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--glass-edge-top) 50%,transparent);z-index:2;}
+.nav-inner{padding:22px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 20px 22px;border-bottom:1px solid var(--border);margin-bottom:18px;}
+.logo-row{display:flex;align-items:center;gap:10px;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#0bb8b8 0%,#D396A6 100%);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 20px -4px rgba(11,184,184,0.5),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--sidebar-fg);letter-spacing:-0.01em;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--sidebar-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;}
+.nav-group{padding:0 11px;margin-bottom:4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:var(--sidebar-fg-dim);padding:0 8px;margin-bottom:5px;}
+.nav-link{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r-sm);color:var(--sidebar-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;}
+.nav-link:hover{background:var(--accent-soft);color:var(--sidebar-fg);transform:translateX(4px);}
+.nav-link.active{background:var(--accent-soft);color:var(--sidebar-fg);font-weight:500;box-shadow:inset 0 0 0 1px var(--border-hot);}
+.nav-link.s-locked{opacity:1;color:var(--sidebar-fg-dim);cursor:default;}
+.nav-link.s-locked:hover{background:transparent;transform:none;}
+.nav-footer{margin-top:auto;padding:14px 11px;border-top:1px solid var(--border);}
+.theme-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r-sm);cursor:pointer;background:transparent;border:none;width:100%;color:var(--sidebar-fg-mute);font-family:var(--sans);font-size:12px;transition:var(--transition);}
+.theme-row:hover{background:var(--accent-soft);color:var(--sidebar-fg);}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.pill-toggle{margin-left:auto;width:36px;height:20px;background:var(--border-2);border-radius:10px;position:relative;transition:background 0.3s;flex-shrink:0;}
+.pill-knob{position:absolute;top:2px;left:2px;width:16px;height:16px;background:var(--sidebar-fg);border-radius:50%;transition:transform 0.3s cubic-bezier(.2,.8,.2,1);box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+[data-theme="light"] .pill-toggle{background:var(--accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(16px);}
+.step-dot{width:16px;height:16px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ══ WORKSPACE ══ */
+.workspace{flex:1;display:flex;height:100vh;overflow:hidden;position:relative;}
+
+/* ══ DETAIL PANEL — heavy glass, display numbers ══ */
+.detail-panel{
+  width:0;overflow:hidden;
+  background:var(--surface);
+  backdrop-filter:blur(32px) saturate(1.6);
+  -webkit-backdrop-filter:blur(32px) saturate(1.6);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  height:100%;flex-shrink:0;
+  transition:width 0.32s cubic-bezier(.2,.8,.2,1);
+  z-index:8;
+  box-shadow:none;
+  position:relative;
+}
+.detail-panel.open{
+  width:var(--detail-w);
+  box-shadow:var(--card-shadow-lg);
+}
+.detail-panel.open::before{
+  content:'';position:absolute;inset:0;
+  border-right:1px solid transparent;
+  pointer-events:none;
+  background:linear-gradient(180deg,var(--glass-edge-top),transparent 25%,transparent 75%,var(--glass-edge-inner) 100%);
+  -webkit-mask:linear-gradient(90deg,transparent calc(100% - 1px),#000 calc(100% - 1px));
+  mask:linear-gradient(90deg,transparent calc(100% - 1px),#000 calc(100% - 1px));
+}
+.detail-inner{
+  width:var(--detail-w);
+  display:flex;flex-direction:column;
+  height:100%;overflow:hidden;
+  flex-shrink:0;
+}
+
+.detail-head{
+  padding:20px 22px 18px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.detail-back{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--surface-3);border:none;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:var(--transition);
+  color:var(--text-2);margin-top:2px;
+}
+.detail-back:hover{background:var(--border-2);color:var(--text-1);}
+.detail-back svg{width:14px;height:14px;}
+.detail-head-body{flex:1;min-width:0;}
+.det-sev{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;padding:3px 10px;border-radius:100px;display:inline-block;margin-bottom:8px;border:1px solid transparent;}
+.sev-critical{background:rgba(224,90,106,0.15);color:var(--danger);border-color:rgba(224,90,106,0.3);}
+.sev-high{background:var(--warning-soft);color:var(--warning);border-color:rgba(152,80,0,0.25);}
+.sev-blocking{background:var(--warm-soft);color:var(--warm);border-color:rgba(212,144,10,0.3);}
+.sev-medium{background:var(--accent-soft);color:var(--accent);border-color:rgba(11,184,184,0.3);}
+.sev-block{background:var(--rose-soft);color:var(--rose);border-color:var(--rose-border);}
+.sev-info{background:var(--surface-3);color:var(--text-2);border-color:var(--border);}
+.sev-tracking{background:var(--accent-soft);color:var(--accent);border-color:rgba(11,184,184,0.3);}
+.det-rival{font-family:var(--mono);font-size:10px;color:var(--text-3);letter-spacing:0.12em;margin-bottom:6px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.det-title{font-size:20px;font-weight:800;color:var(--text-1);line-height:1.15;letter-spacing:-0.025em;}
+
+.detail-scroll{flex:1;overflow-y:auto;padding:16px 18px;min-height:0;}
+.detail-scroll::-webkit-scrollbar{width:3px;}
+.detail-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+
+.det-section{margin-bottom:18px;}
+.det-section-label{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;}
+.det-narrative{font-size:12px;color:var(--text-2);line-height:1.65;}
+
+/* Recommendation block — locked across S04/S12 (variant: .muted for honest "no action" cases) */
+.det-rec{margin-bottom:14px;padding:10px 12px 11px 13px;background:var(--accent-soft);border:1px solid rgba(11,184,184,0.20);border-left:3px solid var(--accent);border-radius:8px;}
+.det-rec .det-section-label{color:var(--accent);margin-bottom:5px;}
+.det-rec .det-narrative{font-size:12.5px;color:var(--text-1);line-height:1.5;}
+.det-rec.muted{background:var(--surface-3);border-color:var(--border-2);border-left-color:var(--text-3);}
+.det-rec.muted .det-section-label{color:var(--text-3);}
+.det-rec.muted .det-narrative{color:var(--text-2);}
+
+.det-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
+.det-stat{background:var(--stat-bg);border:1px solid var(--stat-border);border-radius:14px;padding:16px 14px 14px;transition:transform 0.35s var(--ease-spring);animation:countUp 0.6s var(--ease-spring) both;}
+.det-stat:hover{transform:translateY(-2px);}
+.det-stat:nth-child(1){animation-delay:0.08s;}
+.det-stat:nth-child(2){animation-delay:0.15s;}
+.det-stat:nth-child(3){animation-delay:0.22s;}
+.det-stat:nth-child(4){animation-delay:0.29s;}
+.det-stat-n{font-family:var(--display);font-size:44px;font-weight:400;font-style:italic;letter-spacing:-0.03em;color:var(--text-1);font-variant-numeric:tabular-nums;line-height:0.95;margin-bottom:6px;}
+.det-stat-n.cn-danger{color:var(--danger);}
+.det-stat-n.cn-teal{color:var(--accent);}
+.det-stat-n.cn-warm{color:var(--warning);}
+.det-stat-n.cn-blocking{color:var(--warm);}
+.det-stat-n.cn-rose{color:var(--rose);}
+.det-stat-n .sign{font-size:0.7em;vertical-align:0.08em;margin-right:0.02em;}
+.det-stat-label{font-family:var(--mono);font-size:10px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;font-weight:500;}
+
+.price-table{width:100%;border-collapse:collapse;font-size:11px;}
+.price-table th{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;font-weight:500;}
+.price-table td{padding:8px;border-bottom:1px solid var(--border);color:var(--text-1);}
+.price-table tr:last-child td{border-bottom:none;}
+.price-table tr:hover td{background:var(--surface-2);}
+.price-old{color:var(--text-3);text-decoration:line-through;font-family:var(--mono);font-size:10px;}
+.price-new{color:var(--danger);font-family:var(--mono);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;}
+.price-delta{font-family:var(--mono);font-size:9px;background:rgba(224,90,106,0.1);color:var(--danger);padding:2px 5px;border-radius:3px;}
+.price-delta-pos{font-family:var(--mono);font-size:9px;background:rgba(9,161,161,0.1);color:var(--accent);padding:2px 5px;border-radius:3px;}
+
+/* Block status strip */
+.block-status-strip{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(211,150,166,0.08);
+  border:1px solid rgba(211,150,166,0.2);
+  border-radius:var(--r-sm);
+  padding:10px 14px;
+  margin-bottom:16px;
+}
+.bss-dot{width:9px;height:9px;border-radius:50%;background:var(--rose);flex-shrink:0;}
+.bss-text{font-size:11px;color:var(--rose);font-weight:600;}
+.bss-since{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:auto;}
+
+.detail-footer{
+  padding:16px 22px 20px;
+  border-top:1px solid var(--border);
+  display:flex;flex-direction:column;gap:10px;
+  flex-shrink:0;
+}
+.footer-row{display:flex;gap:10px;}
+.footer-btn{
+  flex:1;padding:12px 20px;border-radius:100px;
+  font-size:13px;font-weight:600;cursor:pointer;
+  font-family:var(--sans);
+  transition:transform 0.32s var(--ease-spring),box-shadow 0.32s var(--ease-spring),border-color 0.32s var(--ease-spring);
+  border:1px solid var(--border-hot);
+  background:var(--accent-soft);color:var(--accent);text-align:center;
+  position:relative;overflow:hidden;letter-spacing:-0.005em;will-change:transform;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.footer-btn::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,0.18),transparent 50%);opacity:0;transition:opacity 0.3s;pointer-events:none;}
+.footer-btn:hover{box-shadow:0 12px 32px -8px color-mix(in srgb,var(--accent) 45%,transparent);}
+.footer-btn:hover::after{opacity:1;}
+.footer-btn:active{transform:scale(0.98);}
+.footer-btn.primary{background:linear-gradient(135deg,var(--accent) 0%,color-mix(in srgb,var(--accent) 60%,#000) 100%);border-color:transparent;color:var(--cta-fg-on-pos);box-shadow:var(--cta-shadow);}
+.footer-btn.primary:hover{box-shadow:0 16px 40px -8px color-mix(in srgb,var(--accent) 55%,transparent);}
+.footer-btn.fb-danger{background:linear-gradient(135deg,var(--danger) 0%,color-mix(in srgb,var(--danger) 60%,#000) 100%);border-color:transparent;color:#fff;box-shadow:var(--cta-danger-shadow);}
+.footer-btn.fb-danger:hover{box-shadow:0 16px 40px -8px color-mix(in srgb,var(--danger) 55%,transparent);}
+.footer-btn.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);cursor:default;opacity:0.9;}
+.footer-btn.active:hover{box-shadow:none;}
+.footer-btn.active::after{display:none;}
+
+/* ══ LIST PANEL ══ glass */
+.list-panel{
+  width:var(--list-w);
+  background:var(--surface);
+  backdrop-filter:blur(20px) saturate(1.4);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  height:100%;flex-shrink:0;
+  z-index:5;
+  box-shadow:var(--card-shadow);
+  position:relative; /* anchor for bulk-action-bar (absolute, bottom-pinned) */
+}
+.list-search-bar{padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:6px;}
+
+.loc-tabs-bar{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.loc-tab-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);flex-shrink:0;}
+.loc-dd-wrap{position:relative;display:inline-block;}
+.loc-dd-btn{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:var(--r-sm);font-size:11px;font-weight:600;border:1.5px solid var(--border-2);background:var(--surface);color:var(--text-1);cursor:pointer;font-family:var(--sans);transition:var(--transition);white-space:nowrap;}
+.loc-dd-btn:hover{border-color:var(--accent);color:var(--accent);}
+.loc-dd-btn.loc-dd-active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.loc-dd-btn svg{width:10px;height:10px;flex-shrink:0;opacity:0.6;}
+.loc-dd-pop{position:absolute;top:calc(100% + 5px);left:0;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);box-shadow:0 8px 32px rgba(30,60,80,0.14);z-index:200;min-width:180px;padding:5px;display:none;}
+.loc-dd-pop.open{display:block;}
+.loc-dd-opt{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:6px;font-size:12px;color:var(--text-1);cursor:pointer;transition:background 0.1s;user-select:none;font-family:var(--sans);}
+.loc-dd-opt:hover{background:var(--surface-3);}
+.loc-dd-opt.loo-sel{color:var(--accent);font-weight:700;}
+.loc-dd-opt.loo-sel::after{content:"✓";font-size:11px;}
+.loc-dd-opt-count{font-family:var(--mono);font-size:9px;color:var(--text-3);}
+.loc-tab:hover{border-color:var(--accent);color:var(--accent);}
+.loc-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 8px rgba(9,161,161,0.28);}
+
+.filter-bar{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.filter-bar-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);flex-shrink:0;}
+.flt-dd-wrap{position:relative;display:inline-block;}
+.flt-dd-btn{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:var(--r-sm);font-size:11px;font-weight:600;border:1.5px solid var(--border-2);background:var(--surface);color:var(--text-1);cursor:pointer;font-family:var(--sans);transition:var(--transition);white-space:nowrap;}
+.flt-dd-btn:hover{border-color:var(--accent);color:var(--accent);}
+.flt-dd-btn.flt-active{background:var(--danger);border-color:var(--danger);color:#fff;}
+.flt-dd-btn.flt-partial{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.flt-dd-btn svg{width:10px;height:10px;flex-shrink:0;opacity:0.6;}
+.flt-dd-pop{position:absolute;top:calc(100% + 5px);left:0;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);box-shadow:0 8px 32px rgba(30,60,80,0.14);z-index:200;min-width:175px;padding:5px;display:none;}
+.flt-dd-pop.open{display:block;}
+.flt-dd-opt{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;font-size:12px;color:var(--text-1);cursor:pointer;transition:background 0.1s;user-select:none;font-family:var(--sans);}
+.flt-dd-opt:hover{background:var(--surface-3);}
+.flt-dd-opt.flo-sel{color:var(--accent);font-weight:700;}
+.flt-dd-opt.flo-sel::after{content:"✓";margin-left:auto;font-size:11px;}
+.flt-dd-divider{height:1px;background:var(--border);margin:4px 0;}
+.flt-dd-opt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.filter-count{font-family:var(--mono);font-size:9px;color:var(--text-3);margin-left:auto;white-space:nowrap;flex-shrink:0;}
+
+.list-scroll{flex:1;overflow-y:auto;min-height:0;}
+.list-scroll::-webkit-scrollbar{width:3px;}
+.list-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+
+.list-divider{padding:8px 16px 5px;font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);background:var(--surface-2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;}
+
+.list-scroll{padding:10px 10px 16px;}
+.list-divider{padding:14px 10px 8px;background:transparent;border:none;position:static;}
+
+/* Alert card — frosted glass */
+.list-item{
+  display:flex;align-items:flex-start;gap:12px;padding:14px 16px;
+  background:var(--surface);
+  backdrop-filter:blur(14px) saturate(1.3);
+  -webkit-backdrop-filter:blur(14px) saturate(1.3);
+  border:1px solid var(--border);
+  border-radius:16px;
+  margin-bottom:8px;
+  cursor:pointer;
+  transition:transform 0.32s var(--ease-spring),box-shadow 0.32s var(--ease-spring),border-color 0.32s var(--ease-spring);
+  position:relative;user-select:none;
+  opacity:0;animation:fadeStagger 0.5s var(--ease-spring) forwards;
+}
+.list-item::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(180deg,var(--glass-edge-top),transparent 40%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:0.9;}
+.list-item:hover{transform:translateY(-2px);box-shadow:var(--card-shadow);border-color:var(--border-hot);}
+.list-item.selected{border-color:transparent;box-shadow:var(--card-shadow),0 0 0 1px var(--border-hot);}
+.list-item.selected::after{content:'';position:absolute;inset:-1px;border-radius:inherit;background:conic-gradient(from 0deg,var(--accent),var(--rose),var(--warning),var(--accent));animation:conicRotate var(--tw-conic-speed,6s) linear infinite;animation-play-state:var(--tw-conic-play,paused);z-index:-1;opacity:var(--tw-conic-opacity,0.55);}
+.list-item > *{position:relative;z-index:1;}
+
+/* ════ TRIAGE OPERATIONAL FEATURES — snooze, bulk, empty (locked 2026-04-26) ════ */
+/* Adapted from S12 v6 baseline. S04's .list-item is a rounded card (14px padding,
+   16px border-radius) whereas S12's is a flat row — the bulk checkbox here sits
+   inside the existing left padding region rather than at the card edge. */
+
+/* Snooze visual state on the row card */
+.list-item.snoozed{opacity:0.7;}
+.list-item.snoozed::before{
+  content:'';position:absolute;left:0;top:14px;bottom:14px;width:3px;
+  background:var(--warm);opacity:0.7;border-radius:0 2px 2px 0;
+  z-index:2;pointer-events:none;
+}
+.list-item.snoozed.selected::before{display:none;}
+.snooze-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--warm-soft);color:var(--warm);
+  font-family:var(--mono);font-size:9.5px;font-weight:600;
+  letter-spacing:0.04em;padding:2px 7px;border-radius:4px;
+  border:1px solid rgba(212,144,10,0.20);
+  margin-top:6px;cursor:pointer;
+}
+.snooze-tag svg{width:9px;height:9px;}
+
+/* Snooze popover */
+.snooze-wrap{position:relative;display:inline-block;}
+.snooze-pop{
+  position:absolute;top:calc(100% + 6px);left:0;
+  min-width:220px;background:var(--surface);
+  backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border:1px solid var(--border);border-radius:10px;
+  box-shadow:var(--card-shadow-lg,0 8px 24px rgba(0,0,0,0.12));padding:6px;
+  display:none;z-index:50;
+}
+.bulk-action-bar .snooze-pop{top:auto;bottom:calc(100% + 6px);}
+.snooze-pop.open{display:block;}
+.snooze-opt{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:8px 10px;border-radius:6px;cursor:pointer;
+  font-size:12px;color:var(--text-1);transition:background 0.12s ease;
+}
+.snooze-opt:hover{background:var(--surface-2);}
+.snooze-opt-when{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.snooze-opt-div{height:1px;background:var(--border);margin:4px 6px;}
+
+/* Bulk checkbox — only on alert rows (.list-item[data-type="alert"]).
+   Sits where the unread dot lives, replacing it when in bulk mode. */
+.bulk-checkbox{
+  position:absolute;left:8px;top:18px;
+  width:16px;height:16px;
+  border:1.5px solid var(--border-hot);border-radius:4px;
+  background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+  cursor:pointer;z-index:3;
+}
+.list-item[data-type="alert"]:hover .bulk-checkbox,
+body.bulk-mode .list-item[data-type="alert"] .bulk-checkbox{opacity:1;}
+.bulk-checkbox:hover{border-color:var(--accent);}
+.bulk-checkbox.checked{background:var(--accent);border-color:var(--accent);opacity:1;}
+.bulk-checkbox.checked svg{color:#fff;width:10px;height:10px;}
+.list-item.bulk-checked{border-color:var(--accent)!important;box-shadow:0 0 0 1px var(--accent),var(--card-shadow);}
+/* When bulk mode is on, hide the unread pip on alerts so the checkbox doesn't double up */
+body.bulk-mode .list-item[data-type="alert"] .unread-dot{visibility:hidden;}
+
+/* Bulk action bar — pinned to the bottom of the list panel */
+.bulk-action-bar{
+  position:absolute;left:0;right:0;bottom:0;
+  display:flex;align-items:center;gap:12px;
+  padding:14px 24px;
+  background:var(--surface);
+  backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border-top:1px solid var(--border-hot);
+  box-shadow:0 -8px 24px rgba(0,0,0,0.08);
+  transform:translateY(110%);transition:transform 0.22s cubic-bezier(0.32,0.72,0,1);
+  z-index:10;
+}
+[data-theme="dark"] .bulk-action-bar{box-shadow:0 -8px 24px rgba(0,0,0,0.4);}
+.bulk-action-bar.show{transform:translateY(0);}
+.bulk-count{
+  font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text-1);
+  display:flex;align-items:center;gap:8px;flex:1;
+}
+.bulk-count-pill{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:22px;height:22px;padding:0 7px;
+  background:var(--accent);color:#fff;
+  font-family:var(--mono);font-size:11px;font-weight:700;
+  border-radius:11px;
+}
+.bulk-count-label{font-weight:600;color:var(--text-1);}
+.bulk-btn{
+  background:var(--surface-2);border:1px solid var(--border);
+  color:var(--text-1);font-family:var(--sans);font-size:12px;font-weight:600;
+  padding:8px 14px;border-radius:7px;cursor:pointer;
+  transition:all 0.18s ease;display:inline-flex;align-items:center;gap:6px;
+}
+.bulk-btn:hover{background:var(--surface-3);border-color:var(--border-hot);}
+.bulk-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.bulk-btn.primary:hover{background:#089999;}
+.bulk-btn.subtle{background:transparent;border-color:transparent;color:var(--text-3);}
+.bulk-btn.subtle:hover{color:var(--text-1);background:var(--surface-2);}
+
+/* Empty state cards (3 variants) */
+.empty-state-card{
+  margin:48px auto;max-width:380px;
+  padding:32px 28px;text-align:center;
+  background:var(--surface-2);border:1px dashed var(--border-hot);
+  border-radius:14px;
+}
+.es-card-icon{
+  width:56px;height:56px;margin:0 auto 16px;
+  background:var(--accent-soft);color:var(--accent);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+}
+.es-card-icon.warm{background:var(--warm-soft);color:var(--warm);}
+.es-card-icon svg{width:24px;height:24px;}
+.es-card-title{
+  font-family:var(--display);font-size:22px;font-weight:500;
+  color:var(--text-1);letter-spacing:-0.01em;margin-bottom:6px;
+}
+.es-card-sub{
+  font-size:13px;color:var(--text-2);line-height:1.5;
+  margin-bottom:18px;
+}
+.es-card-meta{
+  font-family:var(--mono);font-size:10px;font-weight:600;
+  letter-spacing:0.06em;color:var(--text-3);
+  text-transform:uppercase;margin-bottom:18px;
+}
+.es-card-btn{
+  background:var(--surface);border:1px solid var(--border-hot);
+  color:var(--text-1);font-size:12px;font-weight:600;
+  padding:9px 18px;border-radius:7px;cursor:pointer;
+  transition:all 0.18s ease;
+}
+.es-card-btn:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+
+/* When bulk mode is active, push list-scroll up so the action bar doesn't hide content */
+body.bulk-mode .list-scroll{padding-bottom:80px!important;}
+
+.li-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.li-icon svg{width:16px;height:16px;}
+.icon-danger{background:rgba(224,90,106,0.15);color:var(--danger);}
+.icon-warn{background:var(--warning-soft);color:var(--warning);}
+.icon-blocking{background:var(--warm-soft);color:var(--warm);}
+.icon-info{background:var(--accent-soft);color:var(--accent);}
+.icon-block{background:var(--rose-soft);color:var(--rose);}
+.icon-rival{background:var(--surface-3);color:var(--text-2);}
+
+.li-body{flex:1;min-width:0;}
+.li-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;}
+.li-title{font-size:14px;font-weight:700;color:var(--text-1);line-height:1.3;letter-spacing:-0.01em;}
+.li-time{font-family:var(--mono);font-size:10px;color:var(--text-3);white-space:nowrap;flex-shrink:0;font-weight:500;}
+.li-sub{font-size:12px;color:var(--text-2);line-height:1.5;margin-bottom:8px;font-family:var(--mono);}
+.li-sparkline{width:100%;height:24px;margin:0 0 8px;opacity:0.85;}
+.li-sparkline path.line{fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:300;stroke-dashoffset:300;animation:sparklineDraw 1.2s cubic-bezier(.3,.8,.2,1) 0.3s forwards;}
+.li-sparkline .dot-end{animation:livePulse 2.2s ease-in-out infinite;transform-origin:center;transform-box:fill-box;}
+.li-chips{display:flex;gap:5px;flex-wrap:wrap;}
+.li-chip{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:100px;letter-spacing:0.04em;font-weight:500;}
+.chip-loc{background:var(--surface-3);color:var(--text-2);}
+.chip-danger{background:rgba(224,90,106,0.12);color:var(--danger);}
+.chip-warn{background:var(--warning-soft);color:var(--warning);}
+.chip-blocking{background:var(--warm-soft);color:var(--warm);}
+.chip-teal{background:var(--accent-soft);color:var(--accent);}
+.chip-rose{background:var(--rose-soft);color:var(--rose);}
+
+.unread-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);flex-shrink:0;margin-top:5px;box-shadow:0 0 0 3px rgba(224,90,106,0.15);animation:livePulse 2.5s ease-in-out infinite;}
+
+/* ══ MAP ══ */
+.map-area{flex:1;position:relative;overflow:hidden;background:var(--map-bg);transition:background 0.4s;min-width:0;}
+.map-base{position:absolute;inset:0;background-image:linear-gradient(var(--map-grid) 1px,transparent 1px),linear-gradient(90deg,var(--map-grid) 1px,transparent 1px);background-size:38px 38px;}
+.road{position:absolute;background:var(--map-road);}
+.road-minor{background:var(--map-road-minor);}
+.block{position:absolute;border-radius:3px;}
+.block-base{background:var(--map-block);}
+.block-alt{background:var(--map-block-2);}
+.block-park{background:var(--map-park);}
+
+.map-topbar{position:absolute;top:14px;left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;z-index:20;pointer-events:none;}
+.map-title-pill{background:var(--surface);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);border:1px solid var(--border);border-radius:100px;padding:8px 18px;font-size:13px;font-weight:600;color:var(--text-1);box-shadow:var(--card-shadow);pointer-events:all;display:flex;align-items:center;gap:10px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--positive);animation:livePulse 2s ease-in-out infinite;flex-shrink:0;}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.72)}}
+@keyframes lpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.75)}}
+.map-stat-pills{display:flex;gap:6px;pointer-events:all;}
+.map-stat-pill{background:var(--surface);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);border:1px solid var(--border);border-radius:100px;padding:6px 14px;font-family:var(--mono);font-size:11px;color:var(--text-2);box-shadow:var(--card-shadow);display:flex;align-items:center;gap:6px;font-weight:500;}
+.msp-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+.freshness-pill{
+  background:var(--surface);backdrop-filter:blur(20px) saturate(1.4);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border:1px solid var(--border);border-radius:100px;
+  padding:6px 14px;font-family:var(--mono);font-size:11px;
+  color:var(--text-2);box-shadow:var(--card-shadow);
+  display:flex;align-items:center;gap:10px;pointer-events:all;
+}
+.freshness-pill .fp-sep{color:var(--text-3);}
+.freshness-pill .fp-label{color:var(--text-3);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;font-weight:600;}
+.freshness-pill .fp-val{color:var(--text-1);font-weight:600;}
+.freshness-dot{width:6px;height:6px;border-radius:50%;background:var(--positive);flex-shrink:0;animation:livePulse 2s ease-in-out infinite;}
+
+.center-pin{position:absolute;transform:translate(-50%,-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.center-dot{width:14px;height:14px;background:#5484A4;border-radius:50%;border:3px solid white;box-shadow:0 2px 10px rgba(84,132,164,0.5);position:relative;}
+.center-pulse{position:absolute;top:-6px;left:-6px;width:26px;height:26px;border-radius:50%;background:rgba(84,132,164,0.18);animation:cpulse 2.2s ease-out infinite;}
+@keyframes cpulse{0%{transform:scale(0.6);opacity:0.9}100%{transform:scale(1.9);opacity:0}}
+.center-label{background:var(--surface);border:1px solid var(--border-2);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--text-1);white-space:nowrap;box-shadow:var(--card-shadow);font-family:var(--mono);letter-spacing:0.04em;}
+
+.comp-pin{position:absolute;transform:translate(-50%,-100%);z-index:8;cursor:pointer;display:flex;flex-direction:column;align-items:center;transition:transform 0.32s var(--ease-spring);gap:5px;}
+.comp-pin:hover{transform:translate(-50%,-100%) translateY(-3px) scale(1.04);z-index:20;}
+.comp-pin.selected{transform:translate(-50%,-100%) scale(1.08);z-index:20;}
+.pin-blocking-you .pin-head{background:linear-gradient(135deg,#F6C992,#d4900a) !important;color:#2a1a00 !important;box-shadow:0 0 0 3px rgba(212,144,10,0.22),0 10px 28px -8px rgba(212,144,10,0.5) !important;}
+.pin-blocking-you .pin-tag{color:var(--warm);border-color:rgba(212,144,10,0.3);}
+.pin-head{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 28px -8px currentColor;transition:box-shadow 0.3s;position:relative;}
+.pin-head-inner{font-family:var(--mono);font-size:10px;font-weight:700;color:#fff;letter-spacing:0.04em;}
+.comp-pin.selected .pin-head{box-shadow:0 0 0 3px rgba(255,255,255,0.35),0 14px 34px -8px rgba(0,0,0,0.4);}
+.pin-tag{margin-top:2px;background:var(--surface);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:100px;padding:3px 10px;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text-1);white-space:nowrap;box-shadow:var(--card-shadow);text-align:center;letter-spacing:0.02em;}
+.comp-pin.selected .pin-tag{border-color:var(--accent);color:var(--accent);}
+.pin-alert{position:absolute;top:-4px;right:-4px;width:18px;height:18px;background:var(--danger);border-radius:50%;border:2px solid var(--map-bg);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;font-weight:700;color:#fff;}
+
+.map-zoom{position:absolute;bottom:80px;right:14px;display:flex;flex-direction:column;gap:6px;z-index:20;}
+.zoom-btn{width:36px;height:36px;background:var(--surface);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);font-size:18px;font-weight:400;box-shadow:var(--card-shadow);transition:var(--transition);user-select:none;font-family:inherit;}
+.zoom-btn:hover{color:var(--accent);border-color:var(--border-hot);}
+.zoom-btn:active{transform:scale(0.94);}
+
+.map-legend{position:absolute;bottom:14px;left:14px;background:var(--surface);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);border:1px solid var(--border);border-radius:14px;padding:11px 16px;box-shadow:var(--card-shadow);z-index:20;}
+.legend-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px;color:var(--text-2);font-family:var(--mono);font-weight:500;}
+.legend-row:last-child{margin-bottom:0;}
+.legend-swatch{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+
+/* ══ TOAST ══ */
+.toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface-solid);border:1px solid var(--border-2);
+  border-radius:24px;padding:10px 20px;
+  font-size:12px;font-weight:500;color:var(--text-1);
+  box-shadow:var(--card-shadow-lg);z-index:9998;
+  display:flex;align-items:center;gap:8px;
+  opacity:0;pointer-events:none;
+  transition:all 0.3s cubic-bezier(.2,.8,.2,1);
+  white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* ══ GREETING ROW & EXPORT ══ */
+.greeting-row{
+  padding:10px 16px 8px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;gap:12px;
+}
+.greeting-inline{
+  display:flex;align-items:center;gap:10px;
+  font-size:12px;color:var(--text-2);
+  font-family:var(--sans);
+}
+.greeting-name{
+  font-size:13px;font-weight:600;color:var(--text-1);
+}
+.greeting-sep{color:var(--text-3);}
+.greeting-fresh{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.export-wrap{position:relative;}
+.export-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:8px;
+  font-size:11px;font-weight:600;
+  border:1px solid var(--border);
+  background:var(--surface);color:var(--text-1);
+  cursor:pointer;transition:var(--transition);
+  font-family:var(--sans);
+}
+.export-btn:hover{border-color:var(--accent);color:var(--accent);}
+.export-btn svg{width:12px;height:12px;flex-shrink:0;opacity:0.7;}
+.export-menu{
+  position:absolute;top:calc(100% + 5px);right:0;
+  background:var(--surface);
+  backdrop-filter:blur(20px) saturate(1.4);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border:1px solid var(--border-2);
+  border-radius:10px;
+  box-shadow:0 8px 32px rgba(30,60,80,0.14);
+  z-index:200;min-width:200px;padding:5px;
+  display:none;
+}
+.export-menu.open{display:block;}
+.export-opt{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;border-radius:6px;
+  font-size:12px;color:var(--text-1);
+  cursor:pointer;transition:background 0.1s;
+  font-family:var(--sans);
+}
+.export-opt:hover{background:var(--surface-3);}
+.export-opt svg{width:13px;height:13px;color:var(--text-3);stroke-width:2;}
+.export-opt-label{flex:1;}
+.export-opt-sub{font-size:10px;color:var(--text-3);margin-top:2px;}
+
+/* ══ SEARCH BAR ══ */
+.search-bar{
+  padding:10px 16px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.search-input-wrap{
+  position:relative;
+  display:flex;align-items:center;
+}
+.search-input{
+  width:100%;
+  padding:8px 12px 8px 34px;
+  background:var(--surface-3);
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-size:12px;color:var(--text-1);
+  font-family:var(--sans);
+  outline:none;
+  transition:var(--transition);
+}
+.search-input:focus{border-color:var(--accent);background:var(--surface);}
+.search-input::placeholder{color:var(--text-3);}
+.search-icon{
+  position:absolute;left:12px;
+  width:14px;height:14px;
+  color:var(--text-3);
+  pointer-events:none;
+}
+.search-kbd{
+  position:absolute;right:10px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  padding:2px 6px;border-radius:4px;
+  font-family:var(--mono);font-size:9px;
+  color:var(--text-3);pointer-events:none;
+}
+
+/* ══ DISTANCE RINGS ══ */
+.distance-rings{
+  position:absolute;pointer-events:none;
+  transform:translate(-50%,-50%);
+  z-index:3;
+}
+.distance-ring{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  border:1px dashed rgba(11,184,184,0.2);
+  border-radius:50%;pointer-events:none;
+}
+.distance-ring-label{
+  position:absolute;top:-8px;left:50%;
+  transform:translateX(-50%);
+  background:var(--surface);
+  backdrop-filter:blur(12px);
+  padding:2px 7px;border-radius:4px;
+  font-family:var(--mono);font-size:8px;
+  color:var(--text-3);letter-spacing:0.06em;
+  white-space:nowrap;
+  border:1px solid var(--border);
+}
+
+/* ══ KEYBOARD SHORTCUTS ══ */
+.kbd-hint{
+  position:fixed;bottom:28px;right:28px;
+  background:var(--surface);
+  backdrop-filter:blur(20px) saturate(1.4);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border:1px solid var(--border);
+  border-radius:10px;padding:8px 14px;
+  font-family:var(--mono);font-size:10px;
+  color:var(--text-3);
+  display:flex;align-items:center;gap:8px;
+  box-shadow:var(--card-shadow);
+  z-index:100;cursor:pointer;
+  transition:var(--transition);
+}
+.kbd-hint:hover{color:var(--text-1);border-color:var(--border-hot);}
+.kbd-hint kbd{
+  background:var(--surface-3);
+  padding:2px 6px;border-radius:4px;
+  font-family:var(--mono);font-size:9px;
+  color:var(--text-2);
+  border:1px solid var(--border);
+  margin:0 2px;
+}
+.kbd-cheatsheet{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  z-index:9991;display:none;
+  align-items:center;justify-content:center;
+}
+.kbd-cheatsheet.show{display:flex;}
+.kbd-panel{
+  background:var(--surface);
+  backdrop-filter:blur(32px) saturate(1.6);
+  -webkit-backdrop-filter:blur(32px) saturate(1.6);
+  border:1px solid var(--border);
+  border-radius:16px;padding:24px;
+  width:440px;max-width:90vw;
+  box-shadow:var(--card-shadow-lg);
+}
+.kbd-panel h3{
+  font-size:16px;font-weight:700;
+  color:var(--text-1);margin-bottom:16px;
+  letter-spacing:-0.02em;
+}
+.kbd-row{
+  display:flex;justify-content:space-between;
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+  font-size:12px;color:var(--text-2);
+}
+.kbd-row:last-child{border-bottom:none;}
+.kbd-keys{display:inline-flex;gap:4px;}
+.kbd-keys kbd{
+  background:var(--surface-3);
+  padding:3px 8px;border-radius:6px;
+  font-family:var(--mono);font-size:10px;
+  color:var(--text-1);
+  border:1px solid var(--border);
+  min-width:24px;text-align:center;
+}
+
+/* ══ SEARCH PALETTE ══ */
+.search-palette{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  z-index:9992;display:none;
+  align-items:flex-start;justify-content:center;
+  padding-top:20vh;
+}
+.search-palette.show{display:flex;}
+.search-palette-panel{
+  background:var(--surface);
+  backdrop-filter:blur(32px) saturate(1.6);
+  -webkit-backdrop-filter:blur(32px) saturate(1.6);
+  border:1px solid var(--border);
+  border-radius:16px;
+  width:520px;max-width:90vw;
+  box-shadow:var(--card-shadow-lg);
+  overflow:hidden;
+}
+.search-palette-input-wrap{
+  padding:14px 18px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.search-palette-input-wrap svg{
+  width:16px;height:16px;
+  color:var(--text-3);flex-shrink:0;
+}
+.search-palette-input{
+  flex:1;background:transparent;
+  border:none;outline:none;
+  color:var(--text-1);
+  font-family:var(--sans);font-size:14px;
+}
+.search-palette-input::placeholder{color:var(--text-3);}
+.search-palette-actions{padding:8px;}
+.search-palette-label{
+  padding:6px 12px;
+  font-family:var(--mono);font-size:9px;
+  font-weight:600;letter-spacing:0.14em;
+  text-transform:uppercase;color:var(--text-3);
+}
+
+/* ══ MODAL ══ glass */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.55);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  z-index:9990;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.28s;
+}
+.modal-overlay.show{opacity:1;pointer-events:all;}
+.modal{
+  background:var(--surface-2);backdrop-filter:blur(32px) saturate(1.6);
+  -webkit-backdrop-filter:blur(32px) saturate(1.6);
+  border:1px solid var(--border);
+  border-radius:22px;padding:30px;width:460px;max-width:90vw;
+  box-shadow:var(--card-shadow-lg);
+  transform:scale(0.94) translateY(10px);
+  transition:transform 0.3s var(--ease-spring);
+  position:relative;overflow:hidden;
+}
+.modal::before{
+  content:'';position:absolute;inset:0;
+  border-radius:inherit;padding:1px;
+  background:linear-gradient(180deg,var(--glass-edge-top),transparent 25%,transparent 75%,var(--glass-edge-inner) 100%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  pointer-events:none;
+}
+.modal > *{position:relative;z-index:1;}
+.modal-overlay.show .modal{transform:scale(1) translateY(0);}
+.modal-title{font-size:20px;font-weight:800;color:var(--text-1);margin-bottom:10px;letter-spacing:-0.025em;line-height:1.2;}
+.modal-body{font-size:13px;color:var(--text-2);line-height:1.65;margin-bottom:22px;}
+.modal-body p{margin-bottom:12px;}
+.modal-body p:last-child{margin-bottom:0;}
+.modal-body strong{color:var(--text-1);font-weight:600;}
+.billing-terms{background:var(--stat-bg);border:1px solid var(--stat-border);border-radius:14px;padding:14px 16px;margin:12px 0;font-size:12px;}
+.billing-terms-label{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;}
+.billing-terms-row{display:flex;justify-content:space-between;gap:12px;padding:4px 0;color:var(--text-2);}
+.billing-terms-row strong{color:var(--text-1);font-family:var(--mono);font-weight:600;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+.modal-btn{position:relative;padding:12px 22px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:transform 0.32s var(--ease-spring),box-shadow 0.32s var(--ease-spring);border:1px solid var(--border-2);background:var(--surface-3);color:var(--text-1);letter-spacing:-0.005em;overflow:hidden;will-change:transform;}
+.modal-btn::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(255,255,255,0.18),transparent 50%);opacity:0;transition:opacity 0.3s;pointer-events:none;}
+.modal-btn:hover::after{opacity:1;}
+.modal-btn:hover{border-color:var(--border-hot);color:var(--accent);background:var(--accent-soft);}
+.modal-btn.primary{background:linear-gradient(135deg,var(--accent) 0%,color-mix(in srgb,var(--accent) 60%,#000) 100%);border-color:transparent;color:var(--cta-fg-on-pos);box-shadow:var(--cta-shadow);}
+.modal-btn.primary:hover{color:var(--cta-fg-on-pos);background:linear-gradient(135deg,var(--accent) 0%,color-mix(in srgb,var(--accent) 60%,#000) 100%);box-shadow:0 16px 40px -8px color-mix(in srgb,var(--accent) 50%,transparent);}
+.modal-btn.danger{background:linear-gradient(135deg,var(--danger) 0%,color-mix(in srgb,var(--danger) 60%,#000) 100%);border-color:transparent;color:#fff;box-shadow:var(--cta-danger-shadow);}
+.modal-btn.danger:hover{color:#fff;background:linear-gradient(135deg,var(--danger) 0%,color-mix(in srgb,var(--danger) 60%,#000) 100%);box-shadow:0 16px 40px -8px color-mix(in srgb,var(--danger) 50%,transparent);}
+
+/* ════════════════════════════════════════════════════════════════════════
+   V7: DARK RAIL SIDEBAR + WHITE-CARD WORKSPACE (ported from S07 v7)
+   ════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --rail-w: 64px;
+  --rail-expanded-w: 240px;
+  --rail-bg: #1a2f42;
+  --rail-bg-edge: #243d52;
+  --rail-fg: rgba(230, 240, 247, 0.92);
+  --rail-fg-mute: rgba(230, 240, 247, 0.62);
+  --rail-fg-dim: rgba(230, 240, 247, 0.42);
+  --rail-accent: #0bd5d5;
+  --rail-accent-soft: rgba(11, 213, 213, 0.16);
+  --rail-divider: rgba(255, 255, 255, 0.08);
+  --nav-w: var(--rail-w);
+}
+
+.nav-sidebar {
+  width: var(--rail-w) !important;
+  background: var(--rail-bg) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-right: 1px solid var(--rail-divider) !important;
+  color: var(--rail-fg) !important;
+  transition: width 0.22s cubic-bezier(.2,.8,.2,1);
+  overflow: hidden !important;
+  position: relative;
+  z-index: 40;
+}
+.nav-sidebar::before { display: none; }
+.nav-sidebar::after {
+  background: radial-gradient(circle, rgba(11,213,213,0.10), transparent 70%) !important;
+  top: -40px !important; left: -40px !important;
+  width: 200px !important; height: 200px !important;
+}
+.nav-sidebar:hover {
+  width: var(--rail-expanded-w) !important;
+  box-shadow: 8px 0 40px -8px rgba(0,0,0,0.45);
+}
+
+.nav-inner { padding: 16px 0 !important; display: flex !important; flex-direction: column !important; height: 100% !important; overflow: hidden; }
+
+.nav-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2px 0;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.nav-scroll::-webkit-scrollbar { width: 4px; }
+.nav-scroll::-webkit-scrollbar-track { background: transparent; }
+.nav-scroll::-webkit-scrollbar-thumb { background: transparent; border-radius: 3px; }
+.nav-sidebar:hover .nav-scroll { scrollbar-color: rgba(255,255,255,0.16) transparent; }
+.nav-sidebar:hover .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.16); }
+.nav-sidebar:hover .nav-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); }
+
+.logo {
+  padding: 0 0 16px !important;
+  margin-bottom: 12px !important;
+  border-bottom: 1px solid var(--rail-divider) !important;
+  flex-shrink: 0;
+}
+.logo-row {
+  padding: 0 14px;
+  gap: 12px !important;
+}
+.logo-gem {
+  width: 36px !important; height: 36px !important;
+  flex-shrink: 0;
+}
+.logo-name,
+.logo-tag {
+  opacity: 0;
+  transition: opacity 0.18s ease 0.05s;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.nav-sidebar:hover .logo-name,
+.nav-sidebar:hover .logo-tag { opacity: 1; pointer-events: auto; }
+.logo-name { color: var(--rail-fg) !important; font-weight: 700 !important; }
+.logo-tag  { color: var(--rail-fg-dim) !important; }
+
+.nav-group {
+  padding: 0 10px !important;
+  margin-bottom: 2px !important;
+}
+.nav-group-label {
+  color: var(--rail-fg-dim) !important;
+  opacity: 0;
+  transition: opacity 0.18s ease 0.05s;
+  font-size: 8.5px !important;
+  letter-spacing: 0.18em !important;
+  margin: 10px 0 5px !important;
+  padding: 0 8px !important;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.nav-sidebar:hover .nav-group-label { opacity: 1; }
+.nav-group + .nav-group::before {
+  content: '';
+  display: block;
+  width: 20px; height: 1px;
+  background: var(--rail-divider);
+  margin: 10px auto 6px;
+}
+.nav-sidebar:hover .nav-group + .nav-group::before { display: none; }
+
+.nav-link {
+  position: relative;
+  padding: 9px 12px !important;
+  border-radius: 8px !important;
+  color: var(--rail-fg-mute) !important;
+  font-size: 12.5px !important;
+  gap: 12px !important;
+  margin-bottom: 2px !important;
+  overflow: hidden;
+  white-space: nowrap;
+  background: transparent !important;
+  transform: none !important;
+  height: 36px;
+  box-shadow: none !important;
+}
+.nav-link svg {
+  width: 17px !important; height: 17px !important;
+  flex-shrink: 0;
+  stroke-width: 1.9;
+  transition: color 0.15s;
+}
+.nav-link > *:not(svg):not(.step-dot) {
+  opacity: 0;
+  transition: opacity 0.18s ease 0.05s;
+  pointer-events: none;
+}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot) {
+  opacity: 1; pointer-events: auto;
+}
+
+.nav-link .step-dot {
+  width: 17px !important; height: 17px !important;
+  background: rgba(11,213,213,0.18) !important;
+  color: var(--rail-accent) !important;
+}
+.nav-link.done .step-dot {
+  background: var(--rail-accent) !important;
+  color: #071a24 !important;
+}
+
+.nav-link:hover {
+  background: rgba(255,255,255,0.07) !important;
+  color: var(--rail-fg) !important;
+  transform: none !important;
+}
+.nav-link:hover svg { color: var(--rail-accent); }
+
+.nav-link.active {
+  background: var(--rail-accent-soft) !important;
+  color: #fff !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+.nav-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 4px; bottom: 4px;
+  width: 3px;
+  background: var(--rail-accent);
+  border-radius: 0 2px 2px 0;
+}
+.nav-link.active svg { color: var(--rail-accent); }
+
+.nav-footer {
+  padding: 10px 10px !important;
+  border-top: 1px solid var(--rail-divider) !important;
+  margin-top: 0 !important;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+.theme-row {
+  color: var(--rail-fg-mute) !important;
+  font-size: 12px !important;
+  padding: 8px 10px !important;
+  gap: 12px !important;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.theme-row > *:not(svg) {
+  opacity: 0;
+  transition: opacity 0.18s ease 0.05s;
+}
+.nav-sidebar:hover .theme-row > *:not(svg) { opacity: 1; }
+.theme-row:hover {
+  background: rgba(255,255,255,0.05) !important;
+  color: var(--rail-fg) !important;
+}
+.pill-toggle { flex-shrink: 0; }
+
+.nav-link.done:not(.active) { color: rgba(11,213,213,0.72) !important; }
+.nav-link.done:not(.active) svg { color: rgba(11,213,213,0.82); }
+
+</style>
+</head>
+<body class="lv-sev lv-heat lv-inline">
+
+<!-- NAV -->
+<aside class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo">
+      <div class="logo-row">
+        <div class="logo-gem"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"></path><path d="M9 12l2 2 4-4"></path></svg></div>
+        <div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div>
+      </div>
+    </div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s01_FINAL.html'" style="cursor:pointer;"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s02_FINAL.html'" style="cursor:pointer;"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s03_FINAL.html'" style="cursor:pointer;"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link active done" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>Command Center</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s05_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s07_v1.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s12_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s35_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s21_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s22_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s23_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s25_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s26_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s27_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>Annotations</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s29_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s16_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s28_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s30_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="window.location.href='cannaspy_s32_FINAL.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>Data Trust</div>
+    </div>
+    </div>
+
+    <div class="nav-footer">
+      <button class="theme-row" onclick="toggleTheme()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+        <span id="themeLabel">Light mode</span>
+        <div class="pill-toggle"><div class="pill-knob"></div></div>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- DETAIL PANEL — left of list, slides in -->
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-inner">
+      <div class="detail-head">
+        <button class="detail-back" onclick="closeDetail()" title="Back to list">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="detail-head-body" id="detailHeadBody"></div>
+      </div>
+      <div class="detail-scroll" id="detailScroll"></div>
+      <div class="detail-footer" id="detailFooter"></div>
+    </div>
+  </div>
+
+  <!-- LIST PANEL -->
+  <div class="list-panel">
+    <!-- Greeting + Export -->
+    <div class="greeting-row">
+      <div class="greeting-inline">
+        <span class="greeting-name">Good morning, Patrick</span>
+        <span class="greeting-sep">·</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 3px rgba(224,90,106,0.15);"></span>5 unreviewed</span>
+      </div>
+      <div class="export-wrap">
+        <button class="export-btn" onclick="toggleExport(event)" aria-label="Export brief">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Export
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;opacity:0.55;"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="export-menu" id="exportMenu">
+          <div class="export-opt" onclick="doExport('pdf')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <div>
+              <div class="export-opt-label">PDF summary</div>
+              <div class="export-opt-sub">Formatted daily brief</div>
+            </div>
+          </div>
+          <div class="export-opt" onclick="doExport('csv')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            <div>
+              <div class="export-opt-label">CSV (all alerts)</div>
+              <div class="export-opt-sub">For spreadsheet analysis</div>
+            </div>
+          </div>
+          <div class="export-opt" onclick="doExport('slack')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7V4a1 1 0 011-1h3"/><path d="M17 3h3a1 1 0 011 1v3"/><path d="M21 17v3a1 1 0 01-1 1h-3"/><path d="M7 21H4a1 1 0 01-1-1v-3"/></svg>
+            <div>
+              <div class="export-opt-label">Copy to clipboard</div>
+              <div class="export-opt-sub">For Slack / email</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Search Bar -->
+    <div class="search-bar">
+      <div class="search-input-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg>
+        <input class="search-input" id="searchInput" type="text" placeholder="Search rivals, SKUs, alerts…" onfocus="this.placeholder='Type to filter…'" onblur="this.placeholder='Search rivals, SKUs, alerts…'" oninput="filterListBySearch(this.value)" />
+        <span class="search-kbd">⌘K</span>
+      </div>
+    </div>
+    <div class="list-search-bar">
+      <div class="loc-tabs-bar" id="locTabsBar">
+        <div class="loc-dd-wrap">
+          <button class="loc-dd-btn loc-dd-active" id="locDdBtn" onclick="toggleLocDd()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;flex-shrink:0;opacity:0.85;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            All locations
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="loc-dd-pop" id="locDdPop" role="listbox" aria-label="Filter by location">
+            <div class="loc-dd-opt loo-sel" role="button" tabindex="0" onclick="selectLoc('all','All locations',this)">All locations<span class="loc-dd-opt-count">5 unreviewed</span></div>
+            <div class="loc-dd-opt" role="button" tabindex="0" onclick="selectLoc('weho','WeHo',this)">WeHo<span class="loc-dd-opt-count">2 alerts</span></div>
+            <div class="loc-dd-opt" role="button" tabindex="0" onclick="selectLoc('dtla','DTLA',this)">DTLA<span class="loc-dd-opt-count">1 alert</span></div>
+            <div class="loc-dd-opt" role="button" tabindex="0" onclick="selectLoc('lb','Long Beach',this)">Long Beach<span class="loc-dd-opt-count">2 alerts</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="width:1px;height:20px;background:var(--border-2);flex-shrink:0;"></div>
+      <div class="filter-bar">
+        <div class="flt-dd-wrap">
+          <button class="flt-dd-btn flt-active" id="fltDdBtn" onclick="toggleFltDd()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;flex-shrink:0;opacity:0.85;"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            All alerts
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="flt-dd-pop" id="fltDdPop" role="listbox" aria-label="Filter alerts by type">
+            <div class="flt-dd-opt" role="button" tabindex="0" onclick="selectFlt('all','All alerts',this)">All alerts</div>
+            <div class="flt-dd-divider"></div>
+            <div class="flt-dd-opt flo-sel" role="button" tabindex="0" onclick="selectFlt('price-drop','Price drops',this)"><div class="flt-dd-opt-dot" style="background:var(--danger);"></div>Price drops</div>
+            <div class="flt-dd-opt" role="button" tabindex="0" onclick="selectFlt('promo','New promos',this)"><div class="flt-dd-opt-dot" style="background:var(--warning);"></div>New promos</div>
+            <div class="flt-dd-opt" role="button" tabindex="0" onclick="selectFlt('sku','New SKUs',this)"><div class="flt-dd-opt-dot" style="background:var(--accent);"></div>New SKUs</div>
+            <div class="flt-dd-opt" role="button" tabindex="0" onclick="selectFlt('blocked','Blocked rivals',this)"><div class="flt-dd-opt-dot" style="background:var(--rose);"></div>Blocked rivals</div>
+          </div>
+        </div>
+        <div class="flt-dd-wrap">
+          <button class="flt-dd-btn flt-active" id="statusDdBtn" onclick="toggleStatusDd()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;flex-shrink:0;opacity:0.85;"><circle cx="12" cy="12" r="9"/><polyline points="9 12 11 14 15 10"/></svg>
+            <span id="statusDdLabel">Unreviewed</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="flt-dd-pop" id="statusDdPop" role="listbox" aria-label="Filter alerts by status">
+            <div class="flt-dd-opt flo-sel" data-status="unreviewed" role="button" tabindex="0" onclick="selectStatus('unreviewed','Unreviewed',this)"><div class="flt-dd-opt-dot" style="background:var(--accent);"></div>Unreviewed</div>
+            <div class="flt-dd-opt" data-status="snoozed" role="button" tabindex="0" onclick="selectStatus('snoozed','Snoozed',this)"><div class="flt-dd-opt-dot" style="background:var(--warm);"></div>Snoozed</div>
+            <div class="flt-dd-opt" data-status="reviewed" role="button" tabindex="0" onclick="selectStatus('reviewed','Reviewed',this)"><div class="flt-dd-opt-dot" style="background:var(--text-3);"></div>Reviewed</div>
+            <div class="flt-dd-divider"></div>
+            <div class="flt-dd-opt" data-status="all" role="button" tabindex="0" onclick="selectStatus('all','All',this)">All</div>
+          </div>
+        </div>
+        <div class="filter-count" id="filterCount">5 unreviewed</div>
+      </div>
+    </div>
+    <div class="list-scroll" id="listScroll"></div>
+    <div class="bulk-action-bar" id="bulkActionBar" role="region" aria-label="Bulk actions">
+      <div class="bulk-count">
+        <span class="bulk-count-pill">0</span>
+        <span class="bulk-count-label">alerts selected</span>
+      </div>
+      <button class="bulk-btn primary" onclick="bulkMarkReviewed()">Mark all reviewed</button>
+      <div class="snooze-wrap" data-snooze-id="__bulk__">
+        <button class="bulk-btn" onclick="toggleBulkSnoozePop(event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          Snooze all ▾
+        </button>
+        <div class="snooze-pop">
+          <div class="snooze-opt" onclick="bulkSnooze('tomorrow')"><span>Tomorrow morning</span><span class="snooze-opt-when">9 AM</span></div>
+          <div class="snooze-opt" onclick="bulkSnooze('next-monday')"><span>Next Monday</span><span class="snooze-opt-when">9 AM</span></div>
+          <div class="snooze-opt-div"></div>
+          <div class="snooze-opt" onclick="bulkSnooze('next-thursday')"><span>Next Thursday</span><span class="snooze-opt-when">pricing meeting</span></div>
+          <div class="snooze-opt" onclick="bulkSnooze('next-week')"><span>Next week</span><span class="snooze-opt-when">7 days</span></div>
+        </div>
+      </div>
+      <button class="bulk-btn subtle" onclick="bulkClear()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div class="map-area">
+    <div class="map-base"></div>
+    <div class="block block-base" style="top:4%;left:4%;width:17%;height:15%;"></div>
+    <div class="block block-alt" style="top:4%;left:24%;width:13%;height:11%;"></div>
+    <div class="block block-base" style="top:4%;left:40%;width:19%;height:13%;"></div>
+    <div class="block block-park" style="top:4%;left:62%;width:15%;height:17%;"></div>
+    <div class="block block-alt" style="top:4%;left:80%;width:16%;height:11%;"></div>
+    <div class="block block-base" style="top:24%;left:4%;width:11%;height:19%;"></div>
+    <div class="block block-alt" style="top:24%;left:18%;width:15%;height:17%;"></div>
+    <div class="block block-base" style="top:24%;left:62%;width:13%;height:15%;"></div>
+    <div class="block block-alt" style="top:24%;left:78%;width:18%;height:19%;"></div>
+    <div class="block block-park" style="top:50%;left:4%;width:19%;height:17%;"></div>
+    <div class="block block-base" style="top:50%;left:26%;width:13%;height:13%;"></div>
+    <div class="block block-alt" style="top:50%;left:42%;width:17%;height:19%;"></div>
+    <div class="block block-base" style="top:50%;left:62%;width:15%;height:15%;"></div>
+    <div class="block block-alt" style="top:50%;left:80%;width:16%;height:17%;"></div>
+    <div class="block block-alt" style="top:74%;left:4%;width:13%;height:20%;"></div>
+    <div class="block block-base" style="top:74%;left:20%;width:19%;height:18%;"></div>
+    <div class="block block-park" style="top:74%;left:42%;width:15%;height:20%;"></div>
+    <div class="block block-alt" style="top:74%;left:60%;width:17%;height:20%;"></div>
+    <div class="block block-base" style="top:74%;left:80%;width:16%;height:20%;"></div>
+    <div class="road" style="top:20.5%;left:0;right:0;height:5px;"></div>
+    <div class="road" style="top:46.5%;left:0;right:0;height:5px;"></div>
+    <div class="road" style="top:70.5%;left:0;right:0;height:5px;"></div>
+    <div class="road" style="left:37%;top:0;bottom:0;width:5px;"></div>
+    <div class="road" style="left:60%;top:0;bottom:0;width:5px;"></div>
+    <div class="road road-minor" style="left:16%;top:0;bottom:0;width:3px;"></div>
+    <div class="road road-minor" style="left:78%;top:0;bottom:0;width:3px;"></div>
+
+    <div class="map-topbar">
+      <div class="map-title-pill"><div class="live-dot"></div>West Hollywood Flagship</div>
+      <div class="map-stat-pills">
+        <div class="map-stat-pill"><div class="msp-dot" style="background:var(--danger);"></div>5 alerts</div>
+        <div class="map-stat-pill"><div class="msp-dot" style="background:var(--accent);"></div>7 tracked</div>
+        <div class="map-stat-pill"><div class="msp-dot" style="background:var(--rose);"></div>2 blocked</div>
+      </div>
+    </div>
+
+    <div style="position:absolute;top:52px;right:14px;z-index:20;pointer-events:none;">
+      <div class="freshness-pill" title="CannaSpy aggregates public cannabis market data daily at 2:30 AM Pacific. Individual alert timestamps show when each change was detected.">
+        <div class="freshness-dot"></div>
+        <span class="fp-label">Last scan</span>
+        <span class="fp-val">Today 2:47 AM PT</span>
+        <span class="fp-sep">·</span>
+        <span class="fp-label">Next</span>
+        <span class="fp-val">Tomorrow 2:30 AM</span>
+      </div>
+    </div>
+
+    <!-- Distance rings -->
+    <div class="distance-rings" style="left:48%;top:50%;">
+      <div class="distance-ring" style="width:140px;height:140px;"><span class="distance-ring-label">1mi</span></div>
+      <div class="distance-ring" style="width:280px;height:280px;"><span class="distance-ring-label">3mi</span></div>
+      <div class="distance-ring" style="width:460px;height:460px;"><span class="distance-ring-label">5mi</span></div>
+    </div>
+
+    <div class="center-pin" style="left:48%;top:50%;"><div class="center-dot"><div class="center-pulse"></div></div><div class="center-label">YOUR LOCATION</div></div>
+
+    <div class="comp-pin selected" id="pin-stiiizy" role="button" tabindex="0" aria-label="STIIIZY, blocked rival, 3 alerts" style="left:32%;top:36%;" onclick="openDetail('stiiizy-price', true)">
+      <div class="pin-head" style="background:var(--rose);"><div class="pin-alert">3</div><div class="pin-head-inner">ST</div></div><div class="pin-tag">STIIIZY</div>
+    </div>
+    <div class="comp-pin" id="pin-medmen" role="button" tabindex="0" aria-label="MedMen, tracked rival, 1 alert" style="left:24%;top:43%;" onclick="openDetail('medmen-promo', true)">
+      <div class="pin-head" style="background:var(--warning);"><div class="pin-alert">1</div><div class="pin-head-inner">MM</div></div><div class="pin-tag">MedMen</div>
+    </div>
+    <div class="comp-pin" id="pin-otc" role="button" tabindex="0" aria-label="Off The Charts, blocked rival, 2 alerts" style="left:63%;top:38%;" onclick="openDetail('otc-price', true)">
+      <div class="pin-head" style="background:var(--danger);"><div class="pin-alert">2</div><div class="pin-head-inner">OT</div></div><div class="pin-tag">Off The Charts</div>
+    </div>
+    <div class="comp-pin" id="pin-catalyst" role="button" tabindex="0" aria-label="Catalyst Cannabis, tracked rival, 1 alert" style="left:56%;top:59%;" onclick="openDetail('catalyst-skus', true)">
+      <div class="pin-head" style="background:var(--accent);"><div class="pin-alert">1</div><div class="pin-head-inner">CA</div></div><div class="pin-tag">Catalyst</div>
+    </div>
+    <div class="comp-pin" id="pin-jungle" role="button" tabindex="0" aria-label="Jungle Boys, tracked rival" style="left:38%;top:65%;" onclick="openDetail('jungle-sku', true)">
+      <div class="pin-head" style="background:var(--slate);"><div class="pin-head-inner">JB</div></div><div class="pin-tag">Jungle Boys</div>
+    </div>
+    <div class="comp-pin" id="pin-zen" role="button" tabindex="0" aria-label="Zen Dispensary, tracked rival" style="left:72%;top:53%;" onclick="openDetail('zen-rival', true)">
+      <div class="pin-head" style="background:var(--slate);"><div class="pin-head-inner">ZN</div></div><div class="pin-tag">Zen</div>
+    </div>
+
+    <div class="map-zoom">
+      <button class="zoom-btn" aria-label="Zoom in" onclick="showToast('Map zoom — live in production build','var(--accent)')">+</button>
+      <button class="zoom-btn" aria-label="Zoom out" onclick="showToast('Map zoom — live in production build','var(--accent)')">−</button>
+    </div>
+        <div class="comp-pin pin-blocking-you" id="pin-harborside" role="button" tabindex="0" aria-label="Harborside San Jose is blocking your account, 31 days" style="left:20%;top:60%;" onclick="openDetail('harborside-blocking', true)">
+      <div class="pin-head"><div class="pin-head-inner">HS</div></div><div class="pin-tag" style="color:var(--warm);">Harborside</div>
+    </div>
+    <div class="comp-pin pin-blocking-you" id="pin-cookies" role="button" tabindex="0" aria-label="Cookies SF is blocking your account, 8 days" style="left:57%;top:72%;" onclick="openDetail('cookies-blocking', true)">
+      <div class="pin-head"><div class="pin-head-inner">CK</div></div><div class="pin-tag" style="color:var(--warm);">Cookies SF</div>
+    </div>
+    <div class="map-legend">
+      <div class="legend-row"><div class="legend-swatch" style="background:var(--danger);"></div>Critical alert</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:var(--warning);"></div>High alert</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:var(--accent);"></div>Tracking / active</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:var(--rose);"></div>Blocked</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:var(--warm);"></div>Blocking you</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toastDot"></div>
+  <span id="toastMsg"></span>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<!-- KEYBOARD HINT -->
+<div class="kbd-hint" onclick="toggleCheatsheet()" title="View keyboard shortcuts">
+  Press <kbd>?</kbd> for shortcuts
+</div>
+
+<!-- KEYBOARD CHEATSHEET -->
+<div class="kbd-cheatsheet" id="kbdCheat" onclick="toggleCheatsheet(event)">
+  <div class="kbd-panel" onclick="event.stopPropagation()">
+    <h3>Keyboard shortcuts</h3>
+    <div class="kbd-row"><span>Next alert</span><span class="kbd-keys"><kbd>j</kbd></span></div>
+    <div class="kbd-row"><span>Previous alert</span><span class="kbd-keys"><kbd>k</kbd></span></div>
+    <div class="kbd-row"><span>Open selected alert</span><span class="kbd-keys"><kbd>Enter</kbd></span></div>
+    <div class="kbd-row"><span>Mark reviewed</span><span class="kbd-keys"><kbd>r</kbd></span></div>
+    <div class="kbd-row"><span>Close / clear selection</span><span class="kbd-keys"><kbd>Esc</kbd></span></div>
+    <div class="kbd-row"><span>Global search</span><span class="kbd-keys"><kbd>⌘</kbd><kbd>K</kbd></span></div>
+    <div class="kbd-row"><span>Show this cheatsheet</span><span class="kbd-keys"><kbd>?</kbd></span></div>
+  </div>
+</div>
+
+<!-- SEARCH PALETTE (⌘K) -->
+<div class="search-palette" id="searchPalette" onclick="toggleSearchPalette(event)">
+  <div class="search-palette-panel" onclick="event.stopPropagation()">
+    <div class="search-palette-input-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg>
+      <input class="search-palette-input" type="text" placeholder="Search rivals, SKUs, locations…" />
+      <kbd style="background:var(--surface-3);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:10px;color:var(--text-3);border:1px solid var(--border);">Esc</kbd>
+    </div>
+    <div class="search-palette-actions">
+      <div class="search-palette-label">Quick actions</div>
+      <div class="export-opt" onclick="showToast('All alerts marked as reviewed','var(--accent)');toggleSearchPalette();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <div class="export-opt-label">Mark all as reviewed</div>
+      </div>
+      <div class="export-opt" onclick="doExport('pdf');toggleSearchPalette();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        <div class="export-opt-label">Export today's brief</div>
+      </div>
+      <div class="export-opt" onclick="showToast('Opening alert settings','var(--accent)');toggleSearchPalette();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <div class="export-opt-label">Alert settings</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══ DATA ══ */
+const ITEMS = [
+  {
+    id:'stiiizy-price', type:'alert', category:'price-drop', loc:'weho', pinId:'pin-stiiizy', unread:true,
+    icon:'danger', iconSvg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+    title:'STIIIZY dropped Blue Dream 22%', sub:'$45 → $35 · Their #2 volume SKU', time:'2h ago',
+    chips:[{t:'WEHO',c:'chip-loc'},{t:'−$10',c:'chip-danger'},{t:'FLOWER',c:'chip-loc'}],
+    det:{
+      sevClass:'sev-critical', sev:'CRITICAL',
+      rival:'STIIIZY WEST HOLLYWOOD · 1.2 MI · BLOCKED',
+      title:'22% price cut on Blue Dream 3.5g',
+      body:`
+        <div class="block-status-strip"><div class="bss-dot"></div><div class="bss-text">Rival is blocked — they cannot access CannaSpy</div><div class="bss-since">47 days</div></div>
+        <div class="det-section"><div class="det-section-label">What happened</div><div class="det-narrative">STIIIZY dropped Blue Dream 3.5g from $45 to $35 overnight — a 22% cut on their #2 volume SKU. This directly competes with your best-seller in the same category and weight.</div></div>
+        <div class="det-stats">
+          <div class="det-stat"><div class="det-stat-n cn-danger">−$10</div><div class="det-stat-label">Price cut</div></div>
+          <div class="det-stat"><div class="det-stat-n cn-danger">−22%</div><div class="det-stat-label">% change</div></div>
+          <div class="det-stat"><div class="det-stat-n">#2</div><div class="det-stat-label">Their volume rank</div></div>
+          <div class="det-stat"><div class="det-stat-n cn-warm">2h</div><div class="det-stat-label">Detected ago</div></div>
+        </div>
+        <div class="det-section"><div class="det-section-label">Affected SKUs</div>
+        <table class="price-table"><tr><th>Product</th><th>Was</th><th>Now</th><th>Δ</th></tr>
+        <tr><td>Blue Dream 3.5g</td><td class="price-old">$45</td><td class="price-new">$35</td><td><span class="price-delta">−22%</span></td></tr>
+        <tr><td>Blue Dream 7g</td><td class="price-old">$80</td><td class="price-new">$65</td><td><span class="price-delta">−19%</span></td></tr>
+        <tr><td>Blue Dream 1g Pre-roll</td><td class="price-old">$12</td><td class="price-new">$9</td><td><span class="price-delta">−25%</span></td></tr>
+        </table></div>
+        <div class="det-rec"><div class="det-section-label">Recommendation</div><div class="det-narrative">You're $7 above their new price on Blue Dream 3.5g. At a 22% gap on a flagship strain, expect measurable volume loss within 48 hours. Match at $35 if margin allows, or counter at $39 to hold a $4 spread without triggering a race. Decide today.</div></div>`,
+      footer:`<div class="footer-row">
+        <button class="footer-btn" onclick="markReviewed('stiiizy-price')">Mark reviewed</button>
+        <button class="footer-btn primary" onclick="showToast('Opening Price Intelligence for WeHo…','var(--accent)')">View price matrix →</button>
+        <button class="footer-btn fb-danger" onclick="showModal('respond-price','STIIIZY Blue Dream Response','Your Blue Dream 3.5g is currently $7 above their new price. Do you want to match at $35 or counter at $39?','Match at $35','Counter at $39')">Respond →</button>
+      </div>`
+    }
+  },
+  {
+    id:'medmen-promo', type:'alert', category:'promo', loc:'weho', pinId:'pin-medmen', unread:true,
+    icon:'warn', iconSvg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+    title:'MedMen — new daily happy hour', sub:'20% off all vapes 4–7pm · starts today', time:'5h ago',
+    chips:[{t:'WEHO',c:'chip-loc'},{t:'NEW PROMO',c:'chip-warn'},{t:'VAPES',c:'chip-loc'}],
+    det:{
+      sevClass:'sev-high', sev:'HIGH',
+      rival:'MEDMEN WEST HOLLYWOOD · 0.8 MI · TRACKING',
+      title:'New daily happy hour — 20% off all vapes 4–7pm',
+      body:`
+        <div class="det-section"><div class="det-section-label">What happened</div><div class="det-narrative">MedMen launched a new daily happy hour this morning: 20% off all vape products from 4–7pm. Vapes are your #1 margin category at WeHo. This window overlaps with your peak evening traffic.</div></div>
+        <div class="det-stats">
+          <div class="det-stat"><div class="det-stat-n cn-warm">20%</div><div class="det-stat-label">Discount</div></div>
+          <div class="det-stat"><div class="det-stat-n">Daily</div><div class="det-stat-label">Frequency</div></div>
+          <div class="det-stat"><div class="det-stat-n cn-warm">4–7pm</div><div class="det-stat-label">Window</div></div>
+          <div class="det-stat"><div class="det-stat-n">0.8mi</div><div class="det-stat-label">Distance</div></div>
+        </div>
+        <div class="det-rec"><div class="det-section-label">Recommendation</div><div class="det-narrative">Don't match their hours directly — that locks both of you into a daily 20% discount and races margin. Counter with your own happy hour in a different window (12–2pm or 7–9pm) to differentiate on time rather than depth. Test a 15% off vapes promo for two weeks and measure foot traffic.</div></div>`,
+      footer:`<div class="footer-row">
+        <button class="footer-btn" onclick="markReviewed('medmen-promo')">Mark reviewed</button>
+        <button class="footer-btn primary" onclick="showToast('Opening Promotions tracker…','var(--accent)')">View promotions →</button>
+      </div>`
+    }
+  },
+  {
+    id:'otc-price', type:'alert', category:'price-drop', loc:'dtla', pinId:'pin-otc', unread:true,
+    icon:'danger', iconSvg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+    title:'Off The Charts — Gelato cut 25%', sub:'Gelato #41 7g dropped $80 → $60', time:'3h ago',
+    chips:[{t:'DTLA',c:'chip-loc'},{t:'−$20',c:'chip-danger'}],
+    det:{
+      sevClass:'sev-critical', sev:'CRITICAL',
+      rival:'OFF THE CHARTS · DTLA · 2.9 MI · BLOCKED',
+      title:'Gelato #41 7g cut 25% — weekend push',
+      body:`
+        <div class="block-status-strip"><div class="bss-dot"></div><div class="bss-text">Rival is blocked — they cannot access CannaSpy</div><div class="bss-since">22 days</div></div>
+        <div class="det-section"><div class="det-section-label">What happened</div><div class="det-narrative">Off The Charts dropped Gelato #41 7g from $80 to $60 — a $20 cut on their highest-volume premium flower SKU. Looks like an aggressive weekend push at DTLA.</div></div>
+        <div class="det-stats">
+          <div class="det-stat"><div class="det-stat-n cn-danger">−$20</div><div class="det-stat-label">Price cut</div></div>
+          <div class="det-stat"><div class="det-stat-n cn-danger">−25%</div><div class="det-stat-label">% change</div></div>
+          <div class="det-stat"><div class="det-stat-n">#1</div><div class="det-stat-label">Their volume rank</div></div>
+          <div class="det-stat"><div class="det-stat-n cn-warm">3h</div><div class="det-stat-label">Detected ago</div></div>
+        </div>
+        <div class="det-section"><div class="det-section-label">Affected SKUs</div>
+        <table class="price-table"><tr><th>Product</th><th>Was</th><th>Now</th><th>Δ</th></tr>
+        <tr><td>Gelato #41 7g</td><td class="price-old">$80</td><td class="price-new">$60</td><td><span class="price-delta">−25%</span></td></tr>
+        <tr><td>Gelato #41 3.5g</td><td class="price-old">$45</td><td class="price-new">$35</td><td><span class="price-delta">−22%</span></td></tr>
+        <tr><td>Gelato #41 1g Pre-roll</td><td class="price-old">$14</td><td class="price-new">$11</td><td><span class="price-delta">−21%</span></td></tr>
+        </table></div>
+        <div class="det-rec"><div class="det-section-label">Recommendation</div><div class="det-narrative">Off The Charts is at a 25% gap on Gelato #41 7g — your $9 spread will pull weekend traffic if not closed by Friday. DTLA market dynamics differ from WeHo: at 2.9 mi, your overlap is tighter. Match at $60 for the weekend, or counter at $65 to preserve a $5 cushion. If margin doesn't allow, hold and accept some weekend share loss but expect Sunday traffic data to confirm impact.</div></div>`,
+      footer:`<div class="footer-row">
+        <button class="footer-btn" onclick="markReviewed('otc-price')">Mark reviewed</button>
+        <button class="footer-btn primary" onclick="showToast('Opening DTLA Price Matrix…','var(--accent)')">View price matrix →</button>
+        <button class="footer-btn fb-danger" onclick="showModal('respond-otc','Off The Charts Gelato #41 Response','Your Gelato #41 7g is currently $9 above their new price. Do you want to match at $60 or counter at $65?','Match at $60','Counter at $65')">Respond →</button>
+      </div>`
+    }
+  },
+  {
+    id:'catalyst-skus', type:'alert', category:'sku', loc:'dtla', pinId:'pin-catalyst', unread:true,
+    icon:'info', iconSvg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+    title:'Catalyst added 14 new SKUs', sub:'Possible new brand deal — flower category', time:'6h ago',
+    chips:[{t:'DTLA',c:'chip-loc'},{t:'+14 SKUs',c:'chip-teal'}],
+    det:{
+      sevClass:'sev-medium', sev:'MEDIUM',
+      rival:'CATALYST CANNABIS CO. · DTLA · 1.9 MI · TRACKING',
+      title:'14 new flower SKUs added overnight',
+      body:`
+        <div class="det-section"><div class="det-section-label">What happened</div><div class="det-narrative">Catalyst added 14 new flower SKUs in a single overnight batch — pattern suggests a new brand partnership or exclusivity deal. New brand launches typically drive traffic spikes in the first 2–3 weeks.</div></div>
+        <div class="det-stats">
+          <div class="det-stat"><div class="det-stat-n cn-teal">+14</div><div class="det-stat-label">New SKUs</div></div>
+          <div class="det-stat"><div class="det-stat-n">481</div><div class="det-stat-label">Total SKUs</div></div>
+          <div class="det-stat"><div class="det-stat-n">Flower</div><div class="det-stat-label">Category</div></div>
+          <div class="det-stat"><div class="det-stat-n cn-warm">6h</div><div class="det-stat-label">Detected ago</div></div>
+        </div>
+        <div class="det-rec"><div class="det-section-label">Recommendation</div><div class="det-narrative">A 14-SKU drop is a brand launch signal, not a competitive threat by itself. Open the catalog diff to identify the new brand, then check if it overlaps with anything you carry. If it's a brand you stock, expect Catalyst to push it heavily for 2–3 weeks — consider matching the launch with a feature placement of your own.</div></div>`,
+      footer:`<div class="footer-row">
+        <button class="footer-btn" onclick="markReviewed('catalyst-skus')">Mark reviewed</button>
+        <button class="footer-btn primary" onclick="showToast('Opening Catalog Diff for Catalyst…','var(--accent)')">View catalog diff →</button>
+      </div>`
+    }
+  },
+  {
+    id:'jungle-sku', type:'alert', category:'sku', loc:'dtla', pinId:'pin-jungle', unread:true,
+    icon:'block', iconSvg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>',
+    title:'Jungle Boys pulled 8 SKUs', sub:'Concentrate category — possible supply issue', time:'8h ago',
+    chips:[{t:'DTLA',c:'chip-loc'},{t:'−8 SKUs',c:'chip-rose'}],
+    det:{
+      sevClass:'sev-info', sev:'INFO',
+      rival:'JUNGLE BOYS DTLA · 2.4 MI · TRACKING',
+      title:'8 concentrate SKUs pulled overnight',
+      body:`
+        <div class="det-section"><div class="det-section-label">What happened</div><div class="det-narrative">Jungle Boys removed 8 concentrate SKUs simultaneously overnight — pattern suggests supply chain issue, brand dispute, or compliance hold. Not an immediate threat but worth monitoring for market opportunity.</div></div>
+        <div class="det-stats">
+          <div class="det-stat"><div class="det-stat-n cn-danger">−8</div><div class="det-stat-label">SKUs removed</div></div>
+          <div class="det-stat"><div class="det-stat-n">195</div><div class="det-stat-label">Remaining SKUs</div></div>
+        </div>
+        <div class="det-rec muted"><div class="det-section-label">Recommendation</div><div class="det-narrative">Monitoring only. SKUs pulled simultaneously can mean supply chain hiccup, brand dispute, or compliance hold — none of which require a competitive move from you. If the SKUs don't return within 2 weeks, revisit as a market-share opportunity in the concentrate category.</div></div>`,
+      footer:`<div class="footer-row">
+        <button class="footer-btn" onclick="markReviewed('jungle-sku')">Mark reviewed</button>
+        <button class="footer-btn primary" onclick="showToast('Opening Catalog Diff for Jungle Boys…','var(--accent)')">View catalog diff →</button>
+      </div>`
+    }
+  },
+  {
+    id:'stiiizy-rival', type:'rival', category:'blocked', loc:'weho', pinId:'pin-stiiizy', unread:false,
+    icon:'block', iconSvg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
+    title:'STIIIZY West Hollywood', sub:'12 changes today · 1,700+ SKUs', time:'1.2 mi',
+    chips:[{t:'HOT',c:'chip-danger'},{t:'BLOCKED',c:'chip-rose'}],
+    det:{
+      sevClass:'sev-block', sev:'BLOCKED',
+      rival:'STIIIZY WEST HOLLYWOOD · 1.2 MI',
+      title:'Competitor profile',
+      body:`
+        <div class="block-status-strip"><div class="bss-dot"></div><div class="bss-text">Blocked — cannot access CannaSpy</div><div class="bss-since">47 days</div></div>
+        <div class="det-section"><div class="det-section-label">Block summary</div><div class="det-narrative">STIIIZY has been blocked for 47 days across 3 locations. They have made 12 price or catalog changes in the last 24 hours. Cancelling the block will trigger an immediate outreach call to them within 24–48 hours.</div></div>
+        <div class="det-stats">
+          <div class="det-stat"><div class="det-stat-n">47</div><div class="det-stat-label">Days blocked</div></div>
+          <div class="det-stat"><div class="det-stat-n cn-danger">12</div><div class="det-stat-label">Changes today</div></div>
+          <div class="det-stat"><div class="det-stat-n">1,700+</div><div class="det-stat-label">Total SKUs</div></div>
+          <div class="det-stat"><div class="det-stat-n">3</div><div class="det-stat-label">Locations blocked</div></div>
+        </div>
+        <div class="det-rec"><div class="det-section-label">Recommendation</div><div class="det-narrative">Your block is working — STIIIZY is making 12 changes a day they can't see your data while reacting to. Keep the block active. Cancellation triggers an immediate outreach call to STIIIZY within 24–48 hours, so don't cancel unless you've already shifted strategy.</div></div>`,
+      footer:`<div class="footer-row">
+        <button class="footer-btn active">✓ Reviewed</button>
+        <button class="footer-btn primary" onclick="showToast('Opening STIIIZY competitor profile…','var(--accent)')">View full profile →</button>
+        <button class="footer-btn fb-danger" onclick="showModal('cancel-block-stiiizy','Cancel block on STIIIZY?','Warning: The moment you cancel this block, STIIIZY will be added back to the active prospect list and contacted within 24–48 hours. They will be able to access CannaSpy. This cannot be undone without re-purchasing the block slot.','Keep blocking','Cancel block')">Cancel block</button>
+      </div>`
+    }
+  },
+  {
+    id:'zen-rival', type:'rival', category:'blocked', loc:'weho', pinId:'pin-zen', unread:false,
+    icon:'rival', iconSvg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>',
+    title:'Zen Dispensary', sub:'2 changes today · 924 SKUs', time:'4.3 mi',
+    chips:[{t:'TRACKING',c:'chip-teal'}],
+    det:{
+      sevClass:'sev-tracking', sev:'TRACKING',
+      rival:'ZEN DISPENSARY · 4.3 MI',
+      title:'Competitor profile',
+      body:`
+        <div class="det-section"><div class="det-section-label">Activity today</div><div class="det-narrative">Zen has been quiet today with only 2 minor changes. 924 SKUs on a custom site. Low threat level currently — no significant price moves or new promos detected.</div></div>
+        <div class="det-stats">
+          <div class="det-stat"><div class="det-stat-n">2</div><div class="det-stat-label">Changes today</div></div>
+          <div class="det-stat"><div class="det-stat-n">924</div><div class="det-stat-label">Total SKUs</div></div>
+          <div class="det-stat"><div class="det-stat-n">Low</div><div class="det-stat-label">Threat level</div></div>
+          <div class="det-stat"><div class="det-stat-n">Custom</div><div class="det-stat-label">Platform</div></div>
+        </div>
+        <div class="det-rec muted"><div class="det-section-label">Recommendation</div><div class="det-narrative">No action needed. Zen has been quiet today and currently sits in low-threat status. Keep tracking active and revisit if changes-per-day climbs above 5 or if a price drop on a category you carry shows up.</div></div>`,
+      footer:`<div class="footer-row">
+        <button class="footer-btn active">✓ Reviewed</button>
+        <button class="footer-btn primary" onclick="showToast('Opening Zen competitor profile…','var(--accent)')">View full profile →</button>
+      </div>`
+    }
+  },
+  {
+    id:'harborside-blocking', type:'rival', category:'blocking-you', loc:'sf', pinId:'pin-harborside', unread:true,
+    icon:'warn', iconSvg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
+    title:'Harborside San Jose', sub:'Blocking your account — 31 days active', time:'12.1 mi',
+    chips:[{t:'BLOCKING YOU',c:'chip-blocking'}],
+    det:{
+      sevClass:'sev-blocking', sev:'BLOCKING YOU',
+      rival:'HARBORSIDE SAN JOSE · 12.1 MI',
+      title:'Harborside is blocking your account',
+      body:`<div style="background:var(--warm-soft);border:1px solid rgba(212,144,10,0.25);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg><div style="font-size:11px;color:var(--text-2);line-height:1.6;"><strong style="color:var(--warm);">Harborside San Jose is blocking your account.</strong> They are a paying CannaSpy customer. You cannot access their pricing or catalog data while their block is active. Enable unblock notifications in Block Management to be alerted when their block lapses.</div></div><div class="det-stats"><div class="det-stat"><div class="det-stat-n" style="color:var(--warm);">31</div><div class="det-stat-label">Days active</div></div><div class="det-stat"><div class="det-stat-n" style="color:var(--text-3);">—</div><div class="det-stat-label">Price data</div></div><div class="det-stat"><div class="det-stat-n" style="color:var(--text-3);">—</div><div class="det-stat-label">Catalog data</div></div></div>
+        <div class="det-rec muted"><div class="det-section-label">Recommendation</div><div class="det-narrative">No direct action available. While Harborside's block is active, your only lever is to enable notification for when the block lapses. Most blocks are 30-day minimums, so set a reminder to revisit competitive intel on this market in 14 days. Don't pursue retaliatory blocks — drives the cost-of-information up across the SF market.</div></div>`,
+      footer:`<div class="footer-row">
+        <button class="footer-btn" onclick="markReviewed('harborside-blocking')">Mark reviewed</button>
+        <button class="footer-btn primary" onclick="window.location.href='cannaspy_s16_FINAL.html'">Enable unblock notification →</button>
+      </div>`
+    }
+  },
+  {
+    id:'cookies-blocking', type:'rival', category:'blocking-you', loc:'sf', pinId:'pin-cookies', unread:true,
+    icon:'warn', iconSvg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
+    title:'Cookies SF Haight', sub:'Blocking your account — 8 days active', time:'8.3 mi',
+    chips:[{t:'BLOCKING YOU',c:'chip-blocking'}],
+    det:{
+      sevClass:'sev-blocking', sev:'BLOCKING YOU',
+      rival:'COOKIES SF HAIGHT · 8.3 MI',
+      title:'Cookies SF is blocking your account',
+      body:`<div style="background:var(--warm-soft);border:1px solid rgba(212,144,10,0.25);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="2" style="width:15px;height:15px;flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg><div style="font-size:11px;color:var(--text-2);line-height:1.6;"><strong style="color:var(--warm);">Cookies SF Haight is blocking your account.</strong> They are a paying CannaSpy customer. You cannot access their pricing or catalog data while their block is active. Enable unblock notifications in Block Management to be alerted when their block lapses.</div></div><div class="det-stats"><div class="det-stat"><div class="det-stat-n" style="color:var(--warm);">8</div><div class="det-stat-label">Days active</div></div><div class="det-stat"><div class="det-stat-n" style="color:var(--text-3);">—</div><div class="det-stat-label">Price data</div></div><div class="det-stat"><div class="det-stat-n" style="color:var(--text-3);">—</div><div class="det-stat-label">Catalog data</div></div></div>
+        <div class="det-rec muted"><div class="det-section-label">Recommendation</div><div class="det-narrative">No direct action available. Cookies SF only started blocking 8 days ago — too recent for it to be a one-month minimum lapse. Plan to revisit in 22 days. In the meantime, work the SF market intel you do have access to (other tracked rivals, public menu data, walk-by observations).</div></div>`,
+      footer:`<div class="footer-row">
+        <button class="footer-btn" onclick="markReviewed('cookies-blocking')">Mark reviewed</button>
+        <button class="footer-btn primary" onclick="window.location.href='cannaspy_s16_FINAL.html'">Enable unblock notification →</button>
+      </div>`
+    }
+  }
+];
+
+/* ══ STATE ══ */
+let currentKey = null;
+let activeFilters = new Set();
+let activeLoc = 'all';
+let activeStatus = 'unreviewed'; /* unreviewed | all | snoozed | reviewed */
+let reviewedSet = new Set();
+let pinnedKey = null;
+
+/* Triage operational state — locked 2026-04-26 */
+let snoozeMap = {};      /* alertId -> ISO date string when snooze expires */
+let bulkSelected = new Set();
+
+/* Seed one demo snooze so the empty/snoozed states have content to show.
+   Picks medmen-promo for "next Thursday" (matches the Status filter copy). */
+(function seedSnoozes(){
+  const d = new Date();
+  /* compute next Thursday (day 4) */
+  const day = d.getDay();
+  const diff = (4 - day + 7) % 7 || 7;
+  d.setDate(d.getDate() + diff);
+  d.setHours(9,0,0,0);
+  snoozeMap['medmen-promo'] = d.toISOString();
+})();
+
+/* ══ RENDER LIST ══ */
+function renderList() {
+  const scroll = document.getElementById('listScroll');
+  // Search UI was removed (Option A layout) but the filter is retained in case it comes back
+  const searchEl = document.querySelector('.search-input');
+  const search = searchEl ? searchEl.value.toLowerCase() : '';
+
+  const hasFilters = activeFilters.size > 0 || activeLoc !== 'all' || (search && search.length > 0);
+
+  /* Status filter applies only to alert items. Rivals always pass status. */
+  const matchesStatus = (item) => {
+    if (item.type !== 'alert') return true;
+    const snoozed = isSnoozed(item.id);
+    const reviewed = reviewedSet.has(item.id) || !item.unread;
+    if (activeStatus === 'unreviewed') return !reviewed && !snoozed;
+    if (activeStatus === 'reviewed') return reviewed;
+    if (activeStatus === 'snoozed') return snoozed;
+    if (activeStatus === 'all') return true;
+    return true;
+  };
+
+  const visible = ITEMS.filter(item => {
+    if (activeLoc !== 'all' && item.loc !== activeLoc) return false;
+    if (activeFilters.size > 0 && !activeFilters.has(item.category)) return false;
+    if (search && !item.title.toLowerCase().includes(search) && !item.sub.toLowerCase().includes(search)) return false;
+    if (!matchesStatus(item)) return false;
+    return true;
+  });
+
+  const alerts = visible.filter(i => i.type === 'alert' && i.id !== pinnedKey);
+  const rivals = visible.filter(i => i.type === 'rival' && i.category !== 'blocking-you' && i.id !== pinnedKey);
+  const blockingYou = visible.filter(i => i.category === 'blocking-you' && i.id !== pinnedKey);
+  const pinnedItem = pinnedKey ? visible.find(i => i.id === pinnedKey) : null;
+
+  let html = '';
+  if (pinnedItem) {
+    html += `<div class="list-divider" style="color:var(--accent);display:flex;align-items:center;gap:6px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px;height:10px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Selected from map
+    </div>`;
+    html += renderItem(pinnedItem);
+  }
+  if (alerts.length) {
+    const heading = activeStatus === 'snoozed' ? 'Snoozed alerts' :
+                    activeStatus === 'reviewed' ? 'Reviewed alerts' :
+                    'Alerts — last 24 hours';
+    html += `<div class="list-divider">${heading}</div>`;
+    alerts.forEach(item => { html += renderItem(item); });
+  }
+  if (rivals.length) {
+    html += `<div class="list-divider">Rivals — active</div>`;
+    rivals.forEach(item => { html += renderItem(item); });
+  }
+  if (blockingYou.length) {
+    html += `<div class="list-divider" style="color:var(--warm);">Blocking your account</div>`;
+    blockingYou.forEach(item => { html += renderItem(item); });
+  }
+
+  /* Empty-state branches — use the helper. Rivals don't trigger empties since they're reference content. */
+  if (!alerts.length && !rivals.length && !blockingYou.length && !pinnedItem){
+    if (activeStatus === 'snoozed'){
+      html = emptyStateHtml('no-snoozed');
+    } else if (hasFilters){
+      html = emptyStateHtml('no-matches');
+    } else if (activeStatus === 'unreviewed'){
+      html = emptyStateHtml('all-caught-up');
+    } else {
+      html = `<div style="padding:28px 20px;text-align:center;font-size:12px;color:var(--text-3);">No items match current filters.</div>`;
+    }
+  }
+
+  scroll.innerHTML = html;
+
+  /* Filter-bar count: unreviewed + snoozed (if any) */
+  const unreviewedCount = ITEMS.filter(i => i.type === 'alert' && i.unread && !reviewedSet.has(i.id) && !isSnoozed(i.id)).length;
+  const snoozedCount = ITEMS.filter(i => i.type === 'alert' && isSnoozed(i.id)).length;
+  const countEl = document.getElementById('filterCount');
+  if (countEl){
+    countEl.textContent = snoozedCount > 0
+      ? `${unreviewedCount} unreviewed · ${snoozedCount} snoozed`
+      : `${unreviewedCount} unreviewed`;
+  }
+
+  refreshBulkBar();
+}
+
+/* Sparkline SVGs per alert category — 7-day trend hint behind the sub copy */
+function sparklineFor(item) {
+  let d, color, endY;
+  if (item.category === 'price-drop') {
+    // Price collapse curve — stable, then cliff down at the end
+    d = 'M0,12 L20,10 L40,11 L60,9 L80,10 L100,12 L120,11 L140,13 L160,12 L180,14 L200,16 L220,22 L240,24';
+    color = 'var(--danger)'; endY = 24;
+  } else if (item.category === 'promo') {
+    // Rising promo activity
+    d = 'M0,16 L30,15 L60,17 L90,16 L120,14 L150,13 L180,10 L210,8 L240,6';
+    color = 'var(--warning)'; endY = 6;
+  } else if (item.category === 'sku' && item.title.includes('added')) {
+    // SKU count climbing sharply
+    d = 'M0,22 L30,22 L60,22 L90,21 L120,21 L150,21 L180,20 L210,18 L240,8';
+    color = 'var(--accent)'; endY = 8;
+  } else if (item.category === 'sku') {
+    // SKU count dropping (Jungle Boys — products pulled)
+    d = 'M0,10 L30,10 L60,11 L90,12 L120,13 L150,16 L180,18 L210,20 L240,22';
+    color = 'var(--rose)'; endY = 22;
+  } else {
+    return ''; // no sparkline for non-alert rows
+  }
+  return `<svg class="li-sparkline" viewBox="0 0 240 24" preserveAspectRatio="none" aria-hidden="true">
+    <path class="line" d="${d}" stroke="${color}"/>
+    <circle class="dot-end" cx="240" cy="${endY}" r="2.5" fill="${color}"/>
+  </svg>`;
+}
+
+function renderItem(item) {
+  const isSelected = item.id === currentKey;
+  const isReviewed = reviewedSet.has(item.id);
+  const snoozed = item.type === 'alert' && isSnoozed(item.id);
+  const isBulkChecked = bulkSelected.has(item.id);
+  const aria = `Open details for ${item.title}`;
+  const sparkline = item.type === 'alert' ? sparklineFor(item) : '';
+  const sevMap = {'sev-critical':'critical','sev-high':'high','sev-medium':'medium','sev-info':'info','sev-blocking':'blocking-you','sev-block':'block','sev-tracking':'tracking'};
+  const sev = item.det ? (sevMap[item.det.sevClass]||'info') : 'info';
+
+  /* Bulk checkbox — only on alert rows. CSS hides it on non-alert via the data-type attr. */
+  const bulkCheckbox = item.type === 'alert'
+    ? `<div class="bulk-checkbox ${isBulkChecked?'checked':''}" onclick="toggleBulk('${item.id}', event)" role="checkbox" aria-checked="${isBulkChecked}" aria-label="Select for bulk action">
+        ${isBulkChecked ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+      </div>`
+    : '';
+
+  /* Snooze tag — only on alerts that are currently snoozed. Click to unsnooze. */
+  const snoozeTag = snoozed
+    ? `<div class="snooze-tag" onclick="event.stopPropagation(); unsnoozeAlert('${item.id}')" role="button" aria-label="Tap to unsnooze">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        Snoozed · ${formatSnoozeLabel(snoozeMap[item.id])}
+      </div>`
+    : '';
+
+  /* Inject snooze button into the footer at render time — only for alerts that are
+     unreviewed AND not currently snoozed. The footer template never bakes in a snooze button. */
+  let renderedFooter = item.det ? item.det.footer : '';
+  if (item.type === 'alert' && item.unread && !isReviewed && !snoozed && renderedFooter){
+    const snoozePop = `<div class="snooze-wrap" data-snooze-id="${item.id}">
+      <button class="footer-btn" onclick="toggleSnoozePop('${item.id}', event)" aria-label="Snooze options">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        Snooze ▾
+      </button>
+      <div class="snooze-pop">
+        <div class="snooze-opt" onclick="snoozeAlert('${item.id}','tomorrow')"><span>Tomorrow morning</span><span class="snooze-opt-when">9 AM</span></div>
+        <div class="snooze-opt" onclick="snoozeAlert('${item.id}','next-monday')"><span>Next Monday</span><span class="snooze-opt-when">9 AM</span></div>
+        <div class="snooze-opt-div"></div>
+        <div class="snooze-opt" onclick="snoozeAlert('${item.id}','next-thursday')"><span>Next Thursday</span><span class="snooze-opt-when">pricing meeting</span></div>
+        <div class="snooze-opt" onclick="snoozeAlert('${item.id}','next-week')"><span>Next week</span><span class="snooze-opt-when">7 days</span></div>
+      </div>
+    </div>`;
+    /* Insert snooze button right after the "Mark reviewed" button (which is always
+       the first slot for unreviewed alerts per the locked footer order). */
+    renderedFooter = renderedFooter.replace(
+      /(<button class="footer-btn" onclick="markReviewed\([^)]+\)">Mark reviewed<\/button>)/,
+      '$1\n        ' + snoozePop
+    );
+  }
+
+  const inline = isSelected && item.det ? `<div class="li-inline">${item.det.body}${renderedFooter}</div>` : '';
+
+  const classes = [
+    'list-item',
+    isSelected ? 'selected' : '',
+    snoozed ? 'snoozed' : '',
+    isBulkChecked ? 'bulk-checked' : ''
+  ].filter(Boolean).join(' ');
+
+  return `<div class="${classes}" data-id="${item.id}" data-type="${item.type}" data-sev="${sev}" role="button" tabindex="0" aria-label="${aria}" onclick="onRowClick('${item.id}', event)">
+    ${bulkCheckbox}
+    ${item.unread && !isReviewed && !snoozed ? '<div class="unread-dot" aria-label="Unread"></div>' : '<div style="width:8px;flex-shrink:0;"></div>'}
+    <div class="li-icon icon-${item.icon}" aria-hidden="true">${item.iconSvg}</div>
+    <div class="li-body">
+      <div class="li-top"><div class="li-title">${item.title}</div><div class="li-time">${item.time}</div></div>
+      <div class="li-sub">${item.sub}</div>
+      ${sparkline}
+      <div class="li-chips">${item.chips.map(c=>`<span class="li-chip ${c.c}">${c.t}</span>`).join('')}</div>
+      ${snoozeTag}
+      ${inline}
+    </div>
+  </div>`;
+}
+
+/* ══ DETAIL ══ */
+function openDetail(key, fromPin) {
+  const item = ITEMS.find(i => i.id === key);
+  if (!item) return;
+  currentKey = key;
+  if (fromPin) {
+    pinnedKey = key;
+  }
+  const d = item.det;
+
+  document.getElementById('detailHeadBody').innerHTML = `
+    <div class="det-sev ${d.sevClass}">${d.sev}</div>
+    <div class="det-rival">${d.rival}</div>
+    <div class="det-title">${d.title}</div>`;
+  document.getElementById('detailScroll').innerHTML = d.body;
+  document.getElementById('detailFooter').innerHTML = d.footer;
+  document.getElementById('detailPanel').classList.add('open');
+
+  // Sync pins
+  document.querySelectorAll('.comp-pin').forEach(p => p.classList.remove('selected'));
+  const pin = document.getElementById(item.pinId);
+  if (pin) pin.classList.add('selected');
+
+  renderList();
+
+  // Scroll list to top when pinned from map
+  if (fromPin) {
+    const scroll = document.getElementById('listScroll');
+    if (scroll) scroll.scrollTop = 0;
+  }
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('open');
+  document.querySelectorAll('.comp-pin').forEach(p => p.classList.remove('selected'));
+  currentKey = null;
+  renderList();
+}
+
+/* ══ MARK REVIEWED ══ */
+function markReviewed(key) {
+  reviewedSet.add(key);
+  const item = ITEMS.find(i => i.id === key);
+  if (item) item.unread = false;
+  bulkSelected.delete(key); /* if it was bulk-selected, clear that */
+  showToast('✓ Alert marked as reviewed', 'var(--accent)');
+  renderList();
+}
+
+/* ════ TRIAGE OPERATIONAL HELPERS — snooze + bulk + empty (locked 2026-04-26) ════ */
+
+function isSnoozed(id){
+  const exp = snoozeMap[id];
+  if (!exp) return false;
+  return new Date(exp).getTime() > Date.now();
+}
+
+function computeSnoozeDate(option){
+  const d = new Date();
+  if (option === 'tomorrow'){
+    d.setDate(d.getDate() + 1);
+    d.setHours(9,0,0,0);
+  } else if (option === 'next-monday'){
+    const day = d.getDay();
+    const diff = (1 - day + 7) % 7 || 7;
+    d.setDate(d.getDate() + diff);
+    d.setHours(9,0,0,0);
+  } else if (option === 'next-thursday'){
+    const day = d.getDay();
+    const diff = (4 - day + 7) % 7 || 7;
+    d.setDate(d.getDate() + diff);
+    d.setHours(9,0,0,0);
+  } else if (option === 'next-week'){
+    d.setDate(d.getDate() + 7);
+    d.setHours(9,0,0,0);
+  }
+  return d.toISOString();
+}
+
+function formatSnoozeLabel(iso){
+  const d = new Date(iso);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  const tomorrow = new Date(now); tomorrow.setDate(now.getDate()+1);
+  const isTomorrow = d.toDateString() === tomorrow.toDateString();
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  if (sameDay) return 'today';
+  if (isTomorrow) return 'tomorrow';
+  return days[d.getDay()];
+}
+
+function snoozeAlert(id, option){
+  snoozeMap[id] = computeSnoozeDate(option);
+  bulkSelected.delete(id);
+  closeSnoozePopAll();
+  showToast('Snoozed until ' + formatSnoozeLabel(snoozeMap[id]), 'var(--warm)');
+  renderList();
+}
+
+function unsnoozeAlert(id){
+  delete snoozeMap[id];
+  showToast('Unsnoozed', 'var(--accent)');
+  renderList();
+}
+
+function toggleSnoozePop(id, evt){
+  if (evt) evt.stopPropagation();
+  const wrap = document.querySelector('.snooze-wrap[data-snooze-id="'+id+'"]');
+  if (!wrap) return;
+  const pop = wrap.querySelector('.snooze-pop');
+  const isOpen = pop.classList.contains('open');
+  closeSnoozePopAll();
+  if (!isOpen) pop.classList.add('open');
+}
+
+function closeSnoozePopAll(){
+  document.querySelectorAll('.snooze-pop.open').forEach(p => p.classList.remove('open'));
+}
+
+/* Click handler for list rows. In bulk mode, row click toggles bulk membership.
+   Otherwise it opens the inline detail (existing behavior). */
+function onRowClick(id, evt){
+  if (document.body.classList.contains('bulk-mode')){
+    toggleBulk(id, evt);
+    return;
+  }
+  openDetail(id);
+}
+
+function toggleBulk(id, evt){
+  if (evt) evt.stopPropagation();
+  /* Bulk only applies to alert items, not rival profiles */
+  const item = ITEMS.find(i => i.id === id);
+  if (!item || item.type !== 'alert') return;
+  if (bulkSelected.has(id)){
+    bulkSelected.delete(id);
+  } else {
+    bulkSelected.add(id);
+  }
+  if (bulkSelected.size > 0){
+    document.body.classList.add('bulk-mode');
+    /* Bulk and inline-detail are mutually exclusive */
+    if (currentKey){
+      currentKey = null;
+      document.getElementById('detailPanel').classList.remove('open');
+      document.querySelectorAll('.comp-pin').forEach(p => p.classList.remove('selected'));
+    }
+  } else {
+    document.body.classList.remove('bulk-mode');
+  }
+  renderList();
+}
+
+function bulkClear(){
+  bulkSelected.clear();
+  document.body.classList.remove('bulk-mode');
+  closeSnoozePopAll();
+  renderList();
+}
+
+function bulkSelectAllVisible(){
+  /* Select every visible alert (not rival) currently rendered */
+  document.querySelectorAll('.list-item[data-type="alert"]').forEach(el => {
+    const id = el.getAttribute('data-id');
+    if (id) bulkSelected.add(id);
+  });
+  if (bulkSelected.size > 0) document.body.classList.add('bulk-mode');
+  renderList();
+}
+
+function bulkMarkReviewed(){
+  const ids = Array.from(bulkSelected);
+  ids.forEach(id => {
+    reviewedSet.add(id);
+    const it = ITEMS.find(i => i.id === id);
+    if (it) it.unread = false;
+  });
+  showToast('✓ ' + ids.length + ' alert' + (ids.length===1?'':'s') + ' marked reviewed', 'var(--accent)');
+  bulkSelected.clear();
+  document.body.classList.remove('bulk-mode');
+  renderList();
+}
+
+function bulkSnooze(option){
+  const ids = Array.from(bulkSelected);
+  const iso = computeSnoozeDate(option);
+  ids.forEach(id => { snoozeMap[id] = iso; });
+  showToast(ids.length + ' alert' + (ids.length===1?'':'s') + ' snoozed until ' + formatSnoozeLabel(iso), 'var(--warm)');
+  bulkSelected.clear();
+  document.body.classList.remove('bulk-mode');
+  closeSnoozePopAll();
+  renderList();
+}
+
+function refreshBulkBar(){
+  const bar = document.getElementById('bulkActionBar');
+  if (!bar) return;
+  const n = bulkSelected.size;
+  if (n === 0){
+    bar.classList.remove('show');
+    return;
+  }
+  bar.classList.add('show');
+  const countEl = bar.querySelector('.bulk-count-pill');
+  if (countEl) countEl.textContent = n;
+  const labelEl = bar.querySelector('.bulk-count-label');
+  if (labelEl) labelEl.textContent = 'alert' + (n===1?'':'s') + ' selected';
+}
+
+/* Empty state branches */
+function emptyStateHtml(branch){
+  if (branch === 'all-caught-up'){
+    return `<div class="empty-state-card">
+      <div class="es-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="es-card-title">All caught up</div>
+      <div class="es-card-sub">Nothing new in your watchlist. The next sweep runs within the hour.</div>
+      <div class="es-card-meta">Next sweep · within the hour</div>
+      <button class="es-card-btn" onclick="setStatus('reviewed')">View reviewed alerts</button>
+    </div>`;
+  }
+  if (branch === 'no-matches'){
+    return `<div class="empty-state-card">
+      <div class="es-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+      <div class="es-card-title">No matches</div>
+      <div class="es-card-sub">No alerts match the current filters. Adjust the location, category, or status filters to see more.</div>
+      <button class="es-card-btn" onclick="resetFilters()">Clear all filters</button>
+    </div>`;
+  }
+  if (branch === 'no-snoozed'){
+    return `<div class="empty-state-card">
+      <div class="es-card-icon warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+      <div class="es-card-title">No snoozed alerts</div>
+      <div class="es-card-sub">Use the Snooze button on any alert to defer it for later — useful for items you can't act on right now.</div>
+      <button class="es-card-btn" onclick="setStatus('unreviewed')">View unreviewed alerts</button>
+    </div>`;
+  }
+  return '';
+}
+
+function resetFilters(){
+  activeFilters.clear();
+  activeLoc = 'all';
+  /* Reset the alert-type dropdown */
+  const fltAllEl = document.querySelector('#fltDdPop .flt-dd-opt');
+  if (typeof selectFlt === 'function' && fltAllEl) selectFlt('all', 'All alerts', fltAllEl);
+  /* Reset the location dropdown */
+  const locAllEl = document.querySelector('.loc-dd-opt[onclick*="\'all\'"]');
+  if (typeof selectLoc === 'function' && locAllEl) selectLoc('all', 'All locations', locAllEl);
+  /* Reset the status dropdown to Unreviewed */
+  setStatus('unreviewed');
+  /* Clear search input if any */
+  const searchEl = document.querySelector('.search-input');
+  if (searchEl) searchEl.value = '';
+  renderList();
+}
+
+/* Close any open snooze pop when clicking outside */
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.snooze-wrap')) closeSnoozePopAll();
+});
+
+/* ══ FILTERS ══ */
+/* toggleFilter() removed 2026-04-26 — was the old chip-pill UI handler, dead code
+   since S04 moved to dropdown filters. activeFilters is now updated through
+   selectFlt() (alert type) and selectLoc() (location). */
+
+function toggleLocDd() {
+  document.getElementById('locDdPop').classList.toggle('open');
+}
+function selectLoc(loc, label, el) {
+  activeLoc = loc;
+  document.querySelectorAll('.loc-dd-opt').forEach(function(o){ o.classList.remove('loo-sel'); });
+  el.classList.add('loo-sel');
+  var btn = document.getElementById('locDdBtn');
+  var pinIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;flex-shrink:0;opacity:0.85;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var chevron = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px;height:10px;flex-shrink:0;opacity:0.6;"><polyline points="6 9 12 15 18 9"/></svg>';
+  btn.innerHTML = pinIcon + ' ' + label + ' ' + chevron;
+  btn.className = 'loc-dd-btn' + (loc === 'all' ? ' loc-dd-active' : ' loc-dd-active');
+  document.getElementById('locDdPop').classList.remove('open');
+  renderList();
+}
+function toggleFltDd() {
+  document.getElementById('fltDdPop').classList.toggle('open');
+}
+function selectFlt(f, label, el) {
+  document.querySelectorAll('#fltDdPop .flt-dd-opt').forEach(function(o){ o.classList.remove('flo-sel'); });
+  el.classList.add('flo-sel');
+  var btn = document.getElementById('fltDdBtn');
+  var listIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;flex-shrink:0;opacity:0.85;"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>';
+  var chevron = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px;height:10px;flex-shrink:0;opacity:0.6;"><polyline points="6 9 12 15 18 9"/></svg>';
+  btn.innerHTML = listIcon + ' ' + label + ' ' + chevron;
+  btn.className = 'flt-dd-btn' + (f === 'all' ? '' : ' flt-active');
+  document.getElementById('fltDdPop').classList.remove('open');
+  // map to existing filter logic
+  var chipMap = {'price-drop':'price-drop','promo':'promo','sku':'sku','blocked':'blocked','all':'all'};
+  activeFilters = f === 'all' ? new Set() : new Set([chipMap[f]]);
+  renderList();
+}
+function toggleStatusDd(){
+  document.getElementById('statusDdPop').classList.toggle('open');
+}
+function selectStatus(status, label, el){
+  document.querySelectorAll('#statusDdPop .flt-dd-opt').forEach(function(o){ o.classList.remove('flo-sel'); });
+  if (el) el.classList.add('flo-sel');
+  activeStatus = status;
+  document.getElementById('statusDdLabel').textContent = label;
+  var btn = document.getElementById('statusDdBtn');
+  if (btn) btn.className = 'flt-dd-btn' + (status === 'all' ? '' : ' flt-active');
+  var pop = document.getElementById('statusDdPop');
+  if (pop) pop.classList.remove('open');
+  renderList();
+}
+/* setStatus is the keyboard/programmatic entry point (no event element needed). */
+function setStatus(status){
+  var labels = {unreviewed:'Unreviewed', snoozed:'Snoozed', reviewed:'Reviewed', all:'All'};
+  var el = document.querySelector('#statusDdPop [data-status="'+status+'"]');
+  selectStatus(status, labels[status] || status, el);
+}
+function toggleBulkSnoozePop(evt){
+  if (evt) evt.stopPropagation();
+  var wrap = document.querySelector('.bulk-action-bar .snooze-wrap');
+  if (!wrap) return;
+  var pop = wrap.querySelector('.snooze-pop');
+  var isOpen = pop.classList.contains('open');
+  closeSnoozePopAll();
+  if (!isOpen) pop.classList.add('open');
+}
+function switchLoc(btn, loc) {
+  activeLoc = loc;
+  renderList();
+}
+
+function filterList(val) { renderList(); } /* search removed — Option A */
+document.addEventListener('click', function(e){
+  if (!e.target.closest('.loc-dd-wrap')) {
+    var p = document.getElementById('locDdPop');
+    if (p) p.classList.remove('open');
+  }
+  /* Per-dropdown close: scoped by the wrap that contains each pop */
+  var fltWrap = document.getElementById('fltDdPop');
+  if (fltWrap && !e.target.closest('#fltDdBtn') && !e.target.closest('#fltDdPop')){
+    fltWrap.classList.remove('open');
+  }
+  var statusWrap = document.getElementById('statusDdPop');
+  if (statusWrap && !e.target.closest('#statusDdBtn') && !e.target.closest('#statusDdPop')){
+    statusWrap.classList.remove('open');
+  }
+});
+
+/* ══ TOAST ══ */
+let toastTimer;
+function showToast(msg, color='var(--accent)') {
+  const t = document.getElementById('toast');
+  const d = document.getElementById('toastDot');
+  const m = document.getElementById('toastMsg');
+  d.style.background = color;
+  m.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ══ MODAL ══ */
+let modalConfirmAction = null;
+function showModal(id, title, body, cancelLabel, confirmLabel) {
+  document.getElementById('modalTitle').textContent = title;
+  // Body supports HTML (used for billing disclosure formatting in block confirmations).
+  // All body strings are hardcoded in this file — no user input, no XSS surface.
+  document.getElementById('modalBody').innerHTML = body;
+
+  let confirmClass = 'primary';
+  if (id.startsWith('cancel-block') || id.startsWith('respond')) confirmClass = 'danger';
+
+  document.getElementById('modalActions').innerHTML = `
+    <button class="modal-btn" onclick="closeModal()">${cancelLabel}</button>
+    <button class="modal-btn ${confirmClass}" onclick="handleModalConfirm('${id}')">${confirmLabel}</button>`;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function handleModalConfirm(id) {
+  closeModal();
+  if (id === 'cancel-block-stiiizy') {
+    showToast('Block cancelled — STIIIZY added to prospect list', 'var(--danger)');
+  } else if (id === 'block-medmen') {
+    showToast('✓ MedMen blocked — 1 slot added to billing', 'var(--rose)');
+  } else if (id === 'block-catalyst') {
+    showToast('✓ Catalyst blocked — 1 slot added to billing', 'var(--rose)');
+  } else if (id === 'block-zen') {
+    showToast('✓ Zen blocked — 1 slot added to billing', 'var(--rose)');
+  } else if (id === 'respond-price') {
+    showToast('Price updated — Blue Dream 3.5g set to $39', 'var(--accent)');
+  } else if (id === 'respond-otc') {
+    showToast('Price updated — Gelato #41 7g set to $60', 'var(--accent)');
+  }
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modalOverlay')) return;
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+/* ══ DESIGN TOKENS (baked from S04 v3 defaults) ══ */
+(function bakeTokens(){
+  const r = document.documentElement.style;
+  r.setProperty('--tw-glass-blur', '20px');
+  r.setProperty('--tw-glass-sat', '1.4');
+  r.setProperty('--tw-mesh-alpha', '1');
+  r.setProperty('--tw-mesh-size', '220%');
+  r.setProperty('--tw-stat-size', '44px');
+  r.setProperty('--tw-stat-italic', 'normal');
+  r.setProperty('--tw-stat-weight', '400');
+  r.setProperty('--tw-spacing', '1');
+  r.setProperty('--tw-spark-width', '1.6');
+  r.setProperty('--tw-spark-speed', '1.2s');
+  r.setProperty('--tw-conic-play', 'paused');
+  r.setProperty('--tw-conic-speed', '6s');
+  r.setProperty('--tw-conic-opacity', '0.15');
+  r.setProperty('--r-tw-lg', '18px');
+  r.setProperty('--r-tw-md', '14px');
+  r.setProperty('--r-tw-sm', '12px');
+  const h = 184;
+  const s = document.createElement('style'); s.id = 'accent-hue-style';
+  s.textContent =
+    `[data-theme="light"]{--accent:oklch(0.68 0.12 ${h});--accent-soft:oklch(0.68 0.12 ${h} / 0.1);--accent-hover:oklch(0.55 0.13 ${h});--positive:oklch(0.55 0.11 ${h});--bg-g1:oklch(0.68 0.12 ${h} / 0.10);--border:oklch(0.68 0.12 ${h} / 0.10);--border-2:oklch(0.68 0.12 ${h} / 0.24);--border-hot:oklch(0.68 0.12 ${h} / 0.38);--mesh-anim-1:oklch(0.68 0.12 ${h} / 0.08);--glass-edge-inner:oklch(0.68 0.12 ${h} / 0.12);--stat-border:oklch(0.68 0.12 ${h} / 0.14);}` +
+    `[data-theme="dark"]{--accent:oklch(0.75 0.14 ${h});--accent-soft:oklch(0.75 0.14 ${h} / 0.12);--accent-hover:oklch(0.82 0.14 ${h});--positive:oklch(0.75 0.14 ${h});--bg-g1:oklch(0.75 0.14 ${h} / 0.14);--border:oklch(0.75 0.14 ${h} / 0.16);--border-2:oklch(0.75 0.14 ${h} / 0.28);--border-hot:oklch(0.75 0.14 ${h} / 0.50);--mesh-anim-1:oklch(0.75 0.14 ${h} / 0.10);--glass-edge-inner:oklch(0.75 0.14 ${h} / 0.18);--stat-border:oklch(0.75 0.14 ${h} / 0.20);}`;
+  document.head.appendChild(s);
+})();
+
+/* ══ STRIPPED: the entire Tweaks subsystem (state, presets, panel UI, postMessage
+   bridge, layout-variant toggles, and accent-hue live rewriter) lived here in
+   S04 v3. All defaults are now baked: the permanent layout variants are stamped
+   on <body> above (lv-sev lv-heat lv-inline) and the token values above
+   match v3's default preset. Removing this block reduces runtime surface and
+   locks the design to its shipped state. ══ */
+/* ══ THEME ══ */
+function toggleTheme() {
+  const html = document.documentElement;
+  const dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('themeLabel').textContent = dark ? 'Dark mode' : 'Light mode';
+}
+
+/* ══ KEYBOARD ACCESS ══
+   Any element with role="button" becomes keyboard-operable: Enter or Space
+   triggers its click handler. One delegation listener covers list items,
+   map pins, dropdown options, and any other div-based interactive element. */
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const t = e.target;
+  if (!t || t.getAttribute('role') !== 'button') return;
+  if (t.tagName === 'BUTTON' || t.tagName === 'A') return; // native handling
+  e.preventDefault();
+  t.click();
+});
+
+/* ══ INIT ══ */
+// Auto-wire keyboard access for nav links (they use onclick on divs)
+document.querySelectorAll('.nav-link[onclick]').forEach(function(el){
+  el.setAttribute('role', 'link');
+  el.setAttribute('tabindex', '0');
+});
+// Make nav-link respond to Enter/Space the same way as role="button"
+document.querySelectorAll('.nav-link[role="link"]').forEach(function(el){
+  el.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
+  });
+});
+
+activeFilters = new Set(['price-drop','promo','sku','blocked','blocking-you']);
+renderList();
+openDetail('stiiizy-price');
+
+/* ══ MAGNETIC BUTTON HOVER ══ */
+(function magneticButtons(){
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) return;
+  const selector = '.footer-btn, .modal-btn';
+  document.addEventListener('mousemove', function(e){
+    const btn = e.target.closest(selector);
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    const dx = (x - cx) * 0.18;
+    const dy = (y - cy) * 0.18;
+    btn.style.setProperty('--mx', x + 'px');
+    btn.style.setProperty('--my', y + 'px');
+    btn.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+  });
+  document.addEventListener('mouseout', function(e){
+    const btn = e.target.closest(selector);
+    if (btn) btn.style.transform = '';
+  });
+})();
+
+/* ══ LIVE PRICE PULSE ══
+   When the STIIIZY Blue Dream detail is open, the narrative's $35 updates every
+   8s with a soft flash. Demonstrates the ambient "this is live intel" feel. */
+(function livePricePulse(){
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) return;
+  const prices = ['$35.00','$35.25','$34.90','$35.10','$35.00'];
+  let i = 0;
+  setInterval(function(){
+    if (currentKey !== 'stiiizy-price') return;
+    const narr = document.querySelector('.detail-scroll .det-narrative');
+    if (!narr) return;
+    // Find the $35 text in the narrative and wrap it for flash
+    let html = narr.innerHTML;
+    i = (i + 1) % prices.length;
+    const newHtml = html.replace(/\$35(?:\.\d\d)?|<span class="price-live[^"]*"[^>]*>[^<]*<\/span>/,
+      '<span class="price-live" style="background:var(--warning-soft);padding:0 3px;border-radius:3px;transition:background 1.2s ease-out;font-weight:600;">'+prices[i]+'</span>');
+    narr.innerHTML = newHtml;
+    // Fade out the flash after 1.2s
+    const el = narr.querySelector('.price-live');
+    if (el) setTimeout(function(){ el.style.background = 'transparent'; }, 50);
+  }, 8000);
+})();
+
+/* ══ EXPORT MENU ══ */
+function toggleExport(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('exportMenu').classList.toggle('open');
+}
+function doExport(type) {
+  document.getElementById('exportMenu').classList.remove('open');
+  const msgs = {
+    pdf: 'Generating daily brief PDF…',
+    csv: 'Downloading all alerts CSV…',
+    slack: 'Brief copied — ready to paste into Slack'
+  };
+  showToast(msgs[type] || 'Exporting…', 'var(--accent)');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.export-wrap')) {
+    document.getElementById('exportMenu')?.classList.remove('open');
+  }
+});
+
+/* ══ KEYBOARD SHORTCUTS ══ */
+function toggleCheatsheet(e) {
+  if (e && e.target && !e.target.matches('.kbd-cheatsheet')) return;
+  document.getElementById('kbdCheat').classList.toggle('show');
+}
+function toggleSearchPalette(e) {
+  if (e && e.target && !e.target.matches('.search-palette')) return;
+  const pal = document.getElementById('searchPalette');
+  pal.classList.toggle('show');
+  if (pal.classList.contains('show')) {
+    setTimeout(() => pal.querySelector('.search-palette-input').focus(), 50);
+  }
+}
+
+/* ══ INLINE SEARCH FILTER ══ */
+function filterListBySearch(query) {
+  const q = (query || '').trim().toLowerCase();
+  const items = document.querySelectorAll('.list-item');
+  let visible = 0;
+  items.forEach(item => {
+    if (!q) {
+      item.style.display = '';
+      visible++;
+      return;
+    }
+    const text = item.textContent.toLowerCase();
+    if (text.includes(q)) {
+      item.style.display = '';
+      visible++;
+    } else {
+      item.style.display = 'none';
+    }
+  });
+  // Hide empty dividers
+  document.querySelectorAll('.list-divider').forEach(div => {
+    let next = div.nextElementSibling;
+    let hasVisible = false;
+    while (next && !next.classList.contains('list-divider')) {
+      if (next.classList.contains('list-item') && next.style.display !== 'none') {
+        hasVisible = true;
+        break;
+      }
+      next = next.nextElementSibling;
+    }
+    div.style.display = hasVisible || !q ? '' : 'none';
+  });
+}
+
+/* ══ KEYBOARD EVENT LISTENER ══ */
+document.addEventListener('keydown', e => {
+  // Ignore if typing in an input
+  if (e.target.matches('input, textarea')) {
+    if (e.key === 'Escape') e.target.blur();
+    return;
+  }
+  // ⌘K / Ctrl+K — search palette
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    toggleSearchPalette();
+    return;
+  }
+  // ? — cheatsheet
+  if (e.key === '?') {
+    e.preventDefault();
+    toggleCheatsheet();
+    return;
+  }
+  // Esc — close anything open (bulk first, then snooze pop, then modals/inline)
+  if (e.key === 'Escape') {
+    if (document.querySelector('.snooze-pop.open')) {
+      closeSnoozePopAll();
+    } else if (bulkSelected.size > 0) {
+      bulkClear();
+    } else if (document.getElementById('searchPalette').classList.contains('show')) {
+      toggleSearchPalette();
+    } else if (document.getElementById('kbdCheat').classList.contains('show')) {
+      toggleCheatsheet();
+    } else if (document.getElementById('modalOverlay').classList.contains('show')) {
+      closeModal();
+    } else if (typeof currentKey !== 'undefined' && currentKey) {
+      closeDetail();
+    }
+    return;
+  }
+  // Space — toggle bulk on currently selected alert (only if selected is type=alert)
+  if (e.key === ' ') {
+    const sel = document.querySelector('.list-item.selected');
+    if (sel && sel.getAttribute('data-type') === 'alert') {
+      e.preventDefault();
+      const id = sel.getAttribute('data-id');
+      if (id) toggleBulk(id);
+    }
+    return;
+  }
+  // ⌘A / Ctrl+A — select all visible alerts for bulk
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
+    /* Only if there are visible alerts to select — otherwise let browser handle it */
+    if (document.querySelectorAll('.list-item[data-type="alert"]').length > 0) {
+      e.preventDefault();
+      bulkSelectAllVisible();
+    }
+    return;
+  }
+  // j / ArrowDown — next alert
+  if (e.key === 'j' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    const items = Array.from(document.querySelectorAll('.list-item:not([style*="display: none"])'));
+    if (!items.length) return;
+    const selected = document.querySelector('.list-item.selected');
+    let idx = selected ? items.indexOf(selected) : -1;
+    idx = Math.min(idx + 1, items.length - 1);
+    const target = items[idx];
+    if (target) {
+      const id = target.getAttribute('data-id');
+      if (id) openDetail(id); /* bypass bulk-mode routing */
+      target.scrollIntoView({block:'nearest', behavior:'smooth'});
+    }
+    return;
+  }
+  // k / ArrowUp — previous alert
+  if (e.key === 'k' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const items = Array.from(document.querySelectorAll('.list-item:not([style*="display: none"])'));
+    if (!items.length) return;
+    const selected = document.querySelector('.list-item.selected');
+    let idx = selected ? items.indexOf(selected) : 1;
+    idx = Math.max(idx - 1, 0);
+    const target = items[idx];
+    if (target) {
+      const id = target.getAttribute('data-id');
+      if (id) openDetail(id);
+      target.scrollIntoView({block:'nearest', behavior:'smooth'});
+    }
+    return;
+  }
+  // r — mark reviewed
+  if (e.key === 'r' || e.key === 'R') {
+    const selected = document.querySelector('.list-item.selected');
+    if (selected) {
+      e.preventDefault();
+      const id = selected.getAttribute('data-id') || selected.dataset.id;
+      if (id && typeof markReviewed === 'function') markReviewed(id);
+      else showToast('Marked as reviewed','var(--accent)');
+    }
+    return;
+  }
+});
+</script>
+
+
+</body></html>

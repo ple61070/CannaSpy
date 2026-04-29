@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Notification Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+
+[data-theme="light"]{
+  --bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);
+  --sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);--glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);--surface:rgba(255,255,255,0.97);--surface-solid:#ffffff;--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;
+  --border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);--border-hot:rgba(9,161,161,0.38);
+  --text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;
+  --accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);--accent-hover:#078484;
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);
+  --slate:#5484A4;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.08);
+  --card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);
+  --btn-shadow:0 4px 18px rgba(9,161,161,0.32);
+  --noise-opacity:0.022;
+}
+[data-theme="dark"]{
+  --bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);
+  --sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);--glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);--surface:rgba(16,28,40,0.99);--surface-solid:#14202a;--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;
+  --border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);--border-hot:rgba(11,184,184,0.5);
+  --text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);--accent-hover:#0dcfcf;
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);
+  --slate:#acc0d3;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.10);
+  --card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);
+  --btn-shadow:0 4px 20px rgba(9,161,161,0.34);
+  --noise-opacity:0.04;
+}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--tr:all 0.2s cubic-bezier(.4,0,.2,1);--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise-opacity);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;transition:background 0.4s,color 0.3s;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);background-attachment:fixed;}
+
+/* ══ NAV ══ */
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.nav-link.locked{opacity:0.45;pointer-events:none;}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+
+/* ══ MAIN ══ */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+
+/* ══ TOPBAR ══ */
+.topbar{background:var(--surface);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 28px;flex-shrink:0;}
+.topbar-inner{display:flex;align-items:center;gap:14px;padding:14px 0;}
+.back-btn{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--accent);cursor:pointer;transition:var(--transition);flex-shrink:0;}
+.back-btn:hover{opacity:0.75;}
+.back-btn svg{width:12px;height:12px;}
+.topbar-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.topbar-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:2px;}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.tb-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.tb-btn svg{width:12px;height:12px;flex-shrink:0;}
+.tb-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:var(--btn-shadow);}
+.tb-btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);}
+
+/* ══ BODY SCROLL ══ */
+.content-scroll{flex:1;overflow-y:auto;padding:28px;min-height:0;}
+.content-scroll::-webkit-scrollbar{width:4px;}
+.content-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+
+/* ══ SETTINGS LAYOUT ══ */
+.settings-grid{display:grid;grid-template-columns:260px 1fr;gap:24px;max-width:1000px;}
+.settings-nav{display:flex;flex-direction:column;gap:2px;position:sticky;top:0;}
+.snav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-sm);font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;transition:var(--transition);user-select:none;border:1px solid transparent;}
+.snav-item svg{width:15px;height:15px;flex-shrink:0;}
+.snav-item:hover{background:var(--surface);color:var(--text-1);border-color:var(--border);}
+.snav-item.active{background:var(--surface);color:var(--accent);border-color:var(--border);box-shadow:var(--card-shadow);font-weight:600;}
+.snav-item.active svg{color:var(--accent);}
+.snav-divider{height:1px;background:var(--border);margin:8px 0;}
+
+/* ══ SETTINGS PANELS ══ */
+.panel{display:none;}
+.panel.active{display:flex;flex-direction:column;gap:20px;}
+
+/* ══ SECTION CARD ══ */
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);overflow:hidden;}
+.sc-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.sc-title{font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:2px;}
+.sc-sub{font-size:11px;color:var(--text-2);line-height:1.5;}
+.sc-body{padding:0;}
+
+/* ══ SETTING ROW ══ */
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;border-bottom:1px solid var(--border);transition:background 0.15s;}
+.setting-row:last-child{border-bottom:none;}
+.setting-row:hover{background:var(--surface-2);}
+.sr-left{flex:1;min-width:0;}
+.sr-label{font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:2px;display:flex;align-items:center;gap:7px;}
+.sr-desc{font-size:11px;color:var(--text-2);line-height:1.5;}
+.sr-right{flex-shrink:0;display:flex;align-items:center;gap:8px;}
+
+/* ══ TOGGLE SWITCH ══ */
+.toggle{width:40px;height:22px;background:var(--border-2);border-radius:11px;position:relative;cursor:pointer;transition:background 0.25s;flex-shrink:0;}
+.toggle.on{background:var(--accent);}
+.toggle-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform 0.25s;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+.toggle.on .toggle-knob{transform:translateX(18px);}
+
+/* ══ SEGMENTED CONTROL ══ */
+.seg{display:flex;background:var(--surface-3);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:2px;gap:2px;}
+.seg-opt{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text-2);transition:var(--transition);font-family:var(--mono);white-space:nowrap;user-select:none;}
+.seg-opt.active{background:var(--accent);color:#fff;box-shadow:0 2px 6px rgba(9,161,161,0.25);}
+.seg-opt:not(.active):hover{color:var(--text-1);}
+
+/* ══ SELECT INPUT ══ */
+.sel-input{padding:6px 10px;border-radius:var(--r-sm);border:1.5px solid var(--border-2);background:var(--surface);color:var(--text-1);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%238aafc8' stroke-width='2.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-size:12px;padding-right:26px;transition:border-color 0.15s;}
+.sel-input:focus{outline:none;border-color:var(--accent);}
+.sel-input:hover{border-color:var(--accent);}
+
+/* ══ NUMBER INPUT ══ */
+.num-input{padding:6px 10px;border-radius:var(--r-sm);border:1.5px solid var(--border-2);background:var(--surface);color:var(--text-1);font-family:var(--mono);font-size:12px;width:70px;transition:border-color 0.15s;text-align:center;}
+.num-input:focus{outline:none;border-color:var(--accent);}
+.input-unit{font-family:var(--mono);font-size:11px;color:var(--text-3);}
+
+/* ══ ALERT TYPE GRID ══ */
+.alert-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.at-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 20px;border-bottom:1px solid var(--border);transition:background 0.15s;}
+.at-row:last-child{border-bottom:none;}
+.at-row:nth-child(odd):last-child{grid-column:1/-1;}
+.at-row:hover{background:var(--surface-2);}
+.at-label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text-1);}
+.at-desc{font-size:10px;color:var(--text-2);margin-top:1px;}
+.at-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.at-icon svg{width:13px;height:13px;}
+.ai-danger{background:var(--danger-soft);}
+.ai-danger svg{color:var(--danger);}
+.ai-teal{background:var(--accent-soft);}
+.ai-teal svg{color:var(--accent);}
+.ai-warm{background:var(--warm-soft);}
+.ai-warm svg{color:var(--warm);}
+.ai-rose{background:var(--rose-soft);}
+.ai-rose svg{color:var(--rose);}
+.ai-slate{background:rgba(84,132,164,0.1);}
+.ai-slate svg{color:var(--slate);}
+
+/* ══ LOCATION SCOPE TABLE ══ */
+.loc-table{width:100%;}
+.loc-table th{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);padding:10px 20px;border-bottom:1px solid var(--border);text-align:left;font-weight:500;}
+.loc-table th:not(:first-child){text-align:center;}
+.loc-row{border-bottom:1px solid var(--border);transition:background 0.15s;}
+.loc-row:last-child{border-bottom:none;}
+.loc-row:hover{background:var(--surface-2);}
+.loc-row td{padding:12px 20px;vertical-align:middle;}
+.loc-row td:not(:first-child){text-align:center;}
+.loc-name{font-size:13px;font-weight:600;color:var(--text-1);}
+.loc-market{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:1px;}
+.market-badge{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.06em;padding:2px 7px;border-radius:4px;}
+.mb-weho{background:rgba(211,150,166,0.14);color:var(--rose);}
+.mb-dtla{background:rgba(212,144,10,0.12);color:var(--warm);}
+.mb-sf{background:rgba(224,90,106,0.1);color:var(--danger);}
+
+/* ══ QUIET HOURS ══ */
+.time-range{display:flex;align-items:center;gap:8px;}
+.time-label{font-family:var(--mono);font-size:11px;color:var(--text-3);}
+
+/* ══ SAVE BAR ══ */
+.save-bar{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;backdrop-filter:blur(12px);}
+.save-status{font-family:var(--mono);font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:6px;}
+.save-dot{width:6px;height:6px;border-radius:50%;background:var(--warm);flex-shrink:0;}
+.save-dot.saved{background:var(--accent);}
+.save-actions{display:flex;gap:8px;}
+
+/* ══ BADGE ══ */
+.badge{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:2px 7px;border-radius:10px;}
+.badge-new{background:rgba(9,161,161,0.13);color:var(--accent);border:1px solid rgba(9,161,161,0.22);}
+.badge-shared{background:rgba(224,90,106,0.1);color:var(--danger);border:1px solid rgba(224,90,106,0.2);}
+</style>
+</head>
+<body>
+
+<!-- ── NAV SIDEBAR ── -->
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="back-btn" onclick="window.location.href='cannaspy_s04_v1.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </div>
+      <div>
+        <div class="topbar-title">Notification Settings</div>
+        <div class="topbar-sub">WeHo Flagship · All Locations</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="tb-btn" onclick="resetSettings()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+          Reset to defaults
+        </button>
+        <button class="tb-btn primary" onclick="saveSettings()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Save changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scrollable body -->
+  <div class="content-scroll" id="contentScroll">
+    <div class="settings-grid">
+
+      <!-- Settings nav -->
+      <div class="settings-nav">
+        <div class="snav-item active" onclick="showPanel('panel-alerts',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Alert types
+        </div>
+        <div class="snav-item" onclick="showPanel('panel-delivery',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Delivery & digest
+        </div>
+        <div class="snav-item" onclick="showPanel('panel-thresholds',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Thresholds
+        </div>
+        <div class="snav-item" onclick="showPanel('panel-locations',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Per-location overrides
+        </div>
+        <div class="snav-divider"></div>
+        <div class="snav-item" style="color:var(--text-3);font-size:12px;padding:6px 12px;cursor:default;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Changes apply to all locations unless overridden
+        </div>
+      </div>
+
+      <!-- Right panel area -->
+      <div>
+
+        <!-- ══ PANEL: Alert Types ══ -->
+        <div class="panel active" id="panel-alerts">
+
+          <div class="section-card">
+            <div class="sc-head">
+              <div>
+                <div class="sc-title">Shared brand alerts</div>
+                <div class="sc-sub">Alerts for price moves on brands you and a rival both carry. Highest priority — always recommended on.</div>
+              </div>
+            </div>
+            <div class="sc-body">
+              <div class="alert-type-grid">
+                <div class="at-row">
+                  <div>
+                    <div class="at-label">
+                      <div class="at-icon ai-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>
+                      Rival price drop on shared brand
+                      <span class="badge badge-shared">Priority</span>
+                    </div>
+                    <div class="at-desc" style="margin-top:4px;padding-left:34px;">Rival drops price on a brand you both carry</div>
+                  </div>
+                  <div class="toggle on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+                </div>
+                <div class="at-row">
+                  <div>
+                    <div class="at-label">
+                      <div class="at-icon ai-warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div>
+                      Rival price increase on shared brand
+                    </div>
+                    <div class="at-desc" style="margin-top:4px;padding-left:34px;">Opportunity to reprice or hold advantage</div>
+                  </div>
+                  <div class="toggle on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+                </div>
+                <div class="at-row">
+                  <div>
+                    <div class="at-label">
+                      <div class="at-icon ai-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+                      Rival flash sale on shared brand
+                      <span class="badge badge-shared">Priority</span>
+                    </div>
+                    <div class="at-desc" style="margin-top:4px;padding-left:34px;">Time-limited sale on a brand you both carry</div>
+                  </div>
+                  <div class="toggle on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+                </div>
+                <div class="at-row">
+                  <div>
+                    <div class="at-label">
+                      <div class="at-icon ai-rose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+                      Rival adds a brand you carry
+                      <span class="badge badge-new">New</span>
+                    </div>
+                    <div class="at-desc" style="margin-top:4px;padding-left:34px;">A rival starts stocking a brand you already carry</div>
+                  </div>
+                  <div class="toggle on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="sc-head">
+              <div>
+                <div class="sc-title">General alerts</div>
+                <div class="sc-sub">Broader market activity alerts. Lower priority than shared brand alerts.</div>
+              </div>
+            </div>
+            <div class="sc-body">
+              <div class="alert-type-grid">
+                <div class="at-row">
+                  <div>
+                    <div class="at-label">
+                      <div class="at-icon ai-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+                      New rival competitor detected
+                    </div>
+                    <div class="at-desc" style="margin-top:4px;padding-left:34px;">New dispensary opens in your market area</div>
+                  </div>
+                  <div class="toggle on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+                </div>
+                <div class="at-row">
+                  <div>
+                    <div class="at-label">
+                      <div class="at-icon ai-slate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                      Rival new SKUs added
+                    </div>
+                    <div class="at-desc" style="margin-top:4px;padding-left:34px;">Rivals expand their catalog with new products</div>
+                  </div>
+                  <div class="toggle" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+                </div>
+                <div class="at-row">
+                  <div>
+                    <div class="at-label">
+                      <div class="at-icon ai-slate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 12 3 18"/><polyline points="21 6 19 12 21 18"/><line x1="9" y1="6" x2="15" y2="6"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/></svg></div>
+                      Rival SKUs removed
+                    </div>
+                    <div class="at-desc" style="margin-top:4px;padding-left:34px;">Products dropped from a rival's active menu</div>
+                  </div>
+                  <div class="toggle" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+                </div>
+                <div class="at-row">
+                  <div>
+                    <div class="at-label">
+                      <div class="at-icon ai-warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+                      Rival recurring deal changes
+                    </div>
+                    <div class="at-desc" style="margin-top:4px;padding-left:34px;">Daily deals or happy hours added or changed</div>
+                  </div>
+                  <div class="toggle on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /panel-alerts -->
+
+        <!-- ══ PANEL: Delivery ══ -->
+        <div class="panel" id="panel-delivery">
+
+          <div class="section-card">
+            <div class="sc-head">
+              <div>
+                <div class="sc-title">Delivery channels</div>
+                <div class="sc-sub">Where you receive alerts. Email required for digest mode.</div>
+              </div>
+            </div>
+            <div class="sc-body">
+              <div class="setting-row">
+                <div class="sr-left">
+                  <div class="sr-label">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    Email alerts
+                  </div>
+                  <div class="sr-desc">patrick@cannaspy.com · Sends to your account email</div>
+                </div>
+                <div class="sr-right">
+                  <div class="toggle on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="sr-left">
+                  <div class="sr-label">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                    Push notifications
+                  </div>
+                  <div class="sr-desc">Browser and mobile push alerts for real-time delivery</div>
+                </div>
+                <div class="sr-right">
+                  <div class="toggle on" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="sr-left">
+                  <div class="sr-label">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                    SMS / text alerts
+                  </div>
+                  <div class="sr-desc">Text message alerts for urgent price changes. Charged per message by your carrier. US numbers only.</div>
+                  <div id="sms-phone-row" style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+                    <input id="sms-phone" style="padding:6px 10px;border:1.5px solid var(--border-2);border-radius:var(--r-sm);background:var(--surface-2);color:var(--text-1);font-family:var(--mono);font-size:12px;width:160px;outline:none;" placeholder="+1 (310) 555-0000" value="+1 (310) 555-0188" />
+                    <button onclick="showToast('Verification code sent to +1 (310) 555-0188','var(--accent)')" style="padding:5px 11px;border-radius:var(--r-sm);font-size:11px;font-weight:600;border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-2);cursor:pointer;font-family:var(--sans);">Verify number</button>
+                    <span style="font-family:var(--mono);font-size:9px;color:var(--accent);">✓ Verified</span>
+                  </div>
+                  <div style="margin-top:7px;">
+                    <div class="sr-label" style="font-size:11px;margin-bottom:4px;">SMS alert types</div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;" id="sms-types">
+                      <span class="seg-opt active" onclick="toggleSmsType(this)" style="font-size:10px;padding:3px 9px;border-radius:5px;border:1.5px solid var(--border-2);cursor:pointer;user-select:none;background:var(--accent);color:#fff;border-color:var(--accent);">Price drops</span>
+                      <span class="seg-opt" onclick="toggleSmsType(this)" style="font-size:10px;padding:3px 9px;border-radius:5px;border:1.5px solid var(--border-2);cursor:pointer;user-select:none;background:var(--surface-3);color:var(--text-2);">Price increases</span>
+                      <span class="seg-opt" onclick="toggleSmsType(this)" style="font-size:10px;padding:3px 9px;border-radius:5px;border:1.5px solid var(--border-2);cursor:pointer;user-select:none;background:var(--surface-3);color:var(--text-2);">New promos</span>
+                      <span class="seg-opt" onclick="toggleSmsType(this)" style="font-size:10px;padding:3px 9px;border-radius:5px;border:1.5px solid var(--border-2);cursor:pointer;user-select:none;background:var(--surface-3);color:var(--text-2);">Block released</span>
+                      <span class="seg-opt" onclick="toggleSmsType(this)" style="font-size:10px;padding:3px 9px;border-radius:5px;border:1.5px solid var(--border-2);cursor:pointer;user-select:none;background:var(--surface-3);color:var(--text-2);">New rival</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="sr-right">
+                  <div class="toggle on" id="smsToggle" onclick="toggleChannel(this,'sms-phone-row')"><div class="toggle-knob"></div></div>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="sr-left">
+                  <div class="sr-label">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Slack notifications
+                    <span class="badge badge-new">Soon</span>
+                  </div>
+                  <div class="sr-desc">Post alerts to a Slack channel — coming soon</div>
+                </div>
+                <div class="sr-right">
+                  <div class="toggle" style="opacity:0.45;pointer-events:none;"><div class="toggle-knob"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="sc-head">
+              <div>
+                <div class="sc-title">Digest frequency</div>
+                <div class="sc-sub">How often alerts are batched and sent. Real-time fires immediately — recommended for shared brand alerts.</div>
+              </div>
+            </div>
+            <div class="sc-body">
+              <div class="setting-row">
+                <div class="sr-left">
+                  <div class="sr-label">Shared brand alerts</div>
+                  <div class="sr-desc">Price moves and flash sales on brands you both carry — act fast</div>
+                </div>
+                <div class="sr-right">
+                  <div class="seg">
+                    <div class="seg-opt active" onclick="toggleSeg(this)">Real-time</div>
+                    <div class="seg-opt" onclick="toggleSeg(this)">Daily</div>
+                    <div class="seg-opt" onclick="toggleSeg(this)">Weekly</div>
+                  </div>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="sr-left">
+                  <div class="sr-label">General alerts</div>
+                  <div class="sr-desc">SKU changes, new rivals, recurring deal updates</div>
+                </div>
+                <div class="sr-right">
+                  <div class="seg">
+                    <div class="seg-opt" onclick="toggleSeg(this)">Real-time</div>
+                    <div class="seg-opt active" onclick="toggleSeg(this)">Daily</div>
+                    <div class="seg-opt" onclick="toggleSeg(this)">Weekly</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="sc-head">
+              <div>
+                <div class="sc-title">Quiet hours</div>
+                <div class="sc-sub">No alerts sent during this window. Monitoring still runs — alerts queue and deliver when quiet hours end.</div>
+              </div>
+            </div>
+            <div class="sc-body">
+              <div class="setting-row">
+                <div class="sr-left">
+                  <div class="sr-label">Enable quiet hours</div>
+                  <div class="sr-desc">Silence alerts overnight and on weekends</div>
+                </div>
+                <div class="sr-right">
+                  <div class="toggle on" id="quietToggle" onclick="toggleQuiet(this)"><div class="toggle-knob"></div></div>
+                </div>
+              </div>
+              <div class="setting-row" id="quietTimeRow">
+                <div class="sr-left">
+                  <div class="sr-label">Quiet window</div>
+                  <div class="sr-desc">Local time · Alerts queued and released at end of window</div>
+                </div>
+                <div class="sr-right">
+                  <div class="time-range">
+                    <select class="sel-input" style="width:90px;">
+                      <option>10:00 PM</option><option>9:00 PM</option><option>8:00 PM</option><option>11:00 PM</option>
+                    </select>
+                    <span class="time-label">to</span>
+                    <select class="sel-input" style="width:90px;">
+                      <option>7:00 AM</option><option>6:00 AM</option><option>8:00 AM</option><option>9:00 AM</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="setting-row" id="quietWeekendRow">
+                <div class="sr-left">
+                  <div class="sr-label">Include weekends</div>
+                  <div class="sr-desc">Extend quiet hours to Saturday and Sunday</div>
+                </div>
+                <div class="sr-right">
+                  <div class="toggle" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /panel-delivery -->
+
+        <!-- ══ PANEL: Thresholds ══ -->
+        <div class="panel" id="panel-thresholds">
+
+          <div class="section-card">
+            <div class="sc-head">
+              <div>
+                <div class="sc-title">Price change threshold</div>
+                <div class="sc-sub">Only alert when a price changes by at least this percentage. Filters out penny-rounding noise.</div>
+              </div>
+            </div>
+            <div class="sc-body">
+              <div class="setting-row">
+                <div class="sr-left">
+                  <div class="sr-label">Minimum price change</div>
+                  <div class="sr-desc">Applies to all price-related alerts. Shared brand alerts ignore this — they always fire.</div>
+                </div>
+                <div class="sr-right" style="gap:6px;">
+                  <input class="num-input" type="number" value="5" min="1" max="50" id="priceThreshold" onchange="markDirty()">
+                  <span class="input-unit">% change</span>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="sr-left">
+                  <div class="sr-label">Minimum dollar change</div>
+                  <div class="sr-desc">Also require at least this dollar amount — prevents alerts on $0.50 moves</div>
+                </div>
+                <div class="sr-right" style="gap:6px;">
+                  <span class="input-unit">$</span>
+                  <input class="num-input" type="number" value="2" min="0" max="20" id="dollarThreshold" onchange="markDirty()">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="sc-head">
+              <div>
+                <div class="sc-title">Alert volume control</div>
+                <div class="sc-sub">Prevents alert fatigue when monitoring detects widespread market movement.</div>
+              </div>
+            </div>
+            <div class="sc-body">
+              <div class="setting-row">
+                <div class="sr-left">
+                  <div class="sr-label">Max alerts per day</div>
+                  <div class="sr-desc">Cap total daily alerts across all locations. Prioritizes shared brand alerts first.</div>
+                </div>
+                <div class="sr-right" style="gap:6px;">
+                  <input class="num-input" type="number" value="25" min="5" max="200" onchange="markDirty()">
+                  <span class="input-unit">alerts/day</span>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="sr-left">
+                  <div class="sr-label">Cooldown between same-rival alerts</div>
+                  <div class="sr-desc">Don't fire another alert on the same rival within this window</div>
+                </div>
+                <div class="sr-right">
+                  <select class="sel-input" onchange="markDirty()">
+                    <option>No cooldown</option>
+                    <option selected>1 hour</option>
+                    <option>4 hours</option>
+                    <option>24 hours</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /panel-thresholds -->
+
+        <!-- ══ PANEL: Per-location overrides ══ -->
+        <div class="panel" id="panel-locations">
+
+          <div class="section-card">
+            <div class="sc-head">
+              <div>
+                <div class="sc-title">Per-location overrides</div>
+                <div class="sc-sub">These settings override the global defaults for specific locations. Leave a toggle off to inherit the global setting.</div>
+              </div>
+              <button class="tb-btn" style="flex-shrink:0;" onclick="markDirty()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                Add override
+              </button>
+            </div>
+            <div class="sc-body">
+              <table class="loc-table">
+                <thead>
+                  <tr>
+                    <th>Location</th>
+                    <th>Email</th>
+                    <th>SMS</th>
+                    <th>Push</th>
+                    <th>Digest</th>
+                    <th>Quiet hours</th>
+                    <th>Threshold</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="loc-row">
+                    <td>
+                      <div class="loc-name">WeHo Flagship</div>
+                      <div class="loc-market"><span class="market-badge mb-weho">Elite · WeHo</span></div>
+                    </td>
+                    <td><div class="toggle on" onclick="toggleSwitch(this)" style="margin:0 auto;"><div class="toggle-knob"></div></div></td>
+                    <td><div class="toggle on" onclick="toggleSwitch(this)" style="margin:0 auto;"><div class="toggle-knob"></div></div></td>
+                    <td><div class="toggle on" onclick="toggleSwitch(this)" style="margin:0 auto;"><div class="toggle-knob"></div></div></td>
+                    <td><select class="sel-input" style="width:90px;" onchange="markDirty()"><option selected>Real-time</option><option>Daily</option><option>Weekly</option></select></td>
+                    <td><select class="sel-input" style="width:80px;" onchange="markDirty()"><option selected>Global</option><option>Off</option><option>Custom</option></select></td>
+                    <td><select class="sel-input" style="width:80px;" onchange="markDirty()"><option selected>Global</option><option>3%</option><option>10%</option></select></td>
+                  </tr>
+                  <tr class="loc-row">
+                    <td>
+                      <div class="loc-name">DTLA Flagship</div>
+                      <div class="loc-market"><span class="market-badge mb-dtla">Hot · DTLA</span></div>
+                    </td>
+                    <td><div class="toggle on" onclick="toggleSwitch(this)" style="margin:0 auto;"><div class="toggle-knob"></div></div></td>
+                    <td><div class="toggle" onclick="toggleSwitch(this)" style="margin:0 auto;"><div class="toggle-knob"></div></div></td>
+                    <td><div class="toggle" onclick="toggleSwitch(this)" style="margin:0 auto;"><div class="toggle-knob"></div></div></td>
+                    <td><select class="sel-input" style="width:90px;" onchange="markDirty()"><option>Real-time</option><option selected>Daily</option><option>Weekly</option></select></td>
+                    <td><select class="sel-input" style="width:80px;" onchange="markDirty()"><option>Global</option><option selected>Off</option><option>Custom</option></select></td>
+                    <td><select class="sel-input" style="width:80px;" onchange="markDirty()"><option selected>Global</option><option>3%</option><option>10%</option></select></td>
+                  </tr>
+                  <tr class="loc-row">
+                    <td>
+                      <div class="loc-name">SoMa San Francisco</div>
+                      <div class="loc-market"><span class="market-badge mb-sf">Elite · SoMa SF</span></div>
+                    </td>
+                    <td><div class="toggle on" onclick="toggleSwitch(this)" style="margin:0 auto;"><div class="toggle-knob"></div></div></td>
+                    <td><div class="toggle on" onclick="toggleSwitch(this)" style="margin:0 auto;"><div class="toggle-knob"></div></div></td>
+                    <td><div class="toggle on" onclick="toggleSwitch(this)" style="margin:0 auto;"><div class="toggle-knob"></div></div></td>
+                    <td><select class="sel-input" style="width:90px;" onchange="markDirty()"><option selected>Real-time</option><option>Daily</option><option>Weekly</option></select></td>
+                    <td><select class="sel-input" style="width:80px;" onchange="markDirty()"><option>Global</option><option>Off</option><option selected>Custom</option></select></td>
+                    <td><select class="sel-input" style="width:80px;" onchange="markDirty()"><option>Global</option><option selected>3%</option><option>10%</option></select></td>
+                  </tr>
+                  <tr class="loc-row" style="opacity:0.5;">
+                    <td>
+                      <div class="loc-name">+ 7 more locations</div>
+                      <div class="loc-market">Using global defaults</div>
+                    </td>
+                    <td colspan="6" style="text-align:left;font-family:var(--mono);font-size:10px;color:var(--text-3);">Inheriting all global settings · Click to expand</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div><!-- /panel-locations -->
+
+      </div><!-- /right panel -->
+    </div><!-- /settings-grid -->
+  </div><!-- /content-scroll -->
+
+  <!-- Save bar -->
+  <div class="save-bar">
+    <div class="save-status" id="saveStatus">
+      <div class="save-dot saved" id="saveDot"></div>
+      <span id="saveText">All changes saved</span>
+    </div>
+    <div class="save-actions">
+      <button class="tb-btn" onclick="resetSettings()">Discard changes</button>
+      <button class="tb-btn primary" onclick="saveSettings()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"/></svg>
+        Save changes
+      </button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+function toggleTheme(){
+  var html=document.documentElement;
+  var isDark=html.getAttribute('data-theme')==='dark';
+  html.setAttribute('data-theme',isDark?'light':'dark');
+  document.getElementById('themeLabel').textContent=isDark?'Light mode':'Dark mode';
+}
+
+function showPanel(id, navEl) {
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.snav-item').forEach(function(n){ n.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  navEl.classList.add('active');
+}
+
+function toggleSwitch(el) {
+  el.classList.toggle('on');
+  markDirty();
+}
+
+function toggleSeg(el) {
+  var group = el.closest('.seg');
+  group.querySelectorAll('.seg-opt').forEach(function(o){ o.classList.remove('active'); });
+  el.classList.add('active');
+  markDirty();
+}
+
+function toggleChannel(el, dependentId) {
+  el.classList.toggle('on');
+  if (dependentId) {
+    var dep = document.getElementById(dependentId);
+    if (dep) dep.style.display = el.classList.contains('on') ? 'flex' : 'none';
+  }
+  showSaveStatus();
+}
+
+function toggleSmsType(el) {
+  var isActive = el.style.background === 'var(--accent)' || el.classList.contains('active');
+  if (isActive) {
+    el.style.background = 'var(--surface-3)';
+    el.style.color = 'var(--text-2)';
+    el.style.borderColor = 'var(--border-2)';
+    el.classList.remove('active');
+  } else {
+    el.style.background = 'var(--accent)';
+    el.style.color = '#fff';
+    el.style.borderColor = 'var(--accent)';
+    el.classList.add('active');
+  }
+  showSaveStatus();
+}
+
+function toggleQuiet(el) {
+  var show = el.classList.contains('on');
+  document.getElementById('quietTimeRow').style.display = show ? '' : 'none';
+  document.getElementById('quietWeekendRow').style.display = show ? '' : 'none';
+  markDirty();
+}
+
+var dirty = false;
+function markDirty() {
+  dirty = true;
+  document.getElementById('saveDot').classList.remove('saved');
+  document.getElementById('saveText').textContent = 'Unsaved changes';
+}
+
+function saveSettings() {
+  dirty = false;
+  document.getElementById('saveDot').classList.add('saved');
+  document.getElementById('saveText').textContent = 'All changes saved';
+  // flash the save button
+  var btn = event.currentTarget;
+  var orig = btn.innerHTML;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"/></svg> Saved!';
+  setTimeout(function(){ btn.innerHTML = orig; }, 1600);
+}
+
+function resetSettings() {
+  dirty = false;
+  document.getElementById('saveDot').classList.add('saved');
+  document.getElementById('saveText').textContent = 'Reset to defaults';
+  setTimeout(function(){
+    document.getElementById('saveText').textContent = 'All changes saved';
+  }, 2000);
+}
+</script>
+</body>
+</html>

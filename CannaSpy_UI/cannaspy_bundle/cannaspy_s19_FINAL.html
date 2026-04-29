@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Upcoming Billing Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+[data-theme="light"]{
+  --bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);
+  --sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);--glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);--surface:rgba(255,255,255,0.97);--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;
+  --border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);--border-hot:rgba(9,161,161,0.38);
+  --text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;
+  --accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);--accent-hover:#078484;
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);
+  --slate:#5484A4;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.08);
+  --card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);
+  --btn-shadow:0 4px 18px rgba(9,161,161,0.32);--noise-opacity:0.022;
+}
+[data-theme="dark"]{
+  --bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);
+  --sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);--glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);--surface:rgba(16,28,40,0.99);--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;
+  --border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);--border-hot:rgba(11,184,184,0.5);
+  --text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);--accent-hover:#0dcfcf;
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);
+  --slate:#acc0d3;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.10);
+  --card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);
+  --btn-shadow:0 4px 20px rgba(9,161,161,0.34);--noise-opacity:0.04;
+}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--tr:all 0.2s cubic-bezier(.4,0,.2,1);--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise-opacity);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);background-attachment:fixed;}
+
+/* NAV */
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.nav-link.locked{opacity:0.45;pointer-events:none;}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;}
+.topbar-row1{display:flex;align-items:center;gap:12px;padding:12px 0;}
+.back-btn{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--accent);cursor:pointer;transition:var(--transition);}
+.back-btn:hover{opacity:0.75;}
+.back-btn svg{width:12px;height:12px;}
+.topbar-sep{width:1px;height:16px;background:var(--border-2);}
+.topbar-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.tb-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.tb-btn.primary{background:var(--rose);border-color:var(--rose);color:#fff;box-shadow:0 4px 18px rgba(211,150,166,0.4);}
+.tb-btn.primary:hover{opacity:0.88;}
+.tb-btn.accent{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:var(--btn-shadow);}
+.tb-btn.accent:hover{opacity:0.88;}
+.tb-btn svg{width:12px;height:12px;}
+
+.content-scroll{flex:1;overflow-y:auto;padding:28px 32px;min-height:0;}
+.content-scroll::-webkit-scrollbar{width:5px;}
+.content-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px;}
+
+/* BLOCK SELECTOR TABS */
+.block-tabs{display:flex;gap:8px;margin-bottom:22px;}
+.block-tab{padding:8px 16px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--border-2);background:var(--surface);color:var(--text-2);cursor:pointer;transition:var(--transition);display:flex;align-items:center;gap:7px;}
+.block-tab:hover{border-color:var(--rose);color:var(--rose);}
+.block-tab.active{background:var(--rose-soft);border-color:var(--rose);color:var(--rose);}
+.block-tab-dot{width:7px;height:7px;border-radius:50%;background:var(--rose);flex-shrink:0;}
+.block-tab-days{font-family:var(--mono);font-size:9px;background:var(--rose-soft);color:var(--rose);padding:1px 5px;border-radius:8px;font-weight:700;}
+.block-tab.active .block-tab-days{background:rgba(211,150,166,0.25);}
+
+/* EXPIRY BANNER */
+.expiry-banner{border-radius:var(--r);padding:20px 24px;margin-bottom:20px;display:flex;align-items:flex-start;gap:16px;border:2px solid;}
+.expiry-banner.urgent{background:rgba(224,90,106,0.06);border-color:rgba(224,90,106,0.3);border-left:5px solid var(--danger);}
+.expiry-banner.warning{background:rgba(212,144,10,0.06);border-color:rgba(212,144,10,0.28);border-left:5px solid var(--warm);}
+.eb-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.eb-icon.urgent{background:rgba(224,90,106,0.12);}
+.eb-icon.warning{background:rgba(212,144,10,0.10);}
+.eb-content{flex:1;min-width:0;}
+.eb-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px;}
+.eb-label.urgent{color:var(--danger);}
+.eb-label.warning{color:var(--warm);}
+.eb-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.01em;margin-bottom:4px;}
+.eb-sub{font-size:12px;color:var(--text-2);line-height:1.5;}
+.eb-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+
+/* COUNTDOWN */
+.countdown-row{display:flex;gap:10px;margin-bottom:20px;}
+.cd-box{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--card-shadow);text-align:center;}
+.cd-num{font-family:var(--mono);font-size:32px;font-weight:700;line-height:1;margin-bottom:3px;}
+.cd-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);}
+.cd-num.danger{color:var(--danger);}
+.cd-num.warn{color:var(--warm);}
+.cd-num.teal{color:var(--accent);}
+
+/* TWO-COL */
+.two-col{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start;}
+.main-col{display:flex;flex-direction:column;gap:14px;}
+.side-col{display:flex;flex-direction:column;gap:12px;}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);overflow:hidden;}
+.card-header{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.card-title{font-size:12px;font-weight:700;color:var(--text-1);}
+.card-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:auto;}
+
+/* WHAT'S AT STAKE */
+.stake-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border);}
+.stake-row:last-child{border-bottom:none;}
+.stake-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:var(--surface-2);}
+.stake-body{flex:1;min-width:0;}
+.stake-label{font-size:12px;font-weight:600;color:var(--text-1);}
+.stake-sub{font-size:11px;color:var(--text-3);margin-top:1px;}
+.stake-val{font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0;text-align:right;}
+
+/* CONSEQUENCE BOX */
+.consequence-box{background:rgba(224,90,106,0.05);border:1px solid rgba(224,90,106,0.2);border-radius:var(--r-sm);padding:16px 18px;margin:0 16px 16px;}
+.cb-title{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--danger);margin-bottom:7px;display:flex;align-items:center;gap:5px;}
+.cb-body{font-size:12px;color:var(--text-1);line-height:1.6;}
+.cb-step{display:flex;align-items:flex-start;gap:8px;margin-top:8px;}
+.cb-step-num{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--danger);width:18px;flex-shrink:0;margin-top:1px;}
+.cb-step-text{font-size:11px;color:var(--text-2);line-height:1.5;}
+
+/* VALUE SUMMARY */
+.value-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--card-shadow);}
+.vs-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-3);margin-bottom:3px;}
+.vs-val{font-family:var(--mono);font-size:22px;font-weight:700;line-height:1;}
+.vs-sub{font-size:11px;color:var(--text-2);margin-top:4px;line-height:1.4;}
+.vs-divider{height:1px;background:var(--border);margin:10px 0;}
+
+/* RENEWAL DECISION */
+.decision-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);overflow:hidden;}
+.dc-header{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface-2);display:flex;align-items:center;gap:8px;}
+.dc-option{padding:16px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:var(--transition);}
+.dc-option:last-child{border-bottom:none;}
+.dc-option:hover{background:var(--surface-2);}
+.dc-option.selected-renew{background:rgba(9,161,161,0.05);border-left:3px solid var(--accent);}
+.dc-option.selected-cancel{background:rgba(224,90,106,0.05);border-left:3px solid var(--danger);}
+.dc-opt-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.dc-opt-radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--border-2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:var(--transition);}
+.dc-opt-radio.checked-renew{border-color:var(--accent);background:var(--accent);}
+.dc-opt-radio.checked-cancel{border-color:var(--danger);background:var(--danger);}
+.dc-opt-radio svg{width:8px;height:8px;}
+.dc-opt-title{font-size:12px;font-weight:700;color:var(--text-1);}
+.dc-opt-sub{font-size:11px;color:var(--text-2);margin-left:24px;line-height:1.5;}
+.dc-opt-tag{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;margin-left:auto;}
+.tag-renew{background:var(--accent-soft);color:var(--accent);}
+.tag-cancel{background:var(--danger-soft);color:var(--danger);}
+
+/* TIMELINE */
+.timeline{padding:14px 18px;}
+.tl-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;}
+.tl-row:last-child{margin-bottom:0;}
+.tl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.tl-line{width:1px;background:var(--border-2);flex-shrink:0;margin:0 4px;}
+.tl-body{flex:1;min-width:0;}
+.tl-date{font-family:var(--mono);font-size:9px;color:var(--text-3);margin-bottom:1px;}
+.tl-label{font-size:11px;font-weight:600;color:var(--text-1);}
+.tl-sub{font-size:10px;color:var(--text-3);margin-top:1px;}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:11px 18px;font-size:12px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:9000;transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.4,0,.2,1);pointer-events:none;display:flex;align-items:center;gap:8px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-row1">
+      <div class="back-btn" onclick="go('cannaspy_s16_FINAL.html')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Block Management
+      </div>
+      <div class="topbar-sep"></div>
+      <div class="topbar-title">Upcoming Billing Preview</div>
+      <div class="topbar-actions">
+        <button class="tb-btn" onclick="go('cannaspy_s20_FINAL.html')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          View analytics
+        </button>
+        <button class="tb-btn accent" onclick="showToast('Both blocks will auto-renew May 1 — no action needed','var(--accent)')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Looks good — no changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-scroll">
+
+    <!-- BLOCK SELECTOR -->
+    <div class="block-tabs">
+      <div class="block-tab active" id="tab-stiiizy" onclick="switchBlock('stiiizy')">
+        <div class="block-tab-dot"></div>
+        STIIIZY WeHo
+        <span class="block-tab-days" id="days-stiiizy">$2,000 · May 1</span>
+      </div>
+      <div class="block-tab" id="tab-otc" onclick="switchBlock('otc')">
+        <div class="block-tab-dot"></div>
+        Off The Charts DTLA
+        <span class="block-tab-days" id="days-otc">$1,600 · May 1</span>
+      </div>
+    </div>
+
+    <!-- BILLING PREVIEW BANNER -->
+    <div class="expiry-banner warning" id="expiry-banner">
+      <div class="eb-icon warning">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <div class="eb-content">
+        <div class="eb-label warning" id="banner-label">Auto-renews May 1 &mdash; 15 days from now</div>
+        <div class="eb-title" id="banner-title">STIIIZY West Hollywood auto-renews May 1 &mdash; $2,000</div>
+        <div class="eb-sub" id="banner-sub">This block has been active for <strong>47 days</strong> and will automatically continue on May 1. No action is needed to keep it running. If you want to cancel, do so before May 1 — the block stays active through Apr 30 at no additional charge.</div>
+        <div class="eb-actions">
+          <button class="tb-btn" style="opacity:0.6;pointer-events:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"/></svg>
+            Auto-renews May 1 &mdash; no action needed
+          </button>
+          <button class="tb-btn" onclick="confirmCancel()" style="border-color:rgba(224,90,106,0.4);color:var(--danger);">
+            Cancel before Apr 30
+          </button>
+          <button class="tb-btn" onclick="go('cannaspy_s20_FINAL.html')" style="margin-left:4px;">
+            See block ROI &rarr;
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COUNTDOWN -->
+    <div class="countdown-row">
+      <div class="cd-box">
+        <div class="cd-num teal" id="cd-blocked">47</div>
+        <div class="cd-label">Days active</div>
+      </div>
+      <div class="cd-box">
+        <div class="cd-num teal" id="cd-changes">28</div>
+        <div class="cd-label">Intel events captured</div>
+      </div>
+      <div class="cd-box">
+        <div class="cd-num" id="cd-cost" style="color:var(--rose);">$2,000</div>
+        <div class="cd-label">Monthly auto-charge</div>
+      </div>
+      <div class="cd-box">
+        <div class="cd-num teal" id="cd-spent">$3,133</div>
+        <div class="cd-label">Spent to date</div>
+      </div>
+      <div class="cd-box" style="border:1.5px solid rgba(9,161,161,0.2);background:rgba(9,161,161,0.04);">
+        <div class="cd-num" style="color:var(--accent);font-size:22px;">May 1</div>
+        <div class="cd-label">Next auto-charge</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- MAIN COLUMN -->
+      <div class="main-col">
+
+        <!-- WHAT'S AT STAKE -->
+        <div class="card">
+          <div class="card-header">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <div class="card-title" id="stake-title">What your STIIIZY block protects</div>
+            <div class="card-sub">47 days active</div>
+          </div>
+          <div id="stake-rows">
+            <div class="stake-row">
+              <div class="stake-icon">&#128274;</div>
+              <div class="stake-body">
+                <div class="stake-label">STIIIZY can&#39;t access CannaSpy</div>
+                <div class="stake-sub">They have no visibility into your pricing, promos, or inventory changes</div>
+              </div>
+              <div class="stake-val" style="color:var(--accent);">Active</div>
+            </div>
+            <div class="stake-row">
+              <div class="stake-icon">&#128200;</div>
+              <div class="stake-body">
+                <div class="stake-label">28 competitor changes you knew about first</div>
+                <div class="stake-sub">Price moves, new SKUs, promo launches — all detected while they were in the dark</div>
+              </div>
+              <div class="stake-val" style="color:var(--accent);">+28 alerts</div>
+            </div>
+            <div class="stake-row">
+              <div class="stake-icon">&#127919;</div>
+              <div class="stake-body">
+                <div class="stake-label">No CannaSpy outreach to STIIIZY</div>
+                <div class="stake-sub">Our sales team has made zero contact attempts since block was placed Apr 1</div>
+              </div>
+              <div class="stake-val" style="color:var(--accent);">0 contacts</div>
+            </div>
+            <div class="stake-row">
+              <div class="stake-icon">&#128176;</div>
+              <div class="stake-body">
+                <div class="stake-label">Estimated revenue advantage</div>
+                <div class="stake-sub">Based on 3 price response opportunities where you had advance notice</div>
+              </div>
+              <div class="stake-val" style="color:var(--accent);">~$18K</div>
+            </div>
+          </div>
+
+          <!-- CONSEQUENCE if cancelled -->
+          <div class="consequence-box">
+            <div class="cb-title">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              If you cancel this block
+            </div>
+            <div class="cb-step">
+              <div class="cb-step-num">1</div>
+              <div class="cb-step-text">Block stays active through <strong>May 31</strong> (end of current billing period). No charge on Jun 1.</div>
+            </div>
+            <div class="cb-step">
+              <div class="cb-step-num">2</div>
+              <div class="cb-step-text"><strong>STIIIZY is added to our active prospect list</strong> on May 1 when the block ends. Our sales team is automatically notified.</div>
+            </div>
+            <div class="cb-step">
+              <div class="cb-step-num">3</div>
+              <div class="cb-step-text">STIIIZY can now subscribe to CannaSpy, gaining full access to your pricing, promos, and product intelligence.</div>
+            </div>
+            <div class="cb-step">
+              <div class="cb-step-num">4</div>
+              <div class="cb-step-text">If STIIIZY subscribes, they can block <em>you</em> — reversing the intelligence advantage you currently hold.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RENEWAL DECISION -->
+        <div class="decision-card">
+          <div class="dc-header">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div class="card-title">Your options for May 1</div>
+            <div class="card-sub">Act before Apr 30 to cancel · otherwise auto-renews</div>
+          </div>
+          <div class="dc-option selected-renew" id="opt-renew" onclick="selectDecision('renew')">
+            <div class="dc-opt-header">
+              <div class="dc-opt-radio checked-renew" id="radio-renew"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="dc-opt-title">Keep running &mdash; auto-renews May 1</div>
+              <span class="dc-opt-tag tag-renew">Default · no action needed</span>
+            </div>
+            <div class="dc-opt-sub">Block continues automatically. $2,000 will be charged on May 1. STIIIZY remains blocked with zero access to CannaSpy for another month.</div>
+          </div>
+          <div class="dc-option" id="opt-cancel" onclick="selectDecision('cancel')">
+            <div class="dc-opt-header">
+              <div class="dc-opt-radio" id="radio-cancel"></div>
+              <div class="dc-opt-title">Cancel &mdash; stop auto-renew before Apr 30</div>
+              <span class="dc-opt-tag tag-cancel">Block ends Apr 30</span>
+            </div>
+            <div class="dc-opt-sub">Block stays fully active through Apr 30 at no additional charge. On May 1 the auto-charge stops and STIIIZY is added to the active prospect list. They can then subscribe to CannaSpy.</div>
+          </div>
+          <div style="padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:8px;">
+            <button class="tb-btn" style="flex:1;opacity:0.6;" onclick="showToast('Block will auto-renew May 1 — no action needed','var(--accent)')">No change — auto-renews May 1</button>
+            <button class="tb-btn" style="border-color:rgba(224,90,106,0.4);color:var(--danger);" onclick="confirmDecision()">Cancel this block</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SIDE COLUMN -->
+      <div class="side-col">
+
+        <div class="value-stat">
+          <div class="vs-label">Block ROI</div>
+          <div class="vs-val" style="color:var(--accent);" id="side-roi">5.7×</div>
+          <div class="vs-sub" id="side-roi-sub">Estimated $18K revenue advantage vs. $3,133 spent on this block to date.</div>
+          <div class="vs-divider"></div>
+          <div class="vs-label">Cost per intelligence day</div>
+          <div class="vs-val">$66</div>
+          <div class="vs-sub">$2,000/mo ÷ 30 days. Per day you know what STIIIZY is doing and they don&#39;t know what you are doing.</div>
+        </div>
+
+        <div class="value-stat">
+          <div class="vs-label">Next auto-charge</div>
+          <div class="vs-val" style="color:var(--accent);">May 1</div>
+          <div class="vs-sub">$2,000 charged automatically. No action needed. Cancel before Apr 30 to stop the May charge.</div>
+          <div class="vs-divider"></div>
+          <div class="vs-label">Block started</div>
+          <div class="vs-val">Apr 1</div>
+          <div class="vs-sub">47 days active. STIIIZY has had zero CannaSpy access since then.</div>
+        </div>
+
+        <!-- BILLING TIMELINE -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Billing cycle</div>
+          </div>
+          <div class="timeline">
+            <div class="tl-row">
+              <div style="display:flex;flex-direction:column;align-items:center;width:10px;flex-shrink:0;">
+                <div class="tl-dot" style="background:var(--accent);"></div>
+                <div style="width:1px;height:28px;background:var(--border-2);margin-top:3px;"></div>
+              </div>
+              <div class="tl-body" style="margin-left:8px;">
+                <div class="tl-date">Apr 1, 2026</div>
+                <div class="tl-label">Block placed &amp; first charge</div>
+                <div class="tl-sub">Prorated $1,533 &middot; 10 locations &middot; $200/slot</div>
+              </div>
+            </div>
+            <div class="tl-row">
+              <div style="display:flex;flex-direction:column;align-items:center;width:10px;flex-shrink:0;">
+                <div class="tl-dot" style="background:var(--accent);width:10px;height:10px;border:2px solid var(--accent);background:var(--surface);"></div>
+                <div style="width:1px;height:28px;background:var(--border-2);margin-top:3px;"></div>
+              </div>
+              <div class="tl-body" style="margin-left:8px;">
+                <div class="tl-date">Today &mdash; Apr 16</div>
+                <div class="tl-label" style="color:var(--accent);">You are here &mdash; 47 days active</div>
+                <div class="tl-sub">28 intel events captured &middot; STIIIZY still dark</div>
+              </div>
+            </div>
+            <div class="tl-row">
+              <div style="display:flex;flex-direction:column;align-items:center;width:10px;flex-shrink:0;">
+                <div class="tl-dot" style="background:var(--accent);"></div>
+                <div style="width:1px;height:28px;background:var(--border-2);margin-top:3px;"></div>
+              </div>
+              <div class="tl-body" style="margin-left:8px;">
+                <div class="tl-date">May 1</div>
+                <div class="tl-label" style="color:var(--accent);">Auto-charge &mdash; $2,000</div>
+                <div class="tl-sub">Block continues automatically &middot; cancel before Apr 30 to stop</div>
+              </div>
+            </div>
+            <div class="tl-row">
+              <div style="display:flex;flex-direction:column;align-items:center;width:10px;flex-shrink:0;">
+                <div class="tl-dot" style="background:var(--border-2);"></div>
+              </div>
+              <div class="tl-body" style="margin-left:8px;">
+                <div class="tl-date">Jun 1, Jul 1 …</div>
+                <div class="tl-label" style="color:var(--text-3);">Continues monthly</div>
+                <div class="tl-sub">Auto-charges on the 1st until you cancel</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:800;backdrop-filter:blur(4px);"></div>
+<div id="modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:801;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r);box-shadow:0 20px 60px rgba(0,0,0,0.22);padding:28px 32px;width:460px;max-width:90vw;">
+  <div style="font-size:15px;font-weight:700;color:var(--text-1);margin-bottom:6px;" id="modal-title">Confirm Renewal</div>
+  <div style="font-size:12px;color:var(--text-2);margin-bottom:20px;line-height:1.6;" id="modal-body"></div>
+  <div style="display:flex;gap:10px;justify-content:flex-end;">
+    <button class="tb-btn" onclick="closeModal()">Go back</button>
+    <button class="tb-btn accent" id="modal-confirm-btn" onclick="closeModal();showToast('Decision confirmed','var(--accent)')">Confirm</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+var BLOCKS = {
+  stiiizy:{name:'STIIIZY West Hollywood',days:47,left:15,changes:28,cost:2000,slots:10,spent:3133,roi:'5.7×'},
+  otc:{name:'Off The Charts DTLA',days:22,left:15,changes:14,cost:1600,slots:8,spent:1173,roi:'3.2×'}
+};
+var activeBlock='stiiizy';
+var decision=null;
+
+function switchBlock(key){
+  activeBlock=key;
+  var b=BLOCKS[key];
+  document.querySelectorAll('.block-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('tab-'+key).classList.add('active');
+  // Banner
+  document.getElementById('banner-label').textContent='Auto-renews May 1 \u2014 '+b.left+' days from now';
+  document.getElementById('banner-title').textContent=b.name+' auto-renews May 1 \u2014 $'+b.cost.toLocaleString();
+  document.getElementById('banner-sub').innerHTML='This block has been active for <strong>'+b.days+' days</strong> and will automatically continue on May 1. No action is needed to keep it running. Cancel before Apr 30 to stop \u2014 the block stays active through Apr 30 at no additional charge.';
+  // Countdown
+  document.getElementById('cd-blocked').textContent=b.days;
+  document.getElementById('cd-changes').textContent=b.changes;
+  document.getElementById('cd-cost').textContent='$'+b.cost.toLocaleString();
+  document.getElementById('cd-spent').textContent='$'+b.spent.toLocaleString();
+  // Stake title + side roi
+  document.getElementById('stake-title').textContent='What your '+b.name.split(' ')[0]+' block protects';
+  document.getElementById('side-roi').textContent=b.roi;
+  document.getElementById('side-roi-sub').textContent='$'+Math.round(b.cost*b.roi.replace('\xd7','')*1.5/1000)+'K estimated revenue advantage vs. $'+b.spent.toLocaleString()+' spent to date.';
+  // Reset decision UI
+  decision=null;
+  document.getElementById('opt-renew').className='dc-option selected-renew';
+  document.getElementById('opt-cancel').className='dc-option';
+  document.getElementById('radio-renew').className='dc-opt-radio checked-renew';
+  document.getElementById('radio-renew').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+  document.getElementById('radio-cancel').className='dc-opt-radio';
+  document.getElementById('radio-cancel').innerHTML='';
+}
+
+function selectDecision(type){
+  decision=type;
+  if(type==='renew'){
+    document.getElementById('opt-renew').className='dc-option selected-renew';
+    document.getElementById('opt-cancel').className='dc-option';
+    document.getElementById('radio-renew').className='dc-opt-radio checked-renew';
+    document.getElementById('radio-renew').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+    document.getElementById('radio-cancel').className='dc-opt-radio';
+    document.getElementById('radio-cancel').innerHTML='';
+    showToast('Block will auto-renew May 1 \u2014 no action needed','var(--accent)');
+  } else {
+    document.getElementById('opt-cancel').className='dc-option selected-cancel';
+    document.getElementById('opt-renew').className='dc-option selected-renew';
+    document.getElementById('radio-cancel').className='dc-opt-radio checked-cancel';
+    document.getElementById('radio-cancel').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+  }
+}
+
+function confirmDecision(){
+  if(decision!=='cancel'){ showToast('Block auto-renews May 1 \u2014 no action needed','var(--accent)'); return; }
+  var b=BLOCKS[activeBlock];
+  document.getElementById('modal-title').textContent='Cancel Block \u2014 '+b.name;
+  document.getElementById('modal-body').innerHTML='Auto-renew will be stopped. The block stays fully active through <strong>Apr 30</strong> at no additional charge. On May 1, the $'+b.cost.toLocaleString()+' charge does not occur and '+b.name.split(' ')[0]+' is added to the active prospect list. <strong>They can then subscribe to CannaSpy.</strong>';
+  document.getElementById('modal-confirm-btn').style.background='var(--danger)';
+  document.getElementById('modal-confirm-btn').style.borderColor='var(--danger)';
+  document.getElementById('modal-confirm-btn').textContent='Yes, cancel auto-renew';
+  document.getElementById('modal-overlay').style.display='block';
+  document.getElementById('modal').style.display='block';
+}
+
+function confirmRenew(){
+  showToast('Block auto-renews May 1 \u2014 no action needed','var(--accent)');
+}
+function confirmCancel(){
+  selectDecision('cancel');
+  confirmDecision();
+}
+function closeModal(){
+  document.getElementById('modal-overlay').style.display='none';
+  document.getElementById('modal').style.display='none';
+}
+document.getElementById('modal-overlay').addEventListener('click',closeModal);
+
+function go(url){ window.location.href=url; }
+function toggleTheme(){ var t=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'; document.documentElement.setAttribute('data-theme',t); }
+var toastTimer;
+function showToast(msg,color){ clearTimeout(toastTimer); var t=document.getElementById('toast'); document.getElementById('toast-msg').textContent=msg; document.getElementById('toast-dot').style.background=color; t.classList.add('show'); toastTimer=setTimeout(function(){ t.classList.remove('show'); },3200); }
+</script>
+</body>
+</html>

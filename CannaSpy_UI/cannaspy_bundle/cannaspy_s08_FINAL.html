@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy - Promotions Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+[data-theme="light"]{
+  --bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);
+  --sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);--glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);--surface:#fff;--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;
+  --border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);--border-hot:rgba(9,161,161,0.38);
+  --text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;
+  --accent:#09A1A1;--accent-s:rgba(9,161,161,0.10);--accent-h:#078484;
+  --warm:#d4900a;--warm-s:rgba(212,144,10,0.12);--warm-b:rgba(212,144,10,0.28);
+  --rose:#D396A6;--rose-s:rgba(211,150,166,0.11);
+  --slate:#5484A4;--slate-s:rgba(84,132,164,0.10);
+  --danger:#e05a6a;--danger-s:rgba(224,90,106,0.09);--danger-b:rgba(224,90,106,0.28);
+  --cshadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);
+  --cshadow-lg:0 8px 40px rgba(30,60,80,0.13);
+  --btn-shadow:0 4px 18px rgba(9,161,161,0.32);
+  --noise:0.022;
+}
+[data-theme="dark"]{
+  --bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);
+  --sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);--glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);--surface:rgba(16,28,40,0.99);--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;
+  --border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);--border-hot:rgba(11,184,184,0.5);
+  --text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;
+  --accent:#0bb8b8;--accent-s:rgba(11,184,184,0.11);--accent-h:#0dcfcf;
+  --warm:#F6C992;--warm-s:rgba(246,201,146,0.08);--warm-b:rgba(246,201,146,0.22);
+  --rose:#D396A6;--rose-s:rgba(211,150,166,0.09);
+  --slate:#acc0d3;--slate-s:rgba(172,192,211,0.10);
+  --danger:#e05a6a;--danger-s:rgba(224,90,106,0.10);--danger-b:rgba(224,90,106,0.22);
+  --cshadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);
+  --cshadow-lg:0 12px 50px rgba(0,0,0,0.38);
+  --btn-shadow:0 4px 20px rgba(9,161,161,0.34);
+  --noise:0.04;
+}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--tr:all 0.2s cubic-bezier(.4,0,.2,1);--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);}
+
+/* NAV */
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.nav-link.locked{opacity:0.45;pointer-events:none;}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;}
+.tb-in{display:flex;align-items:center;gap:14px;padding:12px 0;}
+.back{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--accent);cursor:pointer;flex-shrink:0;}
+.back:hover{opacity:0.75;}
+.back svg{width:12px;height:12px;}
+.tb-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.tb-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.tb-acts{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--tr);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn svg{width:12px;height:12px;flex-shrink:0;}
+.btn.p{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:var(--btn-shadow);}
+.btn.p:hover{background:var(--accent-h);}
+
+/* CONTROL BAR */
+.ctrl{padding:8px 24px;border-bottom:1px solid var(--border);background:var(--surface-2);display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:nowrap;}
+.vseg{display:flex;background:var(--surface-3);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:2px;gap:2px;flex-shrink:0;}
+.vo{padding:5px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text-2);font-family:var(--mono);white-space:nowrap;user-select:none;display:flex;align-items:center;gap:5px;transition:var(--tr);}
+.vo svg{width:11px;height:11px;}
+.vo.active{background:var(--accent);color:#fff;box-shadow:0 2px 6px rgba(9,161,161,0.25);}
+.vo:not(.active):hover{color:var(--text-1);}
+.bsep{width:1px;height:20px;background:var(--border-2);flex-shrink:0;}
+.dg{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.dg-l{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);}
+.dw{position:relative;display:inline-block;}
+.db{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:var(--r-sm);font-size:11px;font-weight:600;border:1.5px solid var(--border-2);background:var(--surface);color:var(--text-1);cursor:pointer;font-family:var(--sans);white-space:nowrap;transition:var(--tr);}
+.db:hover{border-color:var(--accent);color:var(--accent);}
+.db.act{background:var(--accent);border-color:var(--accent);color:#fff;}
+.db svg{width:10px;height:10px;flex-shrink:0;opacity:0.55;}
+.dp{position:absolute;top:calc(100% + 5px);left:0;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);box-shadow:var(--cshadow-lg);z-index:200;min-width:200px;padding:5px;display:none;}
+.dp.open{display:block;}
+.do{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;font-size:12px;color:var(--text-1);cursor:pointer;user-select:none;font-family:var(--sans);transition:background 0.1s;}
+.do:hover{background:var(--surface-3);}
+.do.sel{color:var(--accent);font-weight:700;}
+.do.sel::after{content:"\2713";margin-left:auto;font-size:11px;}
+.do-ico{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.ddiv{height:1px;background:var(--border);margin:4px 0;}
+
+/* LEGEND */
+.legend{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0;flex-wrap:nowrap;}
+.leg{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:8px;color:var(--text-3);white-space:nowrap;}
+.lsw{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+
+/* SCROLL */
+.scroll{flex:1;overflow-y:auto;min-height:0;}
+.scroll::-webkit-scrollbar{width:4px;}
+.scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+.pad{padding:20px 24px;}
+
+/* ── SUMMARY CARDS ── */
+.sum{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--cshadow);padding:14px 16px;cursor:pointer;transition:var(--tr);position:relative;overflow:hidden;}
+.sc:hover{box-shadow:var(--cshadow-lg);transform:translateY(-2px);}
+.sc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:var(--r-sm) 0 0 var(--r-sm);}
+.sc.flash::before{background:var(--danger);}
+.sc.hh::before{background:var(--warm);}
+.sc.rec::before{background:var(--warm);}
+.sc.shared::before{background:var(--accent);}
+.sc.exp::before{background:var(--rose);}
+.sc.sc-on.flash{background:rgba(224,90,106,0.06);box-shadow:0 0 0 2px var(--danger),var(--cshadow);}
+.sc.sc-on.hh{background:rgba(212,144,10,0.06);box-shadow:0 0 0 2px var(--warm),var(--cshadow);}
+.sc.sc-on.rec{background:rgba(212,144,10,0.06);box-shadow:0 0 0 2px var(--warm),var(--cshadow);}
+.sc.sc-on.shared{background:rgba(9,161,161,0.06);box-shadow:0 0 0 2px var(--accent),var(--cshadow);}
+.sc.sc-on.exp{background:rgba(211,150,166,0.07);box-shadow:0 0 0 2px var(--rose),var(--cshadow);}
+.sc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;}
+.sc-n{font-family:var(--mono);font-size:30px;font-weight:700;line-height:1;}
+.sc-n.cd{color:var(--danger);}
+.sc-n.cw{color:var(--warm);}
+.sc-n.ct{color:var(--accent);}
+.sc-n.cr{color:var(--rose);}
+.sc-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.sci-f{background:var(--danger-s);}
+.sci-w{background:var(--warm-s);}
+.sci-t{background:var(--accent-s);}
+.sci-r{background:var(--rose-s);}
+.sc-label{font-family:var(--mono);font-size:9px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);margin-bottom:2px;}
+.sc-sub{font-size:10px;color:var(--text-2);}
+.sc-hint{font-family:var(--mono);font-size:8px;color:var(--text-3);margin-top:5px;opacity:0;}
+.sc:hover .sc-hint{opacity:1;}
+
+/* ── CALENDAR ── */
+.cal-panel{display:none;}
+.cal-panel.active{display:block;}
+.cal-hdr{display:grid;grid-template-columns:148px repeat(7,1fr);}
+.cal-corner{padding:8px 12px;font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);background:var(--surface);border:1px solid var(--border);border-right:none;border-radius:var(--r-sm) 0 0 0;}
+.cal-dh{padding:8px 6px;font-family:var(--mono);font-size:10px;color:var(--text-2);background:var(--surface);border:1px solid var(--border);border-left:none;text-align:center;position:relative;}
+.cal-dh:last-child{border-radius:0 var(--r-sm) 0 0;}
+.cal-dh.today{background:var(--accent-s);color:var(--accent);font-weight:700;}
+.ddate{font-size:9px;color:var(--text-3);margin-top:1px;}
+.tdot{position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--accent);}
+.cal-body{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);overflow:hidden;}
+.cal-row{display:grid;grid-template-columns:148px repeat(7,1fr);border-bottom:1px solid var(--border);}
+.cal-row:last-child{border-bottom:none;}
+.criv{padding:10px 12px;background:var(--surface-2);border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;}
+.crn{font-size:12px;font-weight:700;color:var(--text-1);}
+.crm{font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:1px;}
+.crst{font-family:var(--mono);font-size:8px;font-weight:700;padding:1px 6px;border-radius:10px;margin-top:4px;width:fit-content;}
+.crst.blocked{background:var(--rose-s);color:var(--rose);}
+.crst.tracking{background:var(--accent-s);color:var(--accent);}
+.cday{padding:4px;border-right:1px solid var(--border);min-height:68px;vertical-align:top;}
+.cday:last-child{border-right:none;}
+.cday.today-col{background:rgba(9,161,161,0.025);}
+.cempty{font-family:var(--mono);font-size:10px;color:rgba(84,132,164,0.14);text-align:center;padding-top:24px;}
+
+/* ── PROMO BLOCK — the redesigned key element ── */
+.pb{border-radius:6px;padding:5px 7px;margin-bottom:3px;cursor:pointer;transition:filter 0.15s,transform 0.1s;position:relative;}
+.pb:hover{filter:brightness(0.93);transform:translateY(-1px);}
+.pb:last-child{margin-bottom:0;}
+
+/* Base colors by deal type */
+.pb.t-flash      {background:rgba(224,90,106,0.12);border:1px solid rgba(224,90,106,0.28);}
+.pb.t-bogo       {background:rgba(224,90,106,0.09);border:1px solid rgba(224,90,106,0.22);}
+.pb.t-happy_hour {background:rgba(212,144,10,0.11);border:1px solid rgba(212,144,10,0.26);}
+.pb.t-early_bird {background:rgba(212,144,10,0.08);border:1px solid rgba(212,144,10,0.20);}
+.pb.t-daily_deal {background:rgba(84,132,164,0.08);border:1px solid rgba(84,132,164,0.18);}
+.pb.t-weekly_deal{background:rgba(84,132,164,0.07);border:1px solid rgba(84,132,164,0.15);}
+.pb.t-member_price{background:rgba(84,132,164,0.06);border:1px solid rgba(84,132,164,0.13);}
+
+/* Shared brand overlay — left accent stripe */
+.pb.is-shared{border-left:3px solid var(--accent);}
+.pb.t-flash.is-shared{border-left:3px solid var(--danger);}
+.pb.t-bogo.is-shared{border-left:3px solid var(--danger);}
+.pb.t-happy_hour.is-shared{border-left:3px solid var(--warm);}
+.pb.t-early_bird.is-shared{border-left:3px solid var(--warm);}
+.pb.t-daily_deal.is-shared{border-left:3px solid var(--accent);}
+.pb.t-weekly_deal.is-shared{border-left:3px solid var(--accent);}
+
+/* Brand name */
+.pb-brand{font-family:var(--mono);font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;margin-bottom:2px;}
+.t-flash .pb-brand{color:var(--danger);}
+.t-bogo .pb-brand{color:var(--danger);}
+.t-happy_hour .pb-brand{color:var(--warm);}
+.t-early_bird .pb-brand{color:var(--warm);}
+.t-daily_deal .pb-brand{color:var(--slate);}
+.t-weekly_deal .pb-brand{color:var(--slate);}
+.t-member_price .pb-brand{color:var(--slate);}
+
+/* Type badge row */
+.pb-meta{display:flex;align-items:center;gap:3px;flex-wrap:wrap;}
+.pb-badge{font-family:var(--mono);font-size:7.5px;font-weight:700;letter-spacing:0.04em;padding:1px 4px;border-radius:3px;white-space:nowrap;}
+.badge-flash      {background:rgba(224,90,106,0.18);color:var(--danger);}
+.badge-bogo       {background:rgba(224,90,106,0.15);color:var(--danger);}
+.badge-happy_hour {background:rgba(212,144,10,0.18);color:var(--warm);}
+.badge-early_bird {background:rgba(212,144,10,0.15);color:var(--warm);}
+.badge-daily_deal {background:rgba(84,132,164,0.13);color:var(--slate);}
+.badge-weekly_deal{background:rgba(84,132,164,0.11);color:var(--slate);}
+.badge-member_price{background:rgba(84,132,164,0.10);color:var(--slate);}
+.badge-shared     {background:rgba(9,161,161,0.15);color:var(--accent);}
+.badge-time       {background:rgba(84,132,164,0.10);color:var(--text-2);}
+
+/* Stat below */
+.pb-stat{font-family:var(--mono);font-size:8px;color:var(--text-2);margin-top:2px;}
+
+/* ── LIST VIEW ── */
+.list-panel{display:none;}
+.list-panel.active{display:flex;flex-direction:column;}
+.lsec{margin-bottom:4px;}
+.lsh{padding:7px 0 5px;display:flex;align-items:center;gap:10px;}
+.lsh-l{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;}
+.lsh-l.flash,.lsh-l.bogo{color:var(--danger);}
+.lsh-l.happy_hour,.lsh-l.early_bird,.lsh-l.weekly_deal,.lsh-l.daily_deal{color:var(--warm);}
+.lsh-l.member_price{color:var(--slate);}
+.lsh-line{flex:1;height:1px;background:var(--border);}
+.lsh-c{font-family:var(--mono);font-size:9px;color:var(--text-3);}
+.pc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--cshadow);overflow:hidden;margin-bottom:7px;cursor:pointer;transition:var(--tr);}
+.pc:hover{box-shadow:var(--cshadow-lg);transform:translateY(-1px);}
+.pc.t-flash,.pc.t-bogo{border-left:3px solid var(--danger);}
+.pc.t-happy_hour,.pc.t-early_bird{border-left:3px solid var(--warm);}
+.pc.t-daily_deal,.pc.t-weekly_deal{border-left:3px solid var(--slate);}
+.pc.t-member_price{border-left:3px solid var(--slate);}
+.pc.is-shared.t-flash,.pc.is-shared.t-bogo{border-left:3px solid var(--danger);}
+.pc.is-shared.t-happy_hour,.pc.is-shared.t-early_bird,.pc.is-shared.t-weekly_deal,.pc.is-shared.t-daily_deal{border-left:3px solid var(--accent);}
+.pcb{padding:12px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;}
+.pc-ic{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;}
+.pc-inf{min-width:0;}
+.pc-riv{font-family:var(--mono);font-size:9px;color:var(--text-3);margin-bottom:2px;display:flex;align-items:center;gap:5px;}
+.blk-b{font-family:var(--mono);font-size:8px;background:var(--rose-s);color:var(--rose);padding:1px 5px;border-radius:8px;}
+.pc-title{font-size:13px;font-weight:700;color:var(--text-1);margin-bottom:3px;}
+.pc-badges{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px;}
+.pc-sub{font-size:11px;color:var(--text-2);}
+.pc-meta{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.pc-pill{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.06em;padding:3px 9px;border-radius:20px;text-transform:uppercase;}
+.pc-exp{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.pc-gap{font-family:var(--mono);font-size:12px;font-weight:700;}
+.pc-gap.cd{color:var(--danger);}
+.pc-gap.ct{color:var(--accent);}
+
+/* ── DRAWER ── */
+.drawer{position:fixed;top:0;right:0;width:400px;height:100vh;background:var(--surface);border-left:1px solid var(--border-2);box-shadow:var(--cshadow-lg);z-index:400;display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.28s cubic-bezier(.4,0,.2,1);}
+.drawer.open{transform:translateX(0);}
+.drh{padding:15px 18px;border-bottom:1px solid var(--border);background:var(--surface-2);display:flex;align-items:flex-start;gap:10px;flex-shrink:0;}
+.drx{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border-2);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);transition:var(--tr);flex-shrink:0;}
+.drx:hover{border-color:var(--danger);color:var(--danger);}
+.drx svg{width:12px;height:12px;}
+.drht{font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:3px;}
+.drhr{font-family:var(--mono);font-size:9px;color:var(--text-3);}
+.dr-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;}
+.drs{flex:1;overflow-y:auto;padding:16px 18px;min-height:0;}
+.drs::-webkit-scrollbar{width:3px;}
+.drs::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+.ds{margin-bottom:14px;}
+.ds-l{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px;}
+.ds-t{font-size:12px;color:var(--text-2);line-height:1.7;}
+.stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px;}
+.stc{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 7px;text-align:center;}
+.stn{font-family:var(--mono);font-size:19px;font-weight:700;line-height:1;margin-bottom:2px;}
+.stl{font-family:var(--mono);font-size:8px;color:var(--text-3);letter-spacing:0.06em;text-transform:uppercase;}
+.stn.cd{color:var(--danger);}
+.stn.ct{color:var(--accent);}
+.stn.cw{color:var(--warm);}
+.ptbl{width:100%;border-collapse:collapse;font-size:11px;}
+.ptbl th{font-family:var(--mono);font-size:9px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-3);padding:5px 7px;border-bottom:1px solid var(--border);text-align:left;}
+.ptbl td{padding:6px 7px;border-bottom:1px solid var(--border);color:var(--text-1);}
+.ptbl tr:last-child td{border-bottom:none;}
+.pold{color:var(--text-3);text-decoration:line-through;font-family:var(--mono);}
+.pnew{font-family:var(--mono);font-weight:700;}
+.pnew.d{color:var(--danger);}
+.pnew.w{color:var(--warm);}
+.pgap{font-family:var(--mono);font-size:10px;padding:2px 5px;border-radius:4px;}
+.pgap.d{background:var(--danger-s);color:var(--danger);}
+.pgap.w{background:var(--warm-s);color:var(--warm);}
+.drf{padding:12px 18px;border-top:1px solid var(--border);background:var(--surface-2);display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.dfrow{display:flex;gap:6px;}
+.dfbtn{flex:1;padding:8px 10px;border-radius:var(--r-sm);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--sans);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);text-align:center;transition:var(--tr);}
+.dfbtn:hover{border-color:var(--accent);color:var(--accent);}
+.dfbtn.p{background:var(--accent);border-color:var(--accent);color:#fff;}
+.dfbtn.p:hover{background:var(--accent-h);}
+.dfbtn.d{border-color:rgba(224,90,106,0.3);color:var(--danger);}
+.dfbtn.d:hover{background:var(--danger-s);border-color:var(--danger);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text-1);color:var(--surface);padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;font-family:var(--mono);z-index:9000;transition:transform 0.3s cubic-bezier(.2,.8,.2,1),opacity 0.3s;opacity:0;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="tb-in">
+      <div class="back" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Back</div>
+      <div><div class="tb-title">Promotions Tracker</div><div class="tb-sub">WeHo Flagship &middot; Week of Apr 14</div></div>
+      <div class="tb-acts">
+        <button class="btn" onclick="toast('Export downloaded')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
+        <button class="btn p" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Price matrix &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ctrl">
+    <div class="vseg">
+      <div class="vo active" id="vC" onclick="switchView('cal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Calendar</div>
+      <div class="vo" id="vL" onclick="switchView('list')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>List</div>
+      <div class="vo" id="vI" onclick="switchView('insights')" style="position:relative;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        Insights
+        <span id="insightBadge" style="position:absolute;top:-3px;right:-6px;min-width:16px;height:16px;background:var(--danger);border-radius:8px;font-size:9px;font-weight:700;color:#fff;display:none;align-items:center;justify-content:center;font-family:var(--mono);padding:0 3px;"></span>
+      </div>
+    </div>
+    <div class="bsep"></div>
+    <div class="dg"><span class="dg-l">Location</span>
+      <div class="dw">
+        <button class="db act" id="locBtn" onclick="toggleDD('locP')">WeHo Flagship <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="dp" id="locP">
+          <div class="do sel" data-dd="locBtn" data-pop="locP" data-label="WeHo Flagship" data-active="1">WeHo Flagship</div>
+          <div class="do" data-dd="locBtn" data-pop="locP" data-label="DTLA Flagship">DTLA Flagship</div>
+          <div class="do" data-dd="locBtn" data-pop="locP" data-label="SoMa SF">SoMa SF</div>
+          <div class="do" data-dd="locBtn" data-pop="locP" data-label="All locations">All locations</div>
+        </div>
+      </div>
+    </div>
+    <div class="bsep"></div>
+    <div class="dg"><span class="dg-l">Type</span>
+      <div class="dw">
+        <button class="db" id="typeBtn" onclick="toggleDD('typeP')">All types <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button>
+        <div class="dp" id="typeP" style="min-width:220px;">
+          <div class="do sel" data-dd="typeBtn" data-pop="typeP" data-label="All types" data-ftype="all"><div class="do-ico" style="background:var(--surface-3);">&#8942;</div>All types</div>
+          <div class="ddiv"></div>
+          <div class="do" data-dd="typeBtn" data-pop="typeP" data-label="&#9889; Flash sales" data-ftype="flash"><div class="do-ico sci-f">&#9889;</div>Flash sales</div>
+          <div class="do" data-dd="typeBtn" data-pop="typeP" data-label="&#128260; BOGO / Bundle" data-ftype="bogo"><div class="do-ico sci-f">&#128260;</div>BOGO / Bundle</div>
+          <div class="ddiv"></div>
+          <div class="do" data-dd="typeBtn" data-pop="typeP" data-label="&#128336; Happy Hour" data-ftype="happy_hour"><div class="do-ico sci-w">&#128336;</div>Happy Hour</div>
+          <div class="do" data-dd="typeBtn" data-pop="typeP" data-label="&#127749; Early Bird" data-ftype="early_bird"><div class="do-ico sci-w">&#127749;</div>Early Bird</div>
+          <div class="do" data-dd="typeBtn" data-pop="typeP" data-label="&#8635; Daily deal" data-ftype="daily_deal"><div class="do-ico" style="background:var(--slate-s);">&#8635;</div>Daily deal</div>
+          <div class="do" data-dd="typeBtn" data-pop="typeP" data-label="&#128197; Weekly deal" data-ftype="weekly_deal"><div class="do-ico" style="background:var(--slate-s);">&#128197;</div>Weekly deal</div>
+          <div class="do" data-dd="typeBtn" data-pop="typeP" data-label="&#9733; Member price" data-ftype="member_price"><div class="do-ico" style="background:var(--slate-s);">&#9733;</div>Member price</div>
+          <div class="ddiv"></div>
+          <div class="do" data-dd="typeBtn" data-pop="typeP" data-label="&#9670; Shared brand only" data-ftype="shared"><div class="do-ico sci-t">&#9670;</div>Shared brand only</div>
+          <div class="do" data-dd="typeBtn" data-pop="typeP" data-label="&#8987; Expiring soon" data-ftype="expiring"><div class="do-ico sci-r">&#8987;</div>Expiring soon</div>
+        </div>
+      </div>
+    </div>
+    <div class="bsep"></div>
+    <!-- Shared brand toggle -->
+    <div class="dg">
+      <span class="dg-l">Shared brand</span>
+      <button class="db" id="sharedBtn" onclick="toggleShared()">All rivals <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></button>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="leg"><div class="lsw" style="background:rgba(224,90,106,0.25);border:1.5px solid var(--danger);"></div>Flash/BOGO</div>
+      <div class="leg"><div class="lsw" style="background:rgba(212,144,10,0.22);border:1.5px solid var(--warm);"></div>HH/Early Bird</div>
+      <div class="leg"><div class="lsw" style="background:rgba(84,132,164,0.18);border:1.5px solid var(--slate);"></div>Recurring</div>
+      <div class="leg" style="margin-left:4px;"><div style="width:3px;height:14px;background:var(--accent);border-radius:2px;flex-shrink:0;"></div>Shared brand</div>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <div class="pad">
+
+      <!-- Summary cards -->
+      <div class="sum">
+        <div class="sc flash" data-filter="flash" id="sc-flash">
+          <div class="sc-top"><div class="sc-n cd" id="n-flash">4</div><div class="sc-ico sci-f">&#9889;</div></div>
+          <div class="sc-label">Flash &amp; BOGO</div>
+          <div class="sc-sub">Limited-time deals</div>
+          <div class="sc-hint">Click to filter</div>
+        </div>
+        <div class="sc hh" data-filter="timed" id="sc-timed">
+          <div class="sc-top"><div class="sc-n cw" id="n-timed">4</div><div class="sc-ico sci-w">&#128336;</div></div>
+          <div class="sc-label">Happy Hour &amp; Early Bird</div>
+          <div class="sc-sub">Time-restricted deals</div>
+          <div class="sc-hint">Click to filter</div>
+        </div>
+        <div class="sc rec" data-filter="recurring" id="sc-rec">
+          <div class="sc-top"><div class="sc-n cw" id="n-rec">5</div><div class="sc-ico sci-w">&#8635;</div></div>
+          <div class="sc-label">Daily &amp; Weekly</div>
+          <div class="sc-sub">Standing recurring deals</div>
+          <div class="sc-hint">Click to filter</div>
+        </div>
+        <div class="sc shared" data-filter="shared" id="sc-shared">
+          <div class="sc-top"><div class="sc-n ct" id="n-shared">6</div><div class="sc-ico sci-t">&#9670;</div></div>
+          <div class="sc-label">Shared Brand Promos</div>
+          <div class="sc-sub">Direct pricing exposure</div>
+          <div class="sc-hint">Click to filter</div>
+        </div>
+        <div class="sc exp" data-filter="expiring" id="sc-exp">
+          <div class="sc-top"><div class="sc-n cr" id="n-exp">4</div><div class="sc-ico sci-r">&#8987;</div></div>
+          <div class="sc-label">Expiring This Week</div>
+          <div class="sc-sub">Ends Sun Apr 20</div>
+          <div class="sc-hint">Click to filter</div>
+        </div>
+      </div>
+
+      <!-- Calendar -->
+      <div class="cal-panel active" id="calPanel">
+        <div class="cal-hdr">
+          <div class="cal-corner">Rival</div>
+          <div class="cal-dh">Mon<div class="ddate">Apr 14</div><div class="tdot"></div></div>
+          <div class="cal-dh today">Tue<div class="ddate">Apr 15</div><div class="tdot"></div></div>
+          <div class="cal-dh">Wed<div class="ddate">Apr 16</div></div>
+          <div class="cal-dh">Thu<div class="ddate">Apr 17</div></div>
+          <div class="cal-dh">Fri<div class="ddate">Apr 18</div></div>
+          <div class="cal-dh">Sat<div class="ddate">Apr 19</div></div>
+          <div class="cal-dh">Sun<div class="ddate">Apr 20</div></div>
+        </div>
+        <div class="cal-body" id="calBody"></div>
+      </div>
+
+      <!-- List -->
+      <div class="list-panel" id="listPanel">
+        <div id="listContent"></div>
+      </div>
+
+      <!-- INSIGHTS PANEL -->
+      <div class="list-panel" id="insightPanel">
+        <!-- Insights filter/sort bar -->
+        <div id="insightBar" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 14px;margin-bottom:16px;display:flex;align-items:center;gap:6px;box-shadow:var(--card-shadow);">
+
+          <!-- Show dropdown -->
+          <div class="dg"><span class="dg-l">Show</span>
+            <div class="dw">
+              <button class="db" id="iShowBtn" onclick="toggleDD('iShowPop')">All insights <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;opacity:0.55;vertical-align:middle;"><polyline points="6 9 12 15 18 9"/></svg></button>
+              <div class="dp" id="iShowPop" style="min-width:180px;">
+                <div class="do sel" data-dd="iShowBtn" data-pop="iShowPop" data-ival="all">All insights</div>
+                <div class="ddiv"></div>
+                <div class="do" data-dd="iShowBtn" data-pop="iShowPop" data-ival="conflict">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--danger);margin-right:4px;"></span>Conflicts only
+                </div>
+                <div class="do" data-dd="iShowBtn" data-pop="iShowPop" data-ival="opp">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:4px;"></span>Opportunities only
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bsep"></div>
+
+          <!-- Category dropdown -->
+          <div class="dg"><span class="dg-l">Category</span>
+            <div class="dw">
+              <button class="db" id="iCatBtn" onclick="toggleDD('iCatPop')">All <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;opacity:0.55;vertical-align:middle;"><polyline points="6 9 12 15 18 9"/></svg></button>
+              <div class="dp" id="iCatPop">
+                <div class="do sel" data-dd="iCatBtn" data-pop="iCatPop" data-ival="all">All categories</div>
+                <div class="ddiv"></div>
+                <div class="do" data-dd="iCatBtn" data-pop="iCatPop" data-ival="flower">Flower</div>
+                <div class="do" data-dd="iCatBtn" data-pop="iCatPop" data-ival="vape">Vape</div>
+                <div class="do" data-dd="iCatBtn" data-pop="iCatPop" data-ival="edible">Edible</div>
+                <div class="do" data-dd="iCatBtn" data-pop="iCatPop" data-ival="concentrate">Concentrate</div>
+                <div class="do" data-dd="iCatBtn" data-pop="iCatPop" data-ival="preroll">Preroll</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bsep"></div>
+
+          <!-- Sort dropdown -->
+          <div class="dg"><span class="dg-l">Sort</span>
+            <div class="dw">
+              <button class="db" id="iSortBtn" onclick="toggleDD('iSortPop')">Severity <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;opacity:0.55;vertical-align:middle;"><polyline points="6 9 12 15 18 9"/></svg></button>
+              <div class="dp" id="iSortPop">
+                <div class="do sel" data-dd="iSortBtn" data-pop="iSortPop" data-ival="severity">Severity (critical first)</div>
+                <div class="do" data-dd="iSortBtn" data-pop="iSortPop" data-ival="day">Day (Mon → Sun)</div>
+                <div class="do" data-dd="iSortBtn" data-pop="iSortPop" data-ival="rival">Rival name</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Count badge -->
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <div id="insightCountLabel" style="font-family:var(--mono);font-size:10px;color:var(--text-3);"></div>
+          </div>
+        </div>
+        <div id="insightContent"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="drawer" id="drawer">
+  <div class="drh">
+    <button class="drx" id="drClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div style="flex:1;min-width:0;">
+      <div class="drht" id="drTitle"></div>
+      <div class="drhr" id="drRival"></div>
+      <div class="dr-badges" id="drBadges"></div>
+    </div>
+  </div>
+  <div class="drs" id="drScroll"></div>
+  <div class="drf" id="drFooter"></div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+/* ══ SUBTYPE CONFIG ══ */
+var ST = {
+  flash:       {ico:'\u26a1', label:'Flash Sale',   badgeCls:'badge-flash',       color:'var(--danger)'},
+  bogo:        {ico:'🔄', label:'BOGO',       badgeCls:'badge-bogo',        color:'var(--danger)'},
+  happy_hour:  {ico:'🕐', label:'Happy Hour', badgeCls:'badge-happy_hour',  color:'var(--warm)'},
+  early_bird:  {ico:'🌅', label:'Early Bird', badgeCls:'badge-early_bird',  color:'var(--warm)'},
+  daily_deal:  {ico:'\u21ba',    label:'Daily Deal', badgeCls:'badge-daily_deal',  color:'var(--slate)'},
+  weekly_deal: {ico:'📅', label:'Weekly',     badgeCls:'badge-weekly_deal', color:'var(--slate)'},
+  member_price:{ico:'\u2605',    label:'Members',    badgeCls:'badge-member_price',color:'var(--slate)'},
+};
+
+/* ══ DATA ══ */
+var RIVALS = [
+  {key:'stiiizy', name:'STIIIZY WeHo',   dist:'1.2 mi', blocked:true},
+  {key:'medmen',  name:'MedMen WeHo',    dist:'0.8 mi', blocked:false},
+  {key:'otc',     name:'Off The Charts', dist:'2.9 mi', blocked:true},
+  {key:'catalyst',name:'Catalyst Co.',   dist:'1.9 mi', blocked:false},
+  {key:'jungle',  name:'Jungle Boys',    dist:'2.4 mi', blocked:false}
+];
+
+var PROMOS = [
+  {key:'ff-flash-stiiizy',    rival:'stiiizy',  subtype:'flash',       shared:true,  brand:'Friendly Farms',
+   days:[1,1,1,1,1,1,1], time_window:null,       discount:'\u221228%', gap:'\u2212$14', expires:'Sun Apr 20',
+   title:'Friendly Farms 3.5g \u2014 28% off flash sale',
+   narrative:'STIIIZY is running a weekend flash sale on Friendly Farms 3.5g. At $36 vs your $50 — a $14 gap on a brand you both carry. You are 28% more expensive on a shared brand until Sunday.',
+   rows:[{sku:'FF 3.5g Flower',yours:'$50',theirs:'$36',gap:'\u2212$14',gc:'d',pc:'d'},{sku:'FF 7g Flower',yours:'$90',theirs:'$68',gap:'\u2212$22',gc:'d',pc:'d'}]},
+
+  {key:'rg-flash-medmen',     rival:'medmen',   subtype:'flash',       shared:true,  brand:'Raw Garden',
+   days:[0,1,1,1,1,1,1], time_window:null,       discount:'\u221224%', gap:'\u2212$14', expires:'Sun Apr 20',
+   title:'Raw Garden 1g vape \u2014 Fri\u2013Sun flash sale',
+   narrative:'MedMen running a weekend Raw Garden flash. $44 vs your $58 on a shared brand. Ends Sunday.',
+   rows:[{sku:'Raw Garden 1g Vape',yours:'$58',theirs:'$44',gap:'\u2212$14',gc:'d',pc:'d'}]},
+
+  {key:'cbx-flash-otc',       rival:'otc',      subtype:'flash',       shared:false, brand:'CBX',
+   days:[1,1,1,0,0,0,0], time_window:null,       discount:'\u221231%', gap:null,        expires:'Wed Apr 16',
+   title:'CBX Cherries \u2014 3-day flash sale',
+   narrative:"Off The Charts running a 3-day CBX flash. You don't carry CBX — low direct impact, but aggressive premium flower pricing pulls traffic.",
+   rows:[{sku:'CBX Cherries 3.5g',yours:'\u2014',theirs:'$45',gap:'N/A',gc:'',pc:'d'}]},
+
+  {key:'jb-bogo-jungle',      rival:'jungle',   subtype:'bogo',        shared:false, brand:'Jungle Boys',
+   days:[1,1,1,1,1,1,1], time_window:null,       discount:'B2G1',      gap:null,        expires:'Sun Apr 20',
+   title:'Jungle Boys \u2014 Buy 2 Get 1 concentrate bundle',
+   narrative:'Jungle Boys B2G1 on house concentrate line all week. Not a brand you carry — low direct threat but BOGO in concentrates shifts weekend traffic.',
+   rows:[]},
+
+  {key:'hh-medmen',           rival:'medmen',   subtype:'happy_hour',  shared:false, brand:'All vapes',
+   days:[1,1,1,1,1,1,1], time_window:'4\u20137pm',     discount:'\u221220%', gap:null,  expires:'Standing',
+   title:'Happy Hour \u2014 20% off all vapes 4\u20137pm',
+   narrative:'MedMen daily vape happy hour 4\u20137pm. Overlaps your peak evening traffic. Brands discounted partially match your vape selection.',
+   rows:[]},
+
+  {key:'rg-hh-jungle',        rival:'jungle',   subtype:'happy_hour',  shared:true,  brand:'Raw Garden',
+   days:[0,0,0,1,0,0,0], time_window:'5\u20138pm',     discount:'\u221215%', gap:'\u2212$9', expires:'Standing',
+   title:'Raw Garden Happy Hour \u2014 Thursdays 5\u20138pm',
+   narrative:'Jungle Boys Thursday evening Raw Garden happy hour. Shared brand \u2014 on Thursdays 5\u20138pm they have a 15% edge on a brand you both carry.',
+   rows:[{sku:'Raw Garden 1g Vape',yours:'$58',theirs:'$49',gap:'\u2212$9',gc:'w',pc:'w'}]},
+
+  {key:'hh-catalyst',         rival:'catalyst', subtype:'happy_hour',  shared:false, brand:'Concentrates',
+   days:[1,1,1,1,1,0,0], time_window:'5\u20137pm',     discount:'\u221220%', gap:null,  expires:'Standing',
+   title:'Happy Hour \u2014 20% off concentrates 5\u20137pm',
+   narrative:'Catalyst runs a weekday concentrate happy hour 5\u20137pm. Not a direct pricing exposure but draws traffic during your evening peak.',
+   rows:[]},
+
+  {key:'eb-stiiizy',          rival:'stiiizy',  subtype:'early_bird',  shared:false, brand:'All flower',
+   days:[0,0,0,0,0,1,1], time_window:'10am\u201312pm', discount:'\u221215%', gap:null, expires:'Standing',
+   title:'Early Bird \u2014 15% off all flower 10am\u201312pm (Weekends)',
+   narrative:'STIIIZY runs a weekend early bird special on all flower. Opens 2 hours before you typically see peak traffic. Drives morning dispensary switching.',
+   rows:[]},
+
+  {key:'rg-daily-catalyst',   rival:'catalyst', subtype:'daily_deal',  shared:true,  brand:'Raw Garden',
+   days:[1,1,1,1,1,1,1], time_window:null,       discount:'\u221216%', gap:'\u2212$9',  expires:'Standing',
+   title:'Raw Garden daily deal \u2014 every day, all day',
+   narrative:'Catalyst has run this Raw Garden deal for 11 consecutive days. At $49 vs your $58, this is a standing competitive gap on a shared brand.',
+   rows:[{sku:'Raw Garden 1g Live Resin',yours:'$58',theirs:'$49',gap:'\u2212$9',gc:'w',pc:'w'}]},
+
+  {key:'ff-mon-otc',          rival:'otc',      subtype:'weekly_deal', shared:true,  brand:'Friendly Farms',
+   days:[1,0,0,0,0,0,0], time_window:null,       discount:'\u221215%', gap:'\u2212$8',  expires:'Standing',
+   title:'Friendly Farms Monday deal \u2014 every Monday',
+   narrative:'Off The Charts has run FF Monday deals for 10 weeks. Every Monday all FF products are 15% off. Blocked rival \u2014 cannot see your response.',
+   rows:[{sku:'FF 3.5g Flower',yours:'$50',theirs:'$42',gap:'\u2212$8',gc:'w',pc:'w'}]},
+
+  {key:'kanha-tues-stiiizy',  rival:'stiiizy',  subtype:'weekly_deal', shared:false, brand:'Kanha',
+   days:[0,1,0,0,0,0,0], time_window:null,       discount:'\u221220%', gap:null,        expires:'Standing',
+   title:'Kanha Tuesday deal \u2014 every Tuesday',
+   narrative:'STIIIZY runs a Tuesday Kanha edibles deal. You carry Kanha at full price. Six weeks running. Low urgency.',
+   rows:[]},
+
+  {key:'maven-wknd-catalyst', rival:'catalyst', subtype:'member_price',shared:false, brand:'Maven',
+   days:[0,0,0,0,0,1,1], time_window:null,       discount:'\u221210%', gap:null,        expires:'Standing',
+   title:'Maven weekend member pricing \u2014 Sat\u2013Sun',
+   narrative:'Catalyst offers Maven weekend pricing to loyalty members \u2014 10% off Sat\u2013Sun. Loyalty pricing is harder to counter directly.',
+   rows:[]},
+
+  {key:'ff-sat-medmen',       rival:'medmen',   subtype:'weekly_deal', shared:true,  brand:'Friendly Farms',
+   days:[0,0,0,0,0,1,0], time_window:null,       discount:'\u221212%', gap:'\u2212$6',  expires:'Standing',
+   title:'Friendly Farms Saturday deal \u2014 every Saturday',
+   narrative:'MedMen runs a Saturday FF special. Their FF price is $44 vs your $50 \u2014 a $6 shared-brand gap on your highest-traffic day.',
+   rows:[{sku:'FF 3.5g Flower',yours:'$50',theirs:'$44',gap:'\u2212$6',gc:'w',pc:'w'}]},
+];
+
+/* ══ FILTER STATE ══ */
+var activeType = 'all';
+var sharedOnly = false;
+
+function matchFilter(p) {
+  var typeOk = false;
+  if (activeType === 'all')          typeOk = true;
+  else if (activeType === 'flash')        typeOk = p.subtype === 'flash';
+  else if (activeType === 'bogo')         typeOk = p.subtype === 'bogo';
+  else if (activeType === 'happy_hour')   typeOk = p.subtype === 'happy_hour';
+  else if (activeType === 'early_bird')   typeOk = p.subtype === 'early_bird';
+  else if (activeType === 'daily_deal')   typeOk = p.subtype === 'daily_deal';
+  else if (activeType === 'weekly_deal')  typeOk = p.subtype === 'weekly_deal';
+  else if (activeType === 'member_price') typeOk = p.subtype === 'member_price';
+  else if (activeType === 'timed')        typeOk = p.subtype === 'happy_hour' || p.subtype === 'early_bird';
+  else if (activeType === 'recurring')    typeOk = p.subtype === 'daily_deal' || p.subtype === 'weekly_deal' || p.subtype === 'member_price';
+  else if (activeType === 'shared')       typeOk = p.shared;
+  else if (activeType === 'expiring')     typeOk = p.expires !== 'Standing';
+  if (!typeOk) return false;
+  if (sharedOnly && !p.shared) return false;
+  return true;
+}
+
+function setFilter(type) {
+  activeType = type;
+  // Card active states
+  var cardMap = {flash:'sc-flash', timed:'sc-timed', recurring:'sc-rec', shared:'sc-shared', expiring:'sc-exp'};
+  Object.keys(cardMap).forEach(function(k) {
+    var el = document.getElementById(cardMap[k]);
+    if (el) el.classList.toggle('sc-on', k === type);
+  });
+  // Sync type button
+  var typeBtn = document.getElementById('typeBtn');
+  var svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px;height:10px;opacity:0.55;"><polyline points="6 9 12 15 18 9"/></svg>';
+  var labels = {
+    all:'All types', flash:'\u26a1 Flash sales', bogo:'&#128260; BOGO',
+    happy_hour:'&#128336; Happy Hour', early_bird:'&#127749; Early Bird',
+    daily_deal:'\u21ba Daily deal', weekly_deal:'&#128197; Weekly deal',
+    member_price:'\u2605 Member price', shared:'\u25c6 Shared brand only', expiring:'\u231b Expiring soon',
+    timed:'&#128336; HH / Early Bird', recurring:'\u21ba Recurring'
+  };
+  typeBtn.innerHTML = (labels[type] || 'All types') + ' ' + svg;
+  typeBtn.className = 'db' + (type !== 'all' ? ' act' : '');
+  // Sync dropdown sel
+  document.querySelectorAll('#typeP .do').forEach(function(o) {
+    o.classList.toggle('sel', o.dataset.ftype === type);
+  });
+  render();
+}
+
+function toggleShared() {
+  sharedOnly = !sharedOnly;
+  var btn = document.getElementById('sharedBtn');
+  var svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px;height:10px;opacity:0.55;"><polyline points="6 9 12 15 18 9"/></svg>';
+  btn.innerHTML = (sharedOnly ? '\u25c6 Shared only' : 'All rivals') + ' ' + svg;
+  btn.className = 'db' + (sharedOnly ? ' act' : '');
+  render();
+}
+
+/* ══ BADGE HELPERS ══ */
+function typeBadge(p) {
+  var s = ST[p.subtype] || {ico:'?',label:p.subtype,badgeCls:''};
+  return '<span class="pb-badge ' + s.badgeCls + '">' + s.ico + ' ' + s.label + '</span>';
+}
+function timeBadge(p) {
+  if (!p.time_window) return '';
+  return '<span class="pb-badge badge-time">&#128336; ' + p.time_window + '</span>';
+}
+function sharedBadge() {
+  return '<span class="pb-badge badge-shared">\u25c6 Shared</span>';
+}
+
+/* ══ CALENDAR ══ */
+function renderCal() {
+  var h = '';
+  var any = false;
+  RIVALS.forEach(function(r) {
+    var rp = PROMOS.filter(function(p) { return p.rival === r.key && matchFilter(p); });
+    if (activeType !== 'all' && !sharedOnly && !rp.length) return;
+    if (sharedOnly && !rp.length) return;
+    any = true;
+    h += '<div class="cal-row">';
+    h += '<div class="criv"><div class="crn">' + r.name + '</div><div class="crm">' + r.dist + '</div>';
+    h += '<div class="crst ' + (r.blocked ? 'blocked' : 'tracking') + '">' + (r.blocked ? 'Blocked' : 'Tracking') + '</div></div>';
+    for (var d = 0; d < 7; d++) {
+      var dp = rp.filter(function(p) { return p.days[d]; });
+      h += '<div class="cday' + (d === 1 ? ' today-col' : '') + '">';
+      if (!dp.length) {
+        h += '<div class="cempty">&mdash;</div>';
+      } else {
+        dp.forEach(function(p) {
+          var tCls = 't-' + p.subtype;
+          var sCls = p.shared ? ' is-shared' : '';
+          // stat: prefer gap for shared, discount otherwise
+          var stat = p.shared && p.gap ? p.gap : p.discount;
+          h += '<div class="pb ' + tCls + sCls + '" data-key="' + p.key + '">';
+          h += '<span class="pb-brand">' + p.brand + '</span>';
+          h += '<div class="pb-meta">';
+          h += typeBadge(p);
+          if (p.time_window) h += timeBadge(p);
+          if (p.shared) h += sharedBadge();
+          h += '</div>';
+          if (stat) h += '<div class="pb-stat">' + stat + '</div>';
+          h += '</div>';
+        });
+      }
+      h += '</div>';
+    }
+    h += '</div>';
+  });
+  if (!any) {
+    h = '<div style="padding:32px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-3);">No promos match this filter</div>';
+  }
+  document.getElementById('calBody').innerHTML = h;
+}
+
+/* ══ LIST ══ */
+var LIST_SECTIONS = [
+  {id:'flash',       label:'\u26a1 Flash Sales',        subtypes:['flash']},
+  {id:'bogo',        label:'&#128260; BOGO / Bundle',   subtypes:['bogo']},
+  {id:'happy_hour',  label:'&#128336; Happy Hour',      subtypes:['happy_hour']},
+  {id:'early_bird',  label:'&#127749; Early Bird',      subtypes:['early_bird']},
+  {id:'daily_deal',  label:'\u21ba Daily Deals',        subtypes:['daily_deal']},
+  {id:'weekly_deal', label:'&#128197; Weekly Deals',    subtypes:['weekly_deal']},
+  {id:'member_price',label:'\u2605 Member Pricing',     subtypes:['member_price']},
+];
+
+function pcHtml(p) {
+  var r = RIVALS.find(function(x) { return x.key === p.rival; });
+  var tCls = 't-' + p.subtype + (p.shared ? ' is-shared' : '');
+  var ico = (ST[p.subtype] || {ico:'?'}).ico;
+  var icoBg = ['flash','bogo'].indexOf(p.subtype) >= 0 ? 'sci-f' : ['happy_hour','early_bird'].indexOf(p.subtype) >= 0 ? 'sci-w' : 'style="background:var(--slate-s);"';
+  var icoBgCls = ['flash','bogo'].indexOf(p.subtype) >= 0 ? 'sci-f' : ['happy_hour','early_bird'].indexOf(p.subtype) >= 0 ? 'sci-w' : '';
+  var pillColor = ['flash','bogo'].indexOf(p.subtype) >= 0 ? 'color:var(--danger);background:var(--danger-s);border:1px solid var(--danger-b);'
+    : ['happy_hour','early_bird'].indexOf(p.subtype) >= 0 ? 'color:var(--warm);background:var(--warm-s);border:1px solid var(--warm-b);'
+    : 'color:var(--slate);background:var(--slate-s);border:1px solid rgba(84,132,164,0.2);';
+  var blk = r && r.blocked ? '<span class="blk-b">Blocked</span>' : '';
+  var gapDisp = p.shared && p.gap ? '<div class="pc-gap cd">' + p.gap + ' gap</div>' : '';
+  return '<div class="pc ' + tCls + '" data-key="' + p.key + '">' +
+    '<div class="pcb">' +
+    '<div class="pc-ic ' + icoBgCls + '"' + (icoBgCls ? '' : ' style="background:var(--slate-s);"') + '>' + ico + '</div>' +
+    '<div class="pc-inf">' +
+      '<div class="pc-riv">' + (r ? r.name + ' \u00b7 ' + r.dist : '') + blk + '</div>' +
+      '<div class="pc-title">' + p.title + '</div>' +
+      '<div class="pc-badges">' + typeBadge(p) + (p.time_window ? timeBadge(p) : '') + (p.shared ? sharedBadge() : '') + '</div>' +
+      '<div class="pc-sub">' + (p.discount || '') + (p.gap ? ' \u00b7 ' + p.gap + ' gap vs you' : '') + (p.expires !== 'Standing' ? ' \u00b7 Expires ' + p.expires : '') + '</div>' +
+    '</div>' +
+    '<div class="pc-meta"><div class="pc-pill" style="' + pillColor + '">' + (ST[p.subtype] || {label:''}).label + '</div>' +
+      '<div class="pc-exp">' + p.expires + '</div>' + gapDisp +
+    '</div></div></div>';
+}
+
+function renderList() {
+  var h = '';
+  LIST_SECTIONS.forEach(function(sec) {
+    var items = PROMOS.filter(function(p) {
+      return sec.subtypes.indexOf(p.subtype) >= 0 && matchFilter(p);
+    });
+    if (!items.length) return;
+    h += '<div class="lsec"><div class="lsh"><div class="lsh-l ' + sec.id + '">' + sec.label + '</div><div class="lsh-line"></div><div class="lsh-c">' + items.length + '</div></div>';
+    h += items.map(pcHtml).join('');
+    h += '</div>';
+  });
+  if (!h) h = '<div style="padding:32px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-3);">No promos match this filter</div>';
+  document.getElementById('listContent').innerHTML = h;
+}
+
+function render() { renderCal(); renderList(); }
+
+/* ══ DRAWER ══ */
+function openDrawer(key) {
+  var p = PROMOS.find(function(x) { return x.key === key; });
+  if (!p) return;
+  var r = RIVALS.find(function(x) { return x.key === p.rival; });
+  document.getElementById('drTitle').textContent = p.title;
+  document.getElementById('drRival').textContent = (r ? r.name + ' \u00b7 ' + r.dist : '') + (r && r.blocked ? ' \u00b7 BLOCKED' : '');
+  document.getElementById('drBadges').innerHTML = typeBadge(p) + (p.time_window ? timeBadge(p) : '') + (p.shared ? sharedBadge() : '');
+  var daysH = ['M','T','W','T','F','S','S'].map(function(d, i) {
+    var on = p.days[i];
+    var s = ST[p.subtype] || {};
+    var c = on ? (s.color || 'var(--accent)') : 'var(--surface-3)';
+    return '<div style="width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;background:' + c + ';color:' + (on ? '#fff' : 'var(--text-3)') + ';border:1px solid ' + (on ? c : 'var(--border)') + ';">' + d + '</div>';
+  }).join('');
+  var tblH = '';
+  if (p.rows && p.rows.length) {
+    tblH = '<div class="ds"><div class="ds-l">Price comparison</div><table class="ptbl"><tr><th>SKU</th><th>Your price</th><th>Their price</th><th>Gap</th></tr>' +
+      p.rows.map(function(rw) {
+        return '<tr><td>' + rw.sku + '</td><td>' + rw.yours + '</td><td class="pnew ' + rw.pc + '">' + rw.theirs + '</td><td><span class="pgap ' + rw.gc + '">' + rw.gap + '</span></td></tr>';
+      }).join('') + '</table></div>';
+  }
+  document.getElementById('drScroll').innerHTML =
+    '<div class="stat3">' +
+      '<div class="stc"><div class="stn ' + (p.gap ? 'cd' : 'cw') + '">' + (p.gap || p.discount) + '</div><div class="stl">' + (p.shared && p.gap ? 'Gap vs you' : 'Discount') + '</div></div>' +
+      '<div class="stc"><div class="stn">' + (p.time_window || 'All day') + '</div><div class="stl">Time window</div></div>' +
+      '<div class="stc"><div class="stn">' + (p.expires === 'Standing' ? '\u221e' : p.expires.replace('Sun ','').replace('Wed ','')) + '</div><div class="stl">Expires</div></div>' +
+    '</div>' +
+    '<div class="ds"><div class="ds-l">Active days this week</div><div style="display:flex;gap:3px;margin-bottom:10px;">' + daysH + '</div></div>' +
+    '<div class="ds"><div class="ds-l">What this means</div><div class="ds-t">' + p.narrative + '</div></div>' +
+    tblH;
+
+  var footer = '<div class="dfrow"><button class="dfbtn" data-action="reviewed">Mark reviewed</button><button class="dfbtn p" data-action="matrix">Open price matrix \u2192</button></div>';
+  if (p.shared) footer += '<div class="dfrow"><button class="dfbtn d" data-action="respond">Respond to price gap \u2192</button></div>';
+  else if (!p.shared && p.subtype !== 'member_price') footer += '<div class="dfrow"><button class="dfbtn" data-action="block">Block this rival \u2192</button></div>';
+  document.getElementById('drFooter').innerHTML = footer;
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer() { document.getElementById('drawer').classList.remove('open'); }
+
+/* ══ EVENT DELEGATION ══ */
+document.addEventListener('click', function(e) {
+  var pb = e.target.closest('.pb[data-key]'); if (pb) { openDrawer(pb.dataset.key); return; }
+  var pc = e.target.closest('.pc[data-key]'); if (pc) { openDrawer(pc.dataset.key); return; }
+  var dfb = e.target.closest('.dfbtn[data-action]');
+  if (dfb) {
+    var a = dfb.dataset.action;
+    if (a === 'reviewed') { toast('Marked as reviewed'); closeDrawer(); }
+    else if (a === 'matrix') { go('cannaspy_s07_v1.html'); }
+    else if (a === 'respond') { toast('Price response flow opened'); }
+    else if (a === 'block') { toast('Block flow opened'); }
+    return;
+  }
+  if (e.target.closest('#drClose')) { closeDrawer(); return; }
+  // Summary card filter
+  var sc = e.target.closest('.sc[data-filter]');
+  if (sc) {
+    var ft = sc.dataset.filter;
+    if (activeType === ft) setFilter('all');
+    else setFilter(ft);
+    return;
+  }
+  // Dropdown option
+  var opt = e.target.closest('.do[data-dd]');
+  if (opt) {
+    var pop = document.getElementById(opt.dataset.pop);
+    var btn = document.getElementById(opt.dataset.dd);
+    pop.querySelectorAll('.do').forEach(function(o) { o.classList.remove('sel'); });
+    opt.classList.add('sel');
+    var svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px;height:10px;opacity:0.55;"><polyline points="6 9 12 15 18 9"/></svg>';
+    // Insight bar dropdowns — route by pop id + data-ival
+    if (pop.id === 'iShowPop' && opt.dataset.ival !== undefined) {
+      pop.classList.remove('open');
+      setInsightFilter(opt.dataset.ival);
+      return;
+    }
+    if (pop.id === 'iCatPop' && opt.dataset.ival !== undefined) {
+      pop.classList.remove('open');
+      setInsightCat(opt.dataset.ival);
+      return;
+    }
+    if (pop.id === 'iSortPop' && opt.dataset.ival !== undefined) {
+      pop.classList.remove('open');
+      setInsightSort(opt.dataset.ival);
+      return;
+    }
+    // Main type filter dropdown
+    if (pop.id === 'typeP' && opt.dataset.ftype) {
+      pop.classList.remove('open');
+      setFilter(opt.dataset.ftype);
+      return;
+    }
+    btn.innerHTML = opt.dataset.label + ' ' + svg;
+    btn.className = 'db' + (opt.dataset.active ? ' act' : '');
+    pop.classList.remove('open');
+    return;
+  }
+  if (!e.target.closest('.dw')) closeDDs();
+});
+
+/* ══ DROPDOWNS ══ */
+function toggleDD(id) {
+  var open = document.getElementById(id).classList.contains('open');
+  closeDDs();
+  if (!open) document.getElementById(id).classList.add('open');
+}
+function closeDDs() { document.querySelectorAll('.dp').forEach(function(p) { p.classList.remove('open'); }); }
+
+/* ══ VIEW ══ */
+function switchView(v) {
+  document.getElementById('calPanel').classList.toggle('active', v === 'cal');
+  document.getElementById('listPanel').classList.toggle('active', v === 'list');
+  document.getElementById('insightPanel').classList.toggle('active', v === 'insights');
+  document.getElementById('vC').classList.toggle('active', v === 'cal');
+  document.getElementById('vL').classList.toggle('active', v === 'list');
+  document.getElementById('vI').classList.toggle('active', v === 'insights');
+  if(v === 'insights') renderInsights();
+}
+
+/* ══ MISC ══ */
+var toastTmr;
+function toast(msg) { var t = document.getElementById('toastEl'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTmr); toastTmr = setTimeout(function() { t.classList.remove('show'); }, 2400); }
+function go(url) { window.location.href = url; }
+function toggleTheme() { var h = document.documentElement; var d = h.getAttribute('data-theme') === 'dark'; h.setAttribute('data-theme', d ? 'light' : 'dark'); document.getElementById('themeLabel').textContent = d ? 'Light mode' : 'Dark mode'; }
+
+/* ══════════════════════════════════════════════════════
+   YOUR OWN PROMO SCHEDULE — WeHo Flagship this week
+   This represents what the tracker (you) currently has running.
+   In production this comes from your POS / promo management system.
+   ══════════════════════════════════════════════════════ */
+var YOUR_PROMOS = [
+  { key:'y-hh-vapes',    days:[1,1,1,1,1,0,0], category:'vape',        subtype:'happy_hour',  time_window:'5\u20138pm',   discount:20, label:'Happy Hour \u2014 20% off all vapes 5\u20138pm (Mon\u2013Fri)' },
+  { key:'y-flower-fri',  days:[0,0,0,0,1,0,0], category:'flower',      subtype:'weekly_deal', time_window:null,       discount:15, label:'Flower Friday \u2014 15% off all flower' },
+  { key:'y-jeeter-sat',  days:[0,0,0,0,0,1,0], category:'preroll',     subtype:'weekly_deal', time_window:null,       discount:20, label:'Jeeter Saturday \u2014 20% off all Jeeter' },
+  { key:'y-new-cust',    days:[1,1,1,1,1,1,1], category:'all',         subtype:'first_time',  time_window:null,       discount:15, label:'First-time customer \u2014 15% off entire order' },
+  { key:'y-edible-sun',  days:[0,0,0,0,0,0,1], category:'edible',      subtype:'weekly_deal', time_window:null,       discount:25, label:'Sunday Funday \u2014 25% off all edibles' },
+];
+
+/* ══════════════════════════════════════════════════════
+   CONFLICT + OPPORTUNITY ENGINE
+   ══════════════════════════════════════════════════════ */
+
+var CATEGORY_MAP = {
+  // rivals' promo categories to standardised keys
+  'All vapes':'vape', 'vape':'vape', 'Vapes':'vape',
+  'All flower':'flower', 'flower':'flower', 'Flower':'flower',
+  'Friendly Farms':'flower', 'CBX':'flower', 'Raw Garden':'vape',
+  'Kanha':'edible', 'Maven':'concentrate', 'Concentrates':'concentrate',
+  'Jungle Boys':'concentrate', 'All':'all', 'all':'all'
+};
+
+var DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function getRivalCategory(p) {
+  // Try brand name first, then subtype hints
+  var cat = CATEGORY_MAP[p.brand] || null;
+  if (!cat) {
+    if (p.subtype === 'happy_hour') cat = 'vape'; // MedMen happy hour = vapes
+  }
+  return cat || 'other';
+}
+
+function generateInsights() {
+  var conflicts   = [];
+  var opps        = [];
+  var mechanic_opps = [];
+
+  var DAYS = [0,1,2,3,4,5,6];
+
+  /* ── CONFLICTS: grouped by rival_promo × your_promo, days collapsed ── */
+  PROMOS.forEach(function(rival_p) {
+    var rCat = getRivalCategory(rival_p);
+    YOUR_PROMOS.forEach(function(your_p) {
+      if (rCat !== your_p.category && your_p.category !== 'all' && rCat !== 'other') return;
+      // Find overlapping days
+      var overlapDays = DAYS.filter(function(d) { return rival_p.days[d] && your_p.days[d]; });
+      if (!overlapDays.length) return;
+      // Only one conflict entry per rival_promo × your_promo pair
+      var dup = conflicts.some(function(x) {
+        return x.rival_key === rival_p.key && x.your_key === your_p.key;
+      });
+      if (dup) return;
+      var rival = RIVALS.find(function(r){ return r.key === rival_p.rival; });
+      var severity = (rival_p.shared && your_p.category !== 'all') ? 'critical' :
+                     (!rival_p.shared && your_p.category !== 'all') ? 'high' : 'medium';
+      conflicts.push({
+        type: 'conflict',
+        severity: severity,
+        days: overlapDays,
+        dayNames: overlapDays.map(function(d){ return DAY_NAMES[d]; }),
+        rival_key: rival_p.key,
+        your_key: your_p.key,
+        rival_name: rival ? rival.name : rival_p.rival,
+        rival_promo: rival_p.label || rival_p.title || rival_p.brand,
+        your_promo: your_p.label,
+        category: rCat,
+        rival_discount: rival_p.discount,
+        your_discount: your_p.discount,
+        shared: rival_p.shared,
+        rival_deeper: (parseFloat(String(rival_p.discount).replace(/[^0-9.]/g,'')) || 0) >
+                      (parseFloat(String(your_p.discount).replace(/[^0-9.]/g,'')) || 0),
+        subtype: rival_p.subtype,
+        time_window: rival_p.time_window,
+        your_time: your_p.time_window
+      });
+    });
+  });
+  // Sort: critical first, then high, then medium
+  conflicts.sort(function(a,b){
+    var order = {critical:0,high:1,medium:2};
+    return (order[a.severity]||9) - (order[b.severity]||9);
+  });
+
+  /* ── OPPORTUNITIES: days where rivals have NO promos in a category ── */
+  var CATS = ['flower','vape','edible','concentrate','preroll'];
+  CATS.forEach(function(cat) {
+    DAYS.forEach(function(d) {
+      // Does any rival have a promo in this category on this day?
+      var rivalHasPromo = PROMOS.some(function(p) {
+        return p.days[d] && getRivalCategory(p) === cat;
+      });
+      // Do YOU have a promo in this category on this day?
+      var youHavePromo = YOUR_PROMOS.some(function(p) {
+        return p.days[d] && (p.category === cat || p.category === 'all');
+      });
+      if (!rivalHasPromo && !youHavePromo) {
+        // Check how many days this gap exists
+        var gapDays = DAYS.filter(function(dd) {
+          var rHas = PROMOS.some(function(p){ return p.days[dd] && getRivalCategory(p)===cat; });
+          var yHas = YOUR_PROMOS.some(function(p){ return p.days[dd] && (p.category===cat||p.category==='all'); });
+          return !rHas && !yHas;
+        });
+        if (gapDays.indexOf(d) === gapDays[0] && gapDays.length >= 1) { // only emit once per run
+          opps.push({
+            type: 'opportunity',
+            category: cat,
+            days: gapDays,
+            dayNames: gapDays.map(function(dd){ return DAY_NAMES[dd]; }),
+            youHavePromo: youHavePromo
+          });
+        }
+      }
+    });
+  });
+  // Deduplicate by category
+  var seenCats = {};
+  opps = opps.filter(function(o){ if(seenCats[o.category]) return false; seenCats[o.category]=1; return true; });
+
+  /* ── MECHANIC GAPS: promo mechanics no rival uses ── */
+  var ALL_MECHANICS = ['happy_hour','early_bird','bogo','bundle','daily_deal','weekly_deal','flash_sale','first_time','loyalty'];
+  var rival_mechanics = PROMOS.map(function(p){ return p.subtype; });
+  var your_mechanics  = YOUR_PROMOS.map(function(p){ return p.subtype; });
+  var MECH_LABELS = {
+    'happy_hour':'Happy hour (time-gated discount)',
+    'early_bird':'Early bird (open-to-noon pricing)',
+    'bogo':'Buy-one-get-one bundle',
+    'bundle':'Multi-unit bundle deal',
+    'daily_deal':'Daily brand deal',
+    'weekly_deal':'Weekly recurring brand day',
+    'flash_sale':'Flash sale (48–72hr)',
+    'first_time':'First-time customer offer',
+    'loyalty':'Loyalty member pricing'
+  };
+  ALL_MECHANICS.forEach(function(m) {
+    var rivalUses = rival_mechanics.indexOf(m) >= 0;
+    var youUse    = your_mechanics.indexOf(m) >= 0;
+    if (!rivalUses && !youUse) {
+      mechanic_opps.push({ mechanic: m, label: MECH_LABELS[m] || m });
+    }
+  });
+
+  return { conflicts: conflicts, opps: opps, mechanic_opps: mechanic_opps };
+}
+
+/* ══════════════════════════════════════════════════════
+   INSIGHT RENDERER
+   ══════════════════════════════════════════════════════ */
+var MECH_SUGGEST = {
+  'happy_hour':   { why:"No rival in WeHo runs a happy hour outside MedMen's 4\u20137pm window. A 5\u20138pm window on a different category would capture post-work traffic without direct overlap.", suggest:"Run a flower happy hour 5\u20138pm Mon\u2013Fri \u2014 no rivals own this window.", day_suggest: null },
+  'early_bird':   { why:"STIIIZY already runs a weekend 10am\u201312pm early bird on flower. An early bird on VAPES on weekdays is completely uncontested.", suggest:"10am\u201312pm weekday vape early bird \u2014 zero rival coverage at this time.", day_suggest: null },
+  'bogo':         { why:"No rival runs a BOGO in vapes, edibles, or prerolls. BOGO mechanics generate significantly higher basket sizes than pct-off deals.", suggest:"Buy-1-get-1 on vape cartridges (1g) \u2014 no rival offers this format.", day_suggest: null },
+  'bundle':       { why:"Bundle deals create perceived value without cutting your margin-per-unit. No rival is using this format currently.", suggest:"3-for-$XX preroll bundle on Sundays \u2014 differentiated from every rival.", day_suggest: null },
+  'daily_deal':   { why:"Catalyst already owns Raw Garden daily. Picking a different brand gives you a standing deal your regulars can plan around.", suggest:"Pick a high-volume brand you own exclusively and run a daily deal to build habitual traffic.", day_suggest: null },
+};
+
+var SEV_CFG = {
+  critical: { bg:'rgba(224,90,106,0.07)', border:'var(--danger)', badge:'var(--danger)', label:'Critical', textCls:'cd' },
+  high:     { bg:'rgba(212,144,10,0.07)', border:'var(--warm)',   badge:'var(--warm)',   label:'High',     textCls:'cw' },
+  medium:   { bg:'rgba(84,132,164,0.06)', border:'var(--slate)',  badge:'var(--slate)',  label:'Medium',   textCls:''   },
+};
+
+function renderInsights() {
+  var ins = generateInsights();
+  var allConflicts = ins.conflicts;
+  var allOpps = ins.opps;
+  var mopps = ins.mechanic_opps;
+
+  // Update badge (always based on unfiltered)
+  var badge = document.getElementById('insightBadge');
+  var total_warn = allConflicts.filter(function(c){ return c.severity !== 'medium'; }).length;
+  if (badge) {
+    badge.textContent = total_warn || '';
+    badge.style.display = total_warn ? 'flex' : 'none';
+  }
+
+  // Apply category filter
+  var conflicts = allConflicts.filter(function(cf) {
+    return insightCat === 'all' || cf.category === insightCat;
+  });
+  var opps = allOpps.filter(function(op) {
+    return insightCat === 'all' || op.category === insightCat;
+  });
+
+  // Apply sort to conflicts
+  var SEV_ORDER = {critical:0, high:1, medium:2};
+  var DAY_ORDER = {Mon:0,Tue:1,Wed:2,Thu:3,Fri:4,Sat:5,Sun:6};
+  if (insightSort === 'severity') {
+    conflicts.sort(function(a,b){ return (SEV_ORDER[a.severity]||9)-(SEV_ORDER[b.severity]||9); });
+  } else if (insightSort === 'day') {
+    conflicts.sort(function(a,b){ return (DAY_ORDER[a.dayNames[0]]||9)-(DAY_ORDER[b.dayNames[0]]||9); });
+  } else if (insightSort === 'rival') {
+    conflicts.sort(function(a,b){ return a.rival_name.localeCompare(b.rival_name); });
+  }
+
+  // Update count label
+  var lbl = document.getElementById('insightCountLabel');
+  if (lbl) {
+    var total = (insightFilter!=='opp'?conflicts.length:0) + (insightFilter!=='conflict'?opps.length:0);
+    lbl.textContent = total + ' item' + (total!==1?'s':'');
+  }
+
+  var h = '';
+
+  /* ── YOUR SCHEDULE strip ── */
+  h += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:18px;box-shadow:var(--card-shadow);">';
+  h += '<div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;">Your current promos \u2014 WeHo Flagship</div>';
+  h += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+  YOUR_PROMOS.forEach(function(p) {
+    var col = p.subtype === 'happy_hour' ? 'var(--accent)' :
+              p.subtype === 'early_bird' ? 'var(--warm)' :
+              p.subtype === 'first_time' ? 'var(--rose)' : 'var(--slate)';
+    var days = p.days.map(function(d,i){ return d ? DAY_NAMES[i][0] : null; }).filter(Boolean).join('');
+    h += '<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-size:11px;color:var(--text-1);">';
+    h += '<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:'+col+';margin-right:5px;">' + days + '</span>';
+    h += p.label;
+    h += '</div>';
+  });
+  h += '</div></div>';
+
+  /* ── CONFLICTS section ── */
+  if (insightFilter !== 'opp') {
+  h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">';
+  h += '<div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--danger);">&#9888; Scheduling conflicts</div>';
+  h += '<div style="flex:1;height:1px;background:var(--border);"></div>';
+  h += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-3);">'+conflicts.length+' found</div>';
+  h += '</div>';
+
+  if (!conflicts.length) {
+    h += '<div style="padding:16px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-3);">No conflicts this week \u2014 your schedule is clear</div>';
+  } else {
+    conflicts.forEach(function(cf) {
+      var sev = SEV_CFG[cf.severity] || SEV_CFG.medium;
+      // Normalize discount for display — strips any existing % sign, strips − prefix
+      function fmtDisc(d) {
+        if (!d && d !== 0) return '?';
+        var s = String(d).replace(/[\u2212\-]/g,'').replace(/%/g,'');
+        return isNaN(Number(s)) ? s : s + '%';
+      }
+      var deeper_note = cf.rival_deeper
+        ? ' They are offering <strong>' + fmtDisc(cf.rival_discount) + ' off</strong> vs your <strong>' + fmtDisc(cf.your_discount) + ' off</strong> \u2014 customers who compare will go to them.'
+        : ' You are offering <strong>' + fmtDisc(cf.your_discount) + ' off</strong> vs their <strong>' + fmtDisc(cf.rival_discount) + ' off</strong> \u2014 you have the better deal.';
+      var shared_note = cf.shared ? ' This is a <strong>shared brand</strong> \u2014 customers can compare prices directly.' : '';
+      var time_note = (cf.time_window && cf.your_time)
+        ? ' Their window is <strong>' + cf.time_window + '</strong>, yours is <strong>' + cf.your_time + '</strong>.'
+        : cf.time_window ? ' Their window: <strong>' + cf.time_window + '</strong>.' : '';
+      var suggestion = getSuggestion(cf);
+      h += '<div style="background:' + sev.bg + ';border:1px solid ' + sev.border + '40;border-left:3px solid ' + sev.border + ';border-radius:var(--r-sm);padding:13px 15px;margin-bottom:8px;">';
+      // Header
+      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">';
+      h += '<div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.08em;padding:2px 8px;border-radius:20px;background:' + sev.badge + ';color:#fff;">' + sev.label.toUpperCase() + '</div>';
+      h += '<div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text-1);">' + cf.dayNames.join(', ') + ' \u00b7 ' + cf.category.toUpperCase() + '</div>';
+      h += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-left:auto;">' + cf.rival_name + '</div>';
+      h += '</div>';
+      // What happened
+      h += '<div style="font-size:12px;color:var(--text-1);margin-bottom:6px;">';
+      h += '<strong>' + cf.rival_name + '</strong> has <em>' + cf.rival_promo + '</em> on ' + cf.dayName + ' while you run <em>' + cf.your_promo + '</em>.' + deeper_note + shared_note + time_note;
+      h += '</div>';
+      // Suggestion
+      h += '<div style="background:rgba(9,161,161,0.08);border:1px solid rgba(9,161,161,0.2);border-radius:6px;padding:8px 11px;font-size:11px;color:var(--text-1);">';
+      h += '<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--accent);margin-right:6px;">\u2192 SUGGESTION</span>';
+      h += suggestion;
+      h += '</div>';
+      h += '</div>';
+    });
+  }
+
+  } // end insightFilter !== opp
+
+  /* ── OPPORTUNITIES section ── */
+  if (insightFilter !== 'conflict') {
+  h += '<div style="display:flex;align-items:center;gap:10px;margin:18px 0 10px;">';
+  h += '<div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);">&#9675; Open market windows</div>';
+  h += '<div style="flex:1;height:1px;background:var(--border);"></div>';
+  h += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-3);">' + opps.length + ' identified</div>';
+  h += '</div>';
+
+  var OPP_ICONS = { flower:'\uD83C\uDF3F', vape:'\uD83D\uDCA8', edible:'\uD83C\uDF6B', concentrate:'\uD83C\uDF76', preroll:'\uD83D\uDE4C' };
+  var OPP_WHY = {
+    flower: 'No rival runs a flower promo on these days. Flower is your highest-volume category. Owning these windows builds habitual traffic before rivals notice the gap.',
+    vape: 'Rivals only promote vapes Mon\u2013Fri (MedMen happy hour). Weekend vape promos are completely uncontested \u2014 Friday and Saturday are high-volume vape days industry-wide.',
+    edible: 'No rival runs an edible promo this week except STIIIZY Kanha on Tuesday. Edibles have the widest demographic appeal and are a natural upsell to flower buyers.',
+    concentrate: 'Concentrates are under-promoted across all rivals this week. Concentrate buyers are high-loyalty, high-spend customers \u2014 a weekly brand day in this category builds a dedicated audience.',
+    preroll: 'Preroll promotions are absent from all rivals this week. Prerolls are an impulse purchase \u2014 any promo drives meaningful unit volume increases with minimal margin cost.'
+  };
+  var OPP_SUGGEST = {
+    flower: 'Add a Flower Wednesday or Flower Sunday deal to own the gap days with no rival competition.',
+    vape: 'Weekend vape promotion (Sat or Sun) \u2014 zero rivals in this window. Even 10% off outperforms their silence.',
+    edible: 'Edible Tuesday or Thursday \u2014 STIIIZY only runs Kanha on Tuesday. A broader edibles deal on a different day is completely uncontested.',
+    concentrate: 'Weekly concentrate brand day (Wed or Thu) \u2014 pick a brand you stock heavily and own this day.',
+    preroll: 'Preroll Monday or Preroll Thursday \u2014 no rivals in this format any day this week.'
+  };
+
+  if (!opps.length) {
+    h += '<div style="padding:16px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-3);">No open windows found \u2014 rival schedule is dense</div>';
+  } else {
+    opps.forEach(function(op) {
+      var icon = OPP_ICONS[op.category] || '\u2B50';
+      var why  = OPP_WHY[op.category] || 'This category is uncontested this week.';
+      var sugg = OPP_SUGGEST[op.category] || 'Consider adding a promo in this category.';
+      h += '<div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--r-sm);padding:13px 15px;margin-bottom:8px;box-shadow:var(--card-shadow);">';
+      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">';
+      h += '<div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.08em;padding:2px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent);border:1px solid rgba(9,161,161,0.25);">OPPORTUNITY</div>';
+      h += '<div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--text-1);">' + op.category.toUpperCase() + ' \u00b7 ' + op.dayNames.join(', ') + '</div>';
+      h += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-left:auto;">No rival coverage</div>';
+      h += '</div>';
+      h += '<div style="font-size:12px;color:var(--text-2);margin-bottom:8px;">' + why + '</div>';
+      h += '<div style="background:rgba(9,161,161,0.08);border:1px solid rgba(9,161,161,0.2);border-radius:6px;padding:8px 11px;font-size:11px;color:var(--text-1);">';
+      h += '<span style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--accent);margin-right:6px;">\u2192 SUGGESTION</span>';
+      h += sugg;
+      h += '</div>';
+      h += '</div>';
+    });
+  }
+
+  } // end insightFilter !== conflict
+
+  /* ── UNUSED PROMO MECHANICS ── */
+  if (mopps.length) {
+    h += '<div style="display:flex;align-items:center;gap:10px;margin:18px 0 10px;">';
+    h += '<div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--warm);">&#9685; Untapped promo mechanics</div>';
+    h += '<div style="flex:1;height:1px;background:var(--border);"></div>';
+    h += '</div>';
+    h += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:8px;box-shadow:var(--card-shadow);">';
+    h += '<div style="font-size:12px;color:var(--text-2);margin-bottom:10px;">These promo formats are used by <strong>neither you nor any rival</strong> this week. Any of them could differentiate your schedule immediately.</div>';
+    h += '<div style="display:flex;flex-direction:column;gap:6px;">';
+    mopps.forEach(function(m) {
+      var info = MECH_SUGGEST[m.mechanic];
+      h += '<div style="border:1px solid var(--border);border-radius:6px;padding:9px 12px;">';
+      h += '<div style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--warm);margin-bottom:4px;">' + m.label + '</div>';
+      if (info) {
+        h += '<div style="font-size:11px;color:var(--text-2);margin-bottom:5px;">' + info.why + '</div>';
+        h += '<div style="font-size:11px;color:var(--text-1);font-weight:600;">\u2192 ' + info.suggest + '</div>';
+      }
+      h += '</div>';
+    });
+    h += '</div></div>';
+  }
+
+  document.getElementById('insightContent').innerHTML = h;
+}
+
+function getSuggestion(cf) {
+  if (cf.severity === 'critical' && cf.shared) {
+    if (cf.rival_deeper) {
+      return 'Move your ' + cf.category + ' promo to a different day where ' + cf.rival_name + ' has no deal running. Running the same category at a lower discount than a rival on a shared brand drives customers directly to them.';
+    } else {
+      return 'You have the price advantage here, but running the same promo on the same day splits attention. Consider shifting yours to a day where you run unopposed and own the full traffic lift.';
+    }
+  }
+  if (cf.subtype === 'happy_hour' && cf.time_window && cf.your_time) {
+    if (cf.time_window === cf.your_time) {
+      return 'Your windows overlap exactly. Shift your ' + cf.category + ' happy hour by 2 hours \u2014 run 6\u20139pm while they run 4\u20137pm. You capture post-dinner traffic they miss.';
+    }
+    return 'Windows are adjacent but not identical. Monitor traffic data on both \u2014 customers may still comparison-shop across the overlap period.';
+  }
+  if (cf.subtype === 'weekly_deal') {
+    return 'Move your ' + cf.category + ' deal to a different day. Check the calendar \u2014 ' + cf.rival_name + ' leaves several days in this category completely uncovered.';
+  }
+  return 'Consider shifting your ' + cf.category + ' promo to a day where ' + cf.rival_name + ' has no competing deal \u2014 you will own the full traffic lift rather than splitting it.';
+}
+
+/* ══ INSIGHT FILTER / SORT STATE ══ */
+var insightFilter = 'all'; // all | conflict | opp
+var insightCat    = 'all';
+var insightSort   = 'severity'; // severity | day | rival
+
+var SVG_CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;opacity:0.55;vertical-align:middle;"><polyline points="6 9 12 15 18 9"/></svg>';
+
+function _updateDdBtn(btnId, popId, label, isActive) {
+  var btn = document.getElementById(btnId);
+  if (btn) btn.innerHTML = label + ' ' + SVG_CHEV;
+  if (btn) btn.className = 'db' + (isActive ? ' active-dd' : '');
+  var pop = document.getElementById(popId);
+  if (pop) pop.classList.remove('open');
+}
+function _syncDdSel(popId, val) {
+  var pop = document.getElementById(popId);
+  if (!pop) return;
+  pop.querySelectorAll('.do').forEach(function(o){ o.classList.toggle('sel', o.dataset.ival === val); });
+}
+
+function setInsightFilter(v) {
+  insightFilter = v;
+  var labels = {all:'All insights', conflict:'Conflicts only', opp:'Opportunities only'};
+  _updateDdBtn('iShowBtn', 'iShowPop', labels[v] || 'All insights', v !== 'all');
+  _syncDdSel('iShowPop', v);
+  renderInsights();
+}
+function setInsightCat(v) {
+  insightCat = v;
+  var labels = {all:'All', flower:'Flower', vape:'Vape', edible:'Edible', concentrate:'Concentrate', preroll:'Preroll'};
+  _updateDdBtn('iCatBtn', 'iCatPop', labels[v] || 'All', v !== 'all');
+  _syncDdSel('iCatPop', v);
+  renderInsights();
+}
+function setInsightSort(v) {
+  insightSort = v;
+  var labels = {severity:'Severity', day:'Day', rival:'Rival'};
+  _updateDdBtn('iSortBtn', 'iSortPop', labels[v] || 'Severity', false);
+  _syncDdSel('iSortPop', v);
+  renderInsights();
+}
+
+
+render();
+// init badge count
+var _ins=generateInsights();var _b=document.getElementById("insightBadge");var _warn=_ins.conflicts.filter(function(x){return x.severity!=="medium";}).length;if(_b&&_warn){_b.textContent=_warn;_b.style.display="flex";}
+</script>
+</body>
+</html>

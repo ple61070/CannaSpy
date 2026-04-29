@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — SKU Gap Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}html{-webkit-font-smoothing:antialiased;}
+[data-theme="light"]{--bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);--glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);--surface:rgba(255,255,255,0.97);--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;--border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);--border-hot:rgba(9,161,161,0.38);--text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;--accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);--warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);--rose:#D396A6;--danger:#e05a6a;--card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);--noise-opacity:0.022;}
+[data-theme="dark"]{--bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);--glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);--surface:rgba(16,28,40,0.99);--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;--border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);--border-hot:rgba(11,184,184,0.5);--text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;--accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);--warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);--rose:#D396A6;--danger:#e05a6a;--card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);--noise-opacity:0.04;}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise-opacity);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),var(--bg);background-attachment:fixed;}
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.nav-link.locked{opacity:0.45;pointer-events:none;}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;}
+.topbar-row1{display:flex;align-items:center;gap:12px;padding:12px 0;}
+.topbar-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.topbar-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.topbar-actions{margin-left:auto;}
+.tb-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.tb-btn svg{width:12px;height:12px;}
+.market-nav{display:flex;background:var(--surface-2);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;overflow-x:auto;}
+.market-nav::-webkit-scrollbar{display:none;}
+.mn-tab{padding:10px 16px;font-size:12px;font-weight:600;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;transition:var(--transition);white-space:nowrap;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.mn-tab:hover{color:var(--text-1);}
+.mn-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.mn-tab svg{width:13px;height:13px;}
+.filter-bar{padding:8px 28px;border-bottom:1px solid var(--border);background:var(--surface-2);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.filter-sep{width:1px;height:20px;background:var(--border-2);margin:0 4px;}
+.filter-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);}
+.dd-wrap{position:relative;display:inline-block;}
+.dd-btn{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:var(--r-sm);font-size:11px;font-weight:600;border:1.5px solid var(--border-2);background:var(--surface);color:var(--text-1);cursor:pointer;font-family:var(--sans);transition:var(--transition);white-space:nowrap;user-select:none;}
+.dd-btn:hover{border-color:var(--accent);color:var(--accent);}
+.dd-btn.dd-active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.dd-btn svg{width:10px;height:10px;opacity:0.6;}
+.dd-pop{position:absolute;top:calc(100% + 5px);left:0;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);box-shadow:0 8px 32px rgba(30,60,80,0.14);z-index:300;min-width:140px;padding:5px;display:none;}
+.dd-pop.open{display:block;}
+.dd-opt{padding:7px 10px;border-radius:6px;font-size:12px;color:var(--text-1);cursor:pointer;display:flex;justify-content:space-between;user-select:none;}
+.dd-opt:hover{background:var(--surface-3);}
+.dd-opt.sel{color:var(--accent);font-weight:700;}
+.dd-opt.sel::after{content:"✓";font-size:11px;}
+.content-scroll{flex:1;overflow-y:auto;padding:24px 28px;}
+.content-scroll::-webkit-scrollbar{width:5px;}
+.content-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);overflow:hidden;margin-bottom:16px;}
+.card-header{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.card-title{font-size:12px;font-weight:700;color:var(--text-1);}
+.card-meta{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:auto;}
+th{padding:8px 12px;text-align:left;font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);border-bottom:2px solid var(--border-2);background:var(--surface-2);cursor:pointer;user-select:none;white-space:nowrap;}
+th:hover{color:var(--text-1);}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface-2);}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:11px 18px;font-size:12px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:9000;transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.4,0,.2,1);pointer-events:none;display:flex;align-items:center;gap:8px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.hover-row:hover td{background:var(--surface-2);}
+</style>
+</head>
+<body>
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar"><div class="topbar-row1">
+    <div class="topbar-title">SKU Gap Analysis</div>
+    <div class="topbar-sub">PRODUCTS YOU SHOULD CONSIDER ADDING</div>
+    <div class="topbar-actions"><button class="tb-btn" onclick="showToast('Exporting SKU gap report\u2026','var(--accent)')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button></div>
+  </div></div>
+
+  <div class="market-nav">
+    <div class="mn-tab" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Heat Map</div>
+    <div class="mn-tab" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+    <div class="mn-tab" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+    <div class="mn-tab active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+    <div class="mn-tab" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Category</span>
+    <div class="dd-wrap">
+      <div class="dd-btn dd-active" onclick="ddToggle('pop-cat',event)">All Categories <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="dd-pop" id="pop-cat">
+        <div class="dd-opt sel" onclick="ddSel(this,'pop-cat',event)">All Categories</div>
+        <div class="dd-opt" onclick="ddSel(this,'pop-cat',event)">Flower</div>
+        <div class="dd-opt" onclick="ddSel(this,'pop-cat',event)">Vapes</div>
+        <div class="dd-opt" onclick="ddSel(this,'pop-cat',event)">Pre-rolls</div>
+        <div class="dd-opt" onclick="ddSel(this,'pop-cat',event)">Edibles</div>
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+    <span class="filter-label">Carried by</span>
+    <div class="dd-wrap">
+      <div class="dd-btn" onclick="ddToggle('pop-by',event)">2+ rivals <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="dd-pop" id="pop-by">
+        <div class="dd-opt" onclick="ddSel(this,'pop-by',event)">Any rival</div>
+        <div class="dd-opt sel" onclick="ddSel(this,'pop-by',event)">2+ rivals</div>
+        <div class="dd-opt" onclick="ddSel(this,'pop-by',event)">3+ rivals</div>
+        <div class="dd-opt" onclick="ddSel(this,'pop-by',event)">All rivals</div>
+      </div>
+    </div>
+    <div style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--text-3);"><span style="color:var(--danger);font-weight:700;">12 SKUs</span> rivals carry that you don&#39;t</div>
+  </div>
+
+  <div class="content-scroll">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;" id="gap-summary"></div>
+    <div class="card">
+      <div class="card-header">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <div class="card-title">SKUs Rivals Carry &mdash; You Don&#39;t</div>
+        <div class="card-meta">Click a row to see rival pricing</div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th onclick="sortGap(0)">SKU</th>
+          <th onclick="sortGap(1)">Brand</th>
+          <th onclick="sortGap(2)">Category</th>
+          <th onclick="sortGap(3)">Rivals Carrying &#9660;</th>
+          <th onclick="sortGap(4)">Avg Rival Price</th>
+          <th onclick="sortGap(5)">Opportunity</th>
+        </tr></thead>
+        <tbody id="gap-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"><div class="toast-dot" id="toast-dot"></div><span id="toast-msg"></span></div>
+
+<script>
+var GAPS = [
+  {name:'Heavy Hitters 1g Vape',    brand:'Heavy Hitters', cat:'Vapes',    rivals:3, price:48, opp:'high'},
+  {name:'Backpack Boyz 3.5g Flower', brand:'Backpack Boyz', cat:'Flower',   rivals:2, price:65, opp:'high'},
+  {name:'Jeeter Baby Infused 5pk',   brand:'Jeeter',        cat:'Pre-rolls',rivals:3, price:60, opp:'high'},
+  {name:'Presidential OG 3.5g',      brand:'Presidential',  cat:'Flower',   rivals:2, price:58, opp:'high'},
+  {name:'Pax Era Pod 0.5g',          brand:'Pax Era',       cat:'Vapes',    rivals:2, price:40, opp:'medium'},
+  {name:'Kiva Terra Bites 100mg',    brand:'Kiva',          cat:'Edibles',  rivals:3, price:22, opp:'medium'},
+  {name:'Camino Sours 100mg',        brand:'Kiva',          cat:'Edibles',  rivals:2, price:20, opp:'medium'},
+  {name:'Raw Garden Preroll 5pk',    brand:'Raw Garden',    cat:'Pre-rolls',rivals:2, price:32, opp:'medium'},
+  {name:'Select Elite 1g',           brand:'Select',        cat:'Vapes',    rivals:2, price:44, opp:'medium'},
+  {name:'Stiiizy Pod Premium',       brand:'STIIIZY',       cat:'Vapes',    rivals:1, price:42, opp:'low'},
+  {name:'Punch Bar 225mg',           brand:'Punch Edibles', cat:'Edibles',  rivals:2, price:18, opp:'low'},
+  {name:'Garden Society Gummies',    brand:'Garden Society',cat:'Edibles',  rivals:1, price:28, opp:'low'},
+];
+var gSort = {col:3, dir:-1};
+
+function renderSummary() {
+  var high = GAPS.filter(function(g){ return g.opp==='high'; }).length;
+  var med  = GAPS.filter(function(g){ return g.opp==='medium'; }).length;
+  var items = [
+    {v:GAPS.length, l:'Gap SKUs total',      c:'var(--danger)'},
+    {v:high,        l:'High opportunity',    c:'var(--warm)'},
+    {v:med,         l:'Medium opportunity',  c:'var(--accent)'},
+  ];
+  var h = '';
+  items.forEach(function(s){
+    h += '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--card-shadow);">';
+    h += '<div style="font-family:var(--mono);font-size:22px;font-weight:700;color:'+s.c+';line-height:1;margin-bottom:3px;">'+s.v+'</div>';
+    h += '<div style="font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);">'+s.l+'</div></div>';
+  });
+  document.getElementById('gap-summary').innerHTML = h;
+}
+
+function renderTable() {
+  var h = '';
+  GAPS.forEach(function(g){
+    var oc = g.opp==='high' ? 'var(--warm)' : g.opp==='medium' ? 'var(--accent)' : 'var(--text-3)';
+    var ol = g.opp==='high' ? 'High' : g.opp==='medium' ? 'Medium' : 'Low';
+    var dots = '';
+    for(var i=0;i<5;i++) {
+      dots += '<div style="width:10px;height:10px;border-radius:2px;margin-right:2px;display:inline-block;background:'+(i<g.rivals?'var(--danger)':'var(--surface-3)')+'"></div>';
+    }
+    h += '<tr style="cursor:pointer;" onclick="showToast(\''+g.name+' \u2014 '+g.rivals+' rivals carry at avg $'+g.price+'\'  ,\'var(--warm)\')">';
+    h += '<td style="font-size:12px;font-weight:600;color:var(--text-1);">'+g.name+'</td>';
+    h += '<td style="font-size:11px;color:var(--text-2);">'+g.brand+'</td>';
+    h += '<td style="font-size:11px;color:var(--text-3);">'+g.cat+'</td>';
+    h += '<td><div style="display:flex;align-items:center;">'+dots+'<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--danger);margin-left:4px;">'+g.rivals+'</span></div></td>';
+    h += '<td style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text-1);">$'+g.price+'</td>';
+    h += '<td><span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;background:'+oc+'22;color:'+oc+';">'+ol+'</span></td>';
+    h += '</tr>';
+  });
+  document.getElementById('gap-tbody').innerHTML = h;
+}
+
+function sortGap(col) {
+  var dir = gSort.col===col ? -gSort.dir : -1;
+  gSort = {col:col, dir:dir};
+  var ths = document.querySelectorAll('th');
+  ths.forEach(function(th){ th.innerHTML = th.innerHTML.replace(/ [▲▼]/g,''); });
+  ths[col].innerHTML += dir===1 ? ' ▲' : ' ▼';
+  var keys = ['name','brand','cat','rivals','price','opp'];
+  GAPS.sort(function(a,b){
+    var va=a[keys[col]], vb=b[keys[col]];
+    if(typeof va==='string') return va.localeCompare(vb)*dir;
+    return (va-vb)*dir;
+  });
+  renderTable();
+}
+
+function ddToggle(id, event) {
+  event.stopPropagation();
+  document.querySelectorAll('.dd-pop').forEach(function(p){ if(p.id!==id) p.classList.remove('open'); });
+  document.getElementById(id).classList.toggle('open');
+}
+function ddSel(el, popId, event) {
+  event.stopPropagation();
+  document.querySelectorAll('#'+popId+' .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+  el.classList.add('sel');
+  document.getElementById(popId).classList.remove('open');
+  showToast('Filter updated','var(--accent)');
+}
+document.addEventListener('click', function(){ document.querySelectorAll('.dd-pop').forEach(function(p){ p.classList.remove('open'); }); });
+function go(url){ window.location.href=url; }
+function toggleTheme(){ var t=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'; document.documentElement.setAttribute('data-theme',t); }
+var _tt;
+function showToast(msg,color){ clearTimeout(_tt); var t=document.getElementById('toast'); document.getElementById('toast-msg').textContent=msg; document.getElementById('toast-dot').style.background=color; t.classList.add('show'); _tt=setTimeout(function(){ t.classList.remove('show'); },3200); }
+
+renderSummary();
+renderTable();
+</script>
+</body></html>

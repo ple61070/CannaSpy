@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Alert Feed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   LOCKED DESIGN TOKENS — v8 baseline
+   ════════════════════════════════════════════════════════════════════════ */
+[data-theme="light"]{
+  --bg:#eef1f5;
+  --bg-g1:rgba(9,161,161,0.0);--bg-g2:rgba(211,150,166,0.0);--bg-g3:rgba(246,201,146,0.0);
+  --sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);
+  --surface:#ffffff;--surface-solid:#ffffff;--surface-2:#f7f8fa;--surface-3:#eef1f5;
+  --glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);
+  --border:rgba(13,31,46,0.06);--border-2:rgba(13,31,46,0.12);--border-hot:rgba(9,161,161,0.38);
+  --text-1:#0d1f2e;--text-2:#3a617d;--text-3:#6b8299;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.10);--accent-hover:#078484;
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --warning:#985000;--warning-soft:rgba(234,150,90,0.14);
+  --rose:#a85a7a;--rose-strong:#a85a7a;--rose-soft:rgba(211,150,166,0.16);--rose-border:rgba(211,150,166,0.35);
+  --slate:#5484A4;--positive:#077575;--danger:#c43b4e;--danger-soft:rgba(196,59,78,0.10);
+  --card-shadow:0 1px 2px rgba(13,31,46,0.04),0 4px 16px -4px rgba(13,31,46,0.08),0 24px 48px -24px rgba(13,31,46,0.10);
+  --card-shadow-lg:0 2px 4px rgba(13,31,46,0.06),0 12px 32px -6px rgba(13,31,46,0.14),0 32px 72px -20px rgba(13,31,46,0.18);
+  --mesh-anim-1:rgba(9,161,161,0.0);--mesh-anim-2:rgba(211,150,166,0.0);
+  --stat-bg:linear-gradient(180deg,rgba(9,161,161,0.04),#ffffff);
+  --stat-border:rgba(13,31,46,0.08);
+  --cta-fg-on-pos:#ffffff;
+  --cta-shadow:0 10px 30px -10px rgba(9,161,161,0.35);
+  --cta-danger-shadow:0 10px 30px -10px rgba(196,59,78,0.35);
+}
+[data-theme="dark"]{
+  --bg:#081018;
+  --bg-g1:rgba(11,184,184,0.14);--bg-g2:rgba(211,150,166,0.18);--bg-g3:rgba(246,201,146,0.10);
+  --sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);
+  --surface:rgba(18,32,46,0.65);--surface-solid:#14202a;--surface-2:rgba(22,38,55,0.82);--surface-3:#1a2a38;
+  --glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);
+  --border:rgba(11,184,184,0.16);--border-2:rgba(11,184,184,0.28);--border-hot:rgba(11,184,184,0.5);
+  --text-1:#e6f0f7;--text-2:rgba(230,240,247,0.78);--text-3:rgba(230,240,247,0.58);
+  --accent:#0bd5d5;--accent-soft:rgba(11,213,213,0.12);--accent-hover:#3aefef;
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.12);
+  --warning:#ef9a4f;--warning-soft:rgba(234,150,90,0.16);
+  --rose:#D396A6;--rose-strong:#e6afc0;--rose-soft:rgba(211,150,166,0.14);--rose-border:rgba(211,150,166,0.32);
+  --slate:#acc0d3;--positive:#0bd5d5;--danger:#ff6b7d;--danger-soft:rgba(255,107,125,0.14);
+  --card-shadow:0 2px 12px rgba(0,0,0,0.30),0 24px 60px -24px rgba(0,0,0,0.55);
+  --card-shadow-lg:0 24px 60px -20px rgba(0,0,0,0.65);
+  --mesh-anim-1:rgba(11,184,184,0.10);--mesh-anim-2:rgba(211,150,166,0.12);
+  --stat-bg:linear-gradient(180deg,rgba(11,184,184,0.08),rgba(20,35,50,0.5));
+  --stat-border:rgba(11,184,184,0.2);
+  --cta-fg-on-pos:#061017;
+  --cta-shadow:0 10px 30px -10px rgba(11,184,184,0.45);
+  --cta-danger-shadow:0 10px 30px -10px rgba(255,107,125,0.45);
+}
+:root{
+  --sans:'Plus Jakarta Sans',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --display:'Instrument Serif','Plus Jakarta Sans',serif;
+  --r:18px;--r-sm:12px;--r-xs:8px;
+  --transition:all 0.32s cubic-bezier(.2,.8,.2,1);
+  --ease-spring:cubic-bezier(.2,.8,.2,1);
+}
+
+/* ════ NAV RAIL TOKENS (lightened 2026-04-25) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+
+/* ════ BASE ════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+body{font-family:var(--sans);color:var(--text-1);background:var(--bg);transition:background 0.4s ease,color 0.4s ease;height:100vh;display:flex;font-size:14px;overflow:hidden;}
+.mono{font-family:var(--mono);}
+.tnum{font-variant-numeric:tabular-nums;}
+.display{font-family:var(--display);}
+
+/* Ambient mesh */
+body::after{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),
+  radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),
+  radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent);
+  pointer-events:none;z-index:0;}
+.nav-sidebar,.workspace,.toast,.modal-overlay{position:relative;z-index:1;}
+
+/* ════ NAV RAIL ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+
+/* ════ MAIN ════ */
+.main{flex:1;display:flex;flex-direction:column;width:0;min-width:0;overflow:hidden;}
+
+/* Topbar */
+.topbar{padding:16px 28px;border-bottom:1px solid var(--border);background:var(--surface);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);flex-shrink:0;}
+.topbar-inner{display:flex;align-items:center;gap:14px;}
+.back-btn{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:8px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);background:var(--surface-3);border:1px solid var(--border);cursor:pointer;transition:var(--transition);}
+.back-btn:hover{color:var(--accent);border-color:var(--accent);}
+.back-btn svg{width:11px;height:11px;}
+.topbar-title{font-family:var(--display);font-size:30px;font-weight:400;color:var(--text-1);letter-spacing:-0.015em;line-height:1;}
+.topbar-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);letter-spacing:0.12em;text-transform:uppercase;margin-top:5px;}
+.topbar-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.tb-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:9px;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--text-1);cursor:pointer;transition:var(--transition);font-family:var(--sans);}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);}
+.tb-btn.primary{background:var(--accent);color:var(--cta-fg-on-pos);border-color:var(--accent);box-shadow:var(--cta-shadow);}
+.tb-btn.primary:hover{background:var(--accent-hover);color:var(--cta-fg-on-pos);}
+.tb-btn svg{width:12px;height:12px;}
+
+/* ════ FILTER BAR ════ */
+.filter-bar{display:flex;align-items:center;gap:14px;padding:11px 28px;border-bottom:1px solid var(--border);background:var(--surface-2);flex-shrink:0;flex-wrap:wrap;}
+.dd-group{display:flex;align-items:center;gap:7px;}
+.dd-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);}
+.dd-wrap{position:relative;}
+.dd-btn{display:flex;align-items:center;gap:6px;padding:6px 11px;border-radius:8px;font-size:11.5px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--text-1);cursor:pointer;transition:var(--transition);font-family:var(--sans);min-width:120px;justify-content:space-between;}
+.dd-btn:hover{border-color:var(--accent);}
+.dd-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.dd-btn.active-danger{border-color:var(--danger);color:var(--danger);background:var(--danger-soft);}
+.dd-btn svg{width:9px;height:9px;opacity:0.55;}
+.dd-pop{position:absolute;top:calc(100% + 5px);left:0;background:var(--surface);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);border:1px solid var(--border-2);border-radius:10px;box-shadow:var(--card-shadow);z-index:200;min-width:200px;padding:5px;display:none;}
+.dd-pop.open{display:block;}
+.dd-opt{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;font-size:12px;color:var(--text-1);cursor:pointer;transition:background 0.1s;}
+.dd-opt:hover{background:var(--surface-3);}
+.dd-opt.sel{font-weight:600;}
+.dd-opt.sel::after{content:"✓";margin-left:auto;color:var(--accent);font-size:11px;font-weight:700;}
+.dd-opt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dd-div{height:1px;background:var(--border);margin:4px 0;}
+.filter-sep{width:1px;height:20px;background:var(--border);}
+
+
+/* ════ BODY (list + inline detail) ════ */
+.body-wrap{flex:1;display:flex;overflow:hidden;min-height:0;}
+.alert-list-panel{
+  flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;
+  background:var(--surface);
+  backdrop-filter:blur(20px) saturate(1.4);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);
+  position:relative;
+}
+.alert-list-panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--glass-edge-top) 50%,transparent);
+  z-index:2;pointer-events:none;
+}
+
+/* Greeting + Export row */
+.greeting-row{padding:10px 16px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:12px;}
+.greeting-inline{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-2);font-family:var(--sans);}
+.greeting-name{font-size:13px;font-weight:600;color:var(--text-1);}
+.greeting-sep{color:var(--text-3);}
+.export-wrap{position:relative;}
+.export-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--text-1);cursor:pointer;transition:var(--transition);font-family:var(--sans);}
+.export-btn:hover{border-color:var(--accent);color:var(--accent);}
+.export-btn svg{width:12px;height:12px;flex-shrink:0;opacity:0.7;}
+.export-menu{position:absolute;top:calc(100% + 5px);right:0;background:var(--surface);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);border:1px solid var(--border-2);border-radius:10px;box-shadow:0 8px 32px rgba(30,60,80,0.14);z-index:200;min-width:220px;padding:5px;display:none;}
+.export-menu.open{display:block;}
+.export-opt{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;font-size:12px;color:var(--text-1);cursor:pointer;transition:background 0.1s;font-family:var(--sans);}
+.export-opt:hover{background:var(--surface-3);}
+.export-opt svg{width:13px;height:13px;color:var(--text-3);stroke-width:2;}
+.export-opt-label{flex:1;}
+.export-opt-sub{font-size:10px;color:var(--text-3);margin-top:2px;}
+
+/* Search bar */
+.search-bar{padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.search-input-wrap{position:relative;display:flex;align-items:center;}
+.search-input{width:100%;padding:8px 12px 8px 34px;background:var(--surface-3);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text-1);font-family:var(--sans);outline:none;transition:var(--transition);}
+.search-input:focus{border-color:var(--accent);background:var(--surface);}
+.search-input::placeholder{color:var(--text-3);}
+.search-icon{position:absolute;left:12px;width:14px;height:14px;color:var(--text-3);pointer-events:none;}
+.search-kbd{position:absolute;right:10px;background:var(--surface);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:9px;color:var(--text-3);pointer-events:none;}
+
+/* List scroll */
+.list-scroll{flex:1;overflow-y:auto;min-height:0;}
+.list-scroll::-webkit-scrollbar{width:5px;}
+.list-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px;}
+
+/* Time group header */
+.time-group-header{padding:11px 24px 7px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;background:linear-gradient(180deg,var(--surface) 80%,transparent);backdrop-filter:blur(8px);}
+.tgh-label{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);}
+.tgh-line{flex:1;height:1px;background:var(--border);}
+.tgh-count{font-family:var(--mono);font-size:9px;color:var(--text-3);}
+
+/* ════ ALERT ROW (now contains inline expansion block) ════ */
+.list-item{
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+  transition:background 0.18s;
+  position:relative;
+}
+.list-item:hover{background:var(--surface-2);}
+.list-item.selected{background:var(--accent-soft);}
+.list-item.selected::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);}
+.list-item.selected.danger-sel{background:var(--danger-soft);}
+.list-item.selected.danger-sel::before{background:var(--danger);}
+.list-item.reviewed{opacity:0.55;}
+
+/* ════ SNOOZE STATE ════ */
+.list-item.snoozed{opacity:0.7;}
+.list-item.snoozed::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--warm);opacity:0.65;pointer-events:none;}
+.list-item.snoozed.selected::after{display:none;} /* don't fight the selected stripe */
+.snooze-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--warm-soft);color:var(--warm);
+  font-family:var(--mono);font-size:9.5px;font-weight:600;
+  letter-spacing:0.04em;padding:2px 7px;border-radius:4px;
+  border:1px solid rgba(184,107,31,0.18);
+  margin-top:5px;
+}
+.snooze-tag svg{width:9px;height:9px;}
+
+/* Snooze popover (lives inside .li-inline footer or bulk action bar) */
+.snooze-wrap{position:relative;display:inline-block;}
+.snooze-pop{
+  position:absolute;top:calc(100% + 6px);left:0;
+  min-width:220px;background:var(--surface);
+  backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border:1px solid var(--border);border-radius:10px;
+  box-shadow:var(--card-shadow-lg);padding:6px;
+  display:none;z-index:50;
+}
+/* Bulk-bar snooze opens UP (the bar is pinned to bottom of list panel) */
+.bulk-action-bar .snooze-pop{top:auto;bottom:calc(100% + 6px);}
+.snooze-pop.open{display:block;}
+.snooze-opt{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:8px 10px;border-radius:6px;cursor:pointer;
+  font-size:12px;color:var(--text-1);transition:background 0.12s ease;
+}
+.snooze-opt:hover{background:var(--surface-2);}
+.snooze-opt-when{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.snooze-opt-div{height:1px;background:var(--border);margin:4px 6px;}
+
+/* ════ BULK SELECT ════ */
+.bulk-checkbox{
+  position:absolute;left:6px;top:50%;transform:translateY(-50%);
+  width:16px;height:16px;
+  border:1.5px solid var(--border-hot);border-radius:4px;
+  background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+  cursor:pointer;z-index:2;
+}
+.list-item:hover .bulk-checkbox,
+body.bulk-mode .bulk-checkbox{opacity:1;}
+.bulk-checkbox:hover{border-color:var(--accent);}
+.bulk-checkbox.checked{background:var(--accent);border-color:var(--accent);opacity:1;}
+.bulk-checkbox.checked svg{color:#fff;width:10px;height:10px;}
+.bulk-checkbox svg{color:transparent;}
+/* Selected row in bulk mode — soft accent background */
+.list-item.bulk-checked{background:var(--accent-soft);}
+.list-item.bulk-checked:hover{background:var(--accent-soft);}
+
+.bulk-action-bar{
+  position:absolute;left:0;right:0;bottom:0;
+  display:flex;align-items:center;gap:12px;
+  padding:14px 24px;
+  background:var(--surface);
+  backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);
+  border-top:1px solid var(--border-hot);
+  box-shadow:0 -8px 24px rgba(0,0,0,0.08);
+  transform:translateY(110%);transition:transform 0.22s cubic-bezier(0.32,0.72,0,1);
+  z-index:10;
+}
+[data-theme="dark"] .bulk-action-bar{box-shadow:0 -8px 24px rgba(0,0,0,0.4);}
+.bulk-action-bar.show{transform:translateY(0);}
+.bulk-count{
+  font-family:var(--sans);font-size:13px;font-weight:600;color:var(--text-1);
+  display:flex;align-items:center;gap:8px;flex:1;
+}
+.bulk-count-pill{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:22px;height:22px;padding:0 7px;
+  background:var(--accent);color:#fff;
+  font-family:var(--mono);font-size:11px;font-weight:700;
+  border-radius:11px;
+}
+.bulk-btn{
+  background:var(--surface-2);border:1px solid var(--border);
+  color:var(--text-1);font-family:var(--sans);font-size:12px;font-weight:600;
+  padding:8px 14px;border-radius:7px;cursor:pointer;
+  transition:var(--transition);display:inline-flex;align-items:center;gap:6px;
+}
+.bulk-btn:hover{background:var(--surface-3);border-color:var(--border-hot);}
+.bulk-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.bulk-btn.primary:hover{background:#089999;}
+.bulk-btn.subtle{background:transparent;border-color:transparent;color:var(--text-3);}
+.bulk-btn.subtle:hover{color:var(--text-1);background:var(--surface-2);}
+
+/* ════ EMPTY STATES ════ */
+.empty-state-card{
+  margin:48px auto;max-width:380px;
+  padding:32px 28px;text-align:center;
+  background:var(--surface-2);border:1px dashed var(--border-hot);
+  border-radius:14px;
+}
+.es-card-icon{
+  width:56px;height:56px;margin:0 auto 16px;
+  background:var(--accent-soft);color:var(--accent);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+}
+.es-card-icon.warm{background:var(--warm-soft);color:var(--warm);}
+.es-card-icon svg{width:24px;height:24px;}
+.es-card-title{
+  font-family:var(--display);font-size:22px;font-weight:500;
+  color:var(--text-1);letter-spacing:-0.01em;margin-bottom:6px;
+}
+.es-card-sub{
+  font-size:13px;color:var(--text-2);line-height:1.5;
+  margin-bottom:18px;
+}
+.es-card-meta{
+  font-family:var(--mono);font-size:10px;font-weight:600;
+  letter-spacing:0.06em;color:var(--text-3);
+  text-transform:uppercase;margin-bottom:18px;
+}
+.es-card-btn{
+  background:var(--surface);border:1px solid var(--border-hot);
+  color:var(--text-1);font-size:12px;font-weight:600;
+  padding:9px 18px;border-radius:7px;cursor:pointer;
+  transition:var(--transition);
+}
+.es-card-btn:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+
+.alert-row{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:13px 24px;
+}
+
+.unread-pip{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.pip-danger{background:var(--danger);box-shadow:0 0 5px rgba(196,59,78,0.5);}
+.pip-warn{background:var(--warm);}
+.pip-teal{background:var(--accent);}
+.pip-rose{background:var(--rose);}
+.pip-none{background:transparent;}
+
+.alert-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.alert-icon svg{width:15px;height:15px;}
+.ai-danger{background:var(--danger-soft);}
+.ai-danger svg{color:var(--danger);}
+.ai-warn{background:var(--warm-soft);}
+.ai-warn svg{color:var(--warm);}
+.ai-teal{background:var(--accent-soft);}
+.ai-teal svg{color:var(--accent);}
+.ai-rose{background:var(--rose-soft);}
+.ai-rose svg{color:var(--rose);}
+.ai-slate{background:rgba(84,132,164,0.12);}
+.ai-slate svg{color:var(--slate);}
+
+.alert-content{flex:1;min-width:0;}
+.alert-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:2px;}
+.alert-title{font-size:13px;font-weight:700;color:var(--text-1);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.alert-time{font-family:var(--mono);font-size:10px;color:var(--text-3);flex-shrink:0;margin-top:1px;}
+.alert-sub{font-size:11px;color:var(--text-2);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.alert-chips{display:flex;gap:4px;flex-wrap:wrap;}
+.chip{font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px;letter-spacing:0.04em;}
+.chip-loc{background:var(--surface-3);color:var(--text-2);}
+.chip-danger{background:var(--danger-soft);color:var(--danger);}
+.chip-warn{background:var(--warm-soft);color:var(--warm);}
+.chip-teal{background:var(--accent-soft);color:var(--accent);}
+.chip-rose{background:var(--rose-soft);color:var(--rose);}
+.chip-shared{background:linear-gradient(135deg,rgba(11,184,184,0.18),rgba(11,184,184,0.08));color:var(--accent);border:1px solid rgba(11,184,184,0.22);}
+
+.sev-pill{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.08em;padding:2px 7px;border-radius:10px;flex-shrink:0;align-self:flex-start;margin-top:1px;}
+.sp-critical{background:var(--danger-soft);color:var(--danger);}
+.sp-high{background:var(--warm-soft);color:var(--warm);}
+.sp-medium{background:var(--accent-soft);color:var(--accent);}
+.sp-info{background:var(--surface-3);color:var(--text-3);}
+.sp-shared{background:linear-gradient(135deg,rgba(11,184,184,0.20),rgba(11,184,184,0.10));color:var(--accent);border:1px solid rgba(11,184,184,0.25);}
+
+/* ════ INLINE EXPANSION BLOCK ════ */
+.li-inline{
+  display:none;
+  padding:0 24px 22px 70px;
+  background:var(--surface-2);
+  border-top:1px solid var(--border);
+  animation:liExpand 0.32s var(--ease-spring);
+}
+body.lv-inline .list-item.selected .li-inline{display:block;}
+@keyframes liExpand{
+  from{opacity:0;transform:translateY(-4px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+.det-rival-line{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);padding:14px 0 4px;}
+.det-title-line{font-family:var(--display);font-size:21px;font-weight:400;line-height:1.2;color:var(--text-1);letter-spacing:-0.01em;margin-bottom:14px;}
+
+.block-strip{display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--rose-soft);border:1px solid var(--rose-border);border-radius:9px;margin-bottom:10px;}
+.bs-dot{width:8px;height:8px;border-radius:50%;background:var(--rose);flex-shrink:0;}
+.bs-text{flex:1;font-size:11.5px;color:var(--text-1);font-weight:500;}
+.bs-since{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--rose);letter-spacing:0.06em;}
+
+.amber-strip{display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--warning-soft);border:1px solid var(--warning);border-radius:9px;margin-bottom:10px;}
+.amber-strip .bs-dot{background:var(--warning);}
+.amber-strip .bs-text{color:var(--warning);font-weight:600;}
+
+.shared-strip{display:flex;align-items:flex-start;gap:9px;padding:10px 12px;background:linear-gradient(135deg,rgba(11,184,184,0.10),rgba(11,184,184,0.04));border:1px solid rgba(11,184,184,0.22);border-radius:9px;margin-bottom:12px;}
+.ss-icon{width:22px;height:22px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ss-text{flex:1;font-size:11.5px;color:var(--text-1);line-height:1.45;}
+.ss-text strong{color:var(--accent);font-weight:700;}
+
+.det-sec{margin-bottom:14px;}
+.det-sec-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px;}
+.det-narrative{font-size:12.5px;color:var(--text-1);line-height:1.5;}
+
+/* Standardized Recommendation block — present on every alert card.
+   Same structure as .det-sec but with a teal accent edge so the eye
+   identifies it as "the call" vs evidence. */
+.det-rec{margin-bottom:14px;padding:10px 12px 11px 13px;background:var(--accent-soft);border:1px solid rgba(11,184,184,0.20);border-left:3px solid var(--accent);border-radius:8px;}
+.det-rec .det-sec-label{color:var(--accent);margin-bottom:5px;}
+.det-rec .det-narrative{font-size:12.5px;color:var(--text-1);line-height:1.5;}
+.det-rec.muted{background:var(--surface-3);border-color:var(--border-2);border-left-color:var(--text-3);}
+.det-rec.muted .det-sec-label{color:var(--text-3);}
+.det-rec.muted .det-narrative{color:var(--text-2);}
+
+.det-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px;}
+.det-stat{padding:10px 11px;background:var(--surface);border:1px solid var(--stat-border);border-radius:10px;}
+.det-stat-n{font-family:var(--display);font-size:24px;font-weight:400;font-style:italic;color:var(--text-1);line-height:1;letter-spacing:-0.01em;}
+.det-stat-n.cn-danger{color:var(--danger);}
+.det-stat-n.cn-warm{color:var(--warm);}
+.det-stat-n.cn-teal{color:var(--accent);}
+.det-stat-label{font-family:var(--mono);font-size:8.5px;color:var(--text-3);letter-spacing:0.10em;text-transform:uppercase;margin-top:4px;}
+
+.price-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:4px;}
+.price-table th{text-align:left;padding:7px 10px;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--text-3);background:var(--surface-3);border-bottom:1px solid var(--border-2);}
+.price-table td{padding:8px 10px;color:var(--text-1);border-bottom:1px solid var(--border);font-family:var(--mono);}
+.price-table td:first-child{font-family:var(--sans);}
+.price-table td.price-new{color:var(--danger);font-weight:700;}
+.price-delta{color:var(--danger);font-weight:700;}
+
+.footer-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.footer-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:9px;font-size:11.5px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--text-1);cursor:pointer;transition:var(--transition);font-family:var(--sans);flex:1;}
+.footer-btn:hover{border-color:var(--accent);color:var(--accent);}
+.footer-btn.primary{background:var(--accent);color:var(--cta-fg-on-pos);border-color:var(--accent);}
+.footer-btn.primary:hover{background:var(--accent-hover);}
+.footer-btn.fb-danger{background:var(--danger);color:#fff;border-color:var(--danger);box-shadow:var(--cta-danger-shadow);}
+.footer-btn.fb-danger:hover{background:#a83040;}
+.footer-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);cursor:default;}
+
+/* Empty state */
+.empty-state{padding:60px 24px;text-align:center;}
+.es-icon{width:46px;height:46px;border-radius:50%;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+.es-icon svg{width:22px;height:22px;color:var(--accent);}
+.es-title{font-family:var(--display);font-size:22px;font-weight:400;color:var(--text-1);margin-bottom:5px;letter-spacing:-0.01em;}
+.es-sub{font-size:12px;color:var(--text-3);}
+
+/* Toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--surface-solid);color:var(--text-1);padding:11px 18px;border-radius:9px;border:1px solid var(--border-2);box-shadow:var(--card-shadow-lg);font-size:13px;font-weight:500;z-index:9990;opacity:0;transition:opacity 0.25s,transform 0.25s var(--ease-spring);pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+
+/* ════ KEYBOARD SHORTCUTS ════ */
+.kbd-hint{position:fixed;bottom:28px;right:28px;background:var(--surface);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-family:var(--mono);font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:8px;box-shadow:var(--card-shadow);z-index:100;cursor:pointer;transition:var(--transition);}
+.kbd-hint:hover{color:var(--text-1);border-color:var(--border-hot);}
+.kbd-hint kbd{background:var(--surface-3);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:9px;color:var(--text-2);border:1px solid var(--border);margin:0 2px;}
+.kbd-cheatsheet{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9991;display:none;align-items:center;justify-content:center;}
+.kbd-cheatsheet.show{display:flex;}
+.kbd-panel{background:var(--surface);backdrop-filter:blur(32px) saturate(1.6);-webkit-backdrop-filter:blur(32px) saturate(1.6);border:1px solid var(--border);border-radius:16px;padding:24px;width:440px;max-width:90vw;box-shadow:var(--card-shadow-lg);}
+.kbd-panel h3{font-family:var(--display);font-size:22px;font-weight:400;color:var(--text-1);margin-bottom:14px;letter-spacing:-0.015em;}
+.kbd-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-2);}
+.kbd-row:last-child{border-bottom:none;}
+.kbd-keys{display:inline-flex;gap:4px;}
+.kbd-keys kbd{background:var(--surface-3);padding:3px 8px;border-radius:6px;font-family:var(--mono);font-size:10px;color:var(--text-1);border:1px solid var(--border);min-width:24px;text-align:center;}
+
+/* Search palette */
+.search-palette{position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9992;display:none;align-items:flex-start;justify-content:center;padding-top:20vh;}
+.search-palette.show{display:flex;}
+.search-palette-panel{background:var(--surface);backdrop-filter:blur(32px) saturate(1.6);-webkit-backdrop-filter:blur(32px) saturate(1.6);border:1px solid var(--border);border-radius:16px;width:520px;max-width:90vw;box-shadow:var(--card-shadow-lg);overflow:hidden;}
+.search-palette-input-wrap{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.search-palette-input-wrap svg{width:16px;height:16px;color:var(--text-3);flex-shrink:0;}
+.search-palette-input{flex:1;background:transparent;border:none;outline:none;color:var(--text-1);font-family:var(--sans);font-size:14px;}
+.search-palette-input::placeholder{color:var(--text-3);}
+.search-palette-actions{padding:8px;}
+.search-palette-label{padding:6px 12px;font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);}
+</style>
+</head>
+<body class="lv-inline">
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     NAV RAIL (S12 active = Alert Feed)
+     ════════════════════════════════════════════════════════════════════════ -->
+<aside class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo">
+      <div class="logo-row">
+        <div class="logo-gem"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"></path><path d="M9 12l2 2 4-4"></path></svg></div>
+        <div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div>
+      </div>
+    </div>
+    <div class="nav-scroll">
+      <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+        <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>Org Setup</div>
+        <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>Add Locations</div>
+        <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>Find Rivals</div>
+      </div>
+      <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+        <div class="nav-link done" onclick="go('cannaspy_s04_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>Command Center</div>
+        <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Location Dashboard</div>
+        <div class="nav-link done" onclick="go('cannaspy_s07_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>Price Intelligence</div>
+        <div class="nav-link active done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>Alert Feed</div>
+        <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+      </div>
+      <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+        <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>Market Heat Map</div>
+        <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>Competitor Ranking</div>
+        <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>My Benchmarks</div>
+        <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>SKU Gap Analysis</div>
+        <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>Deal Effectiveness</div>
+      </div>
+      <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+        <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>Annotations</div>
+        <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Location Access</div>
+      </div>
+      <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+        <div class="nav-link done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>Block Management</div>
+      </div>
+      <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+        <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>Billing &amp; Slots</div>
+        <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>Alert Settings</div>
+        <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>Data Trust</div>
+      </div>
+    </div>
+    <div class="nav-footer">
+      <button class="theme-row" onclick="toggleTheme()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+        <span id="themeLabel">Light mode</span>
+        <div class="pill-toggle"><div class="pill-knob"></div></div>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     MAIN
+     ════════════════════════════════════════════════════════════════════════ -->
+<div class="main">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="back-btn" onclick="go('cannaspy_s04_FINAL.html')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Back
+      </div>
+      <div>
+        <div class="topbar-title">Alert Feed</div>
+        <div class="topbar-sub" id="topbarSub">All locations · 8 unreviewed</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="tb-btn" onclick="markAllReviewed()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Mark all reviewed
+        </button>
+        <button class="tb-btn primary" onclick="go('cannaspy_s07_FINAL.html')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Price matrix →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <div class="dd-group">
+      <span class="dd-group-label">Type</span>
+      <div class="dd-wrap">
+        <button class="dd-btn" id="typeDdBtn" onclick="toggleDd('typeDd')">
+          All types
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="dd-pop" id="typeDd">
+          <div class="dd-opt sel" onclick="selType('all','All types',this)">All types</div>
+          <div class="dd-div"></div>
+          <div class="dd-opt" onclick="selType('shared','Shared brand',this)"><div class="dd-opt-dot" style="background:var(--accent);"></div>Shared brand alert</div>
+          <div class="dd-opt" onclick="selType('price-drop','Price drop',this)"><div class="dd-opt-dot" style="background:var(--danger);"></div>Price drop</div>
+          <div class="dd-opt" onclick="selType('promo','New promo',this)"><div class="dd-opt-dot" style="background:var(--warm);"></div>New promo</div>
+          <div class="dd-opt" onclick="selType('sku','Catalog change',this)"><div class="dd-opt-dot" style="background:var(--slate);"></div>Catalog change</div>
+          <div class="dd-opt" onclick="selType('block','Block activity',this)"><div class="dd-opt-dot" style="background:var(--rose);"></div>Block activity</div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+    <div class="dd-group">
+      <span class="dd-group-label">Location</span>
+      <div class="dd-wrap">
+        <button class="dd-btn" id="locDdBtn" onclick="toggleDd('locDd')">
+          All locations
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="dd-pop" id="locDd">
+          <div class="dd-opt sel" onclick="selLoc('all','All locations',this)">All locations</div>
+          <div class="dd-div"></div>
+          <div class="dd-opt" onclick="selLoc('weho','WeHo Flagship',this)">WeHo Flagship</div>
+          <div class="dd-opt" onclick="selLoc('dtla','DTLA Flagship',this)">DTLA Flagship</div>
+          <div class="dd-opt" onclick="selLoc('sf','SoMa SF',this)">SoMa SF</div>
+          <div class="dd-opt" onclick="selLoc('oak','Oakland Telegraph',this)">Oakland Telegraph</div>
+          <div class="dd-opt" onclick="selLoc('sd','San Diego Gaslamp',this)">San Diego Gaslamp</div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+    <div class="dd-group">
+      <span class="dd-group-label">Status</span>
+      <div class="dd-wrap">
+        <button class="dd-btn active-danger" id="statusDdBtn" onclick="toggleDd('statusDd')">
+          Unreviewed
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="dd-pop" id="statusDd">
+          <div class="dd-opt" onclick="selStatus('all','All alerts',this)">All alerts</div>
+          <div class="dd-opt sel" onclick="selStatus('unreviewed','Unreviewed',this)">Unreviewed</div>
+          <div class="dd-opt" onclick="selStatus('reviewed','Reviewed',this)">Reviewed</div>
+          <div class="dd-opt" onclick="selStatus('snoozed','Snoozed',this)"><div class="dd-opt-dot" style="background:var(--warm);"></div>Snoozed</div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+    <div class="dd-group">
+      <span class="dd-group-label">Sort</span>
+      <div class="dd-wrap">
+        <button class="dd-btn" id="sortDdBtn" onclick="toggleDd('sortDd')">
+          Newest first
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="dd-pop" id="sortDd">
+          <div class="dd-opt sel" onclick="selSort('newest','Newest first',this)">Newest first</div>
+          <div class="dd-opt" onclick="selSort('severity','Severity',this)">Severity (critical first)</div>
+          <div class="dd-opt" onclick="selSort('rival','Rival name',this)">Rival name</div>
+          <div class="dd-opt" onclick="selSort('location','Location',this)">Location</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert list panel + inline detail -->
+  <div class="body-wrap">
+    <div class="alert-list-panel">
+      <!-- Greeting + Export row -->
+      <div class="greeting-row">
+        <div class="greeting-inline">
+          <span class="greeting-name">Good morning, Patrick</span>
+          <span class="greeting-sep">·</span>
+          <span style="display:flex;align-items:center;gap:5px;">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 3px rgba(196,59,78,0.15);"></span>
+            <span id="greetingCount">8 unreviewed</span>
+          </span>
+        </div>
+        <div class="export-wrap">
+          <button class="export-btn" onclick="toggleExport(event)" aria-label="Export alerts">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Export
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;opacity:0.55;"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="export-menu" id="exportMenu">
+            <div class="export-opt" onclick="doExport('pdf')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <div>
+                <div class="export-opt-label">PDF summary</div>
+                <div class="export-opt-sub">Formatted daily brief</div>
+              </div>
+            </div>
+            <div class="export-opt" onclick="doExport('csv')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+              <div>
+                <div class="export-opt-label">CSV (all alerts)</div>
+                <div class="export-opt-sub">For spreadsheet analysis</div>
+              </div>
+            </div>
+            <div class="export-opt" onclick="doExport('slack')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7V4a1 1 0 011-1h3"/><path d="M17 3h3a1 1 0 011 1v3"/><path d="M21 17v3a1 1 0 01-1 1h-3"/><path d="M7 21H4a1 1 0 01-1-1v-3"/></svg>
+              <div>
+                <div class="export-opt-label">Copy to clipboard</div>
+                <div class="export-opt-sub">For Slack / email</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search bar -->
+      <div class="search-bar">
+        <div class="search-input-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg>
+          <input class="search-input" id="searchInput" type="text" placeholder="Search rivals, SKUs, alerts…" oninput="filterListBySearch(this.value)" />
+          <span class="search-kbd">⌘K</span>
+        </div>
+      </div>
+
+      <!-- Alert list (renders into #listScroll) -->
+      <div class="list-scroll" id="listScroll"></div>
+
+      <!-- Bulk action bar (slides up when 1+ alerts checked) -->
+      <div class="bulk-action-bar" id="bulkBar">
+        <div class="bulk-count" id="bulkCount"><span class="bulk-count-pill">0</span> alerts selected</div>
+        <button class="bulk-btn primary" onclick="bulkMarkReviewed()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;"><polyline points="20 6 9 17 4 12"/></svg>
+          Mark all reviewed
+        </button>
+        <div class="snooze-wrap">
+          <button class="bulk-btn" onclick="toggleSnoozePop('bulk', event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+            Snooze all
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;opacity:0.55;"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="snooze-pop" id="snoozePop-bulk">
+            <div class="snooze-opt" onclick="bulkSnooze('tomorrow')"><span>Tomorrow morning</span><span class="snooze-opt-when">+1d</span></div>
+            <div class="snooze-opt" onclick="bulkSnooze('next-monday')"><span>Next Monday</span><span class="snooze-opt-when">weekly review</span></div>
+            <div class="snooze-opt" onclick="bulkSnooze('next-thursday')"><span>Next Thursday</span><span class="snooze-opt-when">pricing meeting</span></div>
+            <div class="snooze-opt-div"></div>
+            <div class="snooze-opt" onclick="bulkSnooze('next-week')"><span>Next week</span><span class="snooze-opt-when">+7d</span></div>
+          </div>
+        </div>
+        <button class="bulk-btn subtle" onclick="bulkClear()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Keyboard hint pill -->
+<div class="kbd-hint" onclick="toggleCheatsheet()" title="View keyboard shortcuts">
+  Press <kbd>?</kbd> for shortcuts
+</div>
+
+<!-- Keyboard cheatsheet modal -->
+<div class="kbd-cheatsheet" id="kbdCheat" onclick="toggleCheatsheet(event)">
+  <div class="kbd-panel" onclick="event.stopPropagation()">
+    <h3>Keyboard shortcuts</h3>
+    <div class="kbd-row"><span>Next alert</span><span class="kbd-keys"><kbd>j</kbd></span></div>
+    <div class="kbd-row"><span>Previous alert</span><span class="kbd-keys"><kbd>k</kbd></span></div>
+    <div class="kbd-row"><span>Open selected alert</span><span class="kbd-keys"><kbd>Enter</kbd></span></div>
+    <div class="kbd-row"><span>Mark reviewed</span><span class="kbd-keys"><kbd>r</kbd></span></div>
+    <div class="kbd-row"><span>Toggle bulk-select on row</span><span class="kbd-keys"><kbd>Space</kbd></span></div>
+    <div class="kbd-row"><span>Select all visible</span><span class="kbd-keys"><kbd>⌘</kbd><kbd>A</kbd></span></div>
+    <div class="kbd-row"><span>Close / clear selection</span><span class="kbd-keys"><kbd>Esc</kbd></span></div>
+    <div class="kbd-row"><span>Global search</span><span class="kbd-keys"><kbd>⌘</kbd><kbd>K</kbd></span></div>
+    <div class="kbd-row"><span>Show this cheatsheet</span><span class="kbd-keys"><kbd>?</kbd></span></div>
+  </div>
+</div>
+
+<!-- Search palette (⌘K) -->
+<div class="search-palette" id="searchPalette" onclick="toggleSearchPalette(event)">
+  <div class="search-palette-panel" onclick="event.stopPropagation()">
+    <div class="search-palette-input-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg>
+      <input class="search-palette-input" type="text" placeholder="Search rivals, SKUs, locations…" />
+      <kbd style="background:var(--surface-3);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:10px;color:var(--text-3);border:1px solid var(--border);">Esc</kbd>
+    </div>
+    <div class="search-palette-actions">
+      <div class="search-palette-label">Quick actions</div>
+      <div class="export-opt" onclick="markAllReviewed();toggleSearchPalette();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <div class="export-opt-label">Mark all as reviewed</div>
+      </div>
+      <div class="export-opt" onclick="doExport('pdf');toggleSearchPalette();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        <div class="export-opt-label">Export today's brief</div>
+      </div>
+      <div class="export-opt" onclick="go('cannaspy_s07_FINAL.html');">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <div class="export-opt-label">Open price matrix</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     SCRIPT
+     ════════════════════════════════════════════════════════════════════════ -->
+<script>
+/* ════ DATA ════ */
+var ALERTS = [
+  {
+    id:'ff-shared-weho', type:'shared', loc:'weho', locLabel:'WeHo Flagship', rival:'STIIIZY WeHo', unread:true, sev:'critical',
+    icon:'danger', title:'STIIIZY dropped Friendly Farms 3.5g — shared brand', sub:'$50 → $42 · You both carry this brand · You are now $8 higher', time:'1h ago',
+    chips:[{t:'SHARED BRAND',c:'chip-shared'},{t:'WEHO',c:'chip-loc'},{t:'−$8 gap',c:'chip-danger'}],
+    detail:{
+      rival:'STIIIZY WEST HOLLYWOOD · 1.2 MI · BLOCKED',
+      title:'Price drop on shared brand — Friendly Farms 3.5g',
+      body:'<div class="block-strip"><div class="bs-dot"></div><div class="bs-text">Rival is blocked — they cannot access CannaSpy</div><div class="bs-since">47 days</div></div><div class="shared-strip"><div class="ss-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" style="width:9px;height:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="ss-text"><strong>Shared brand alert</strong> — both you and STIIIZY carry Friendly Farms. Their price cut directly affects your competitive position on this SKU.</div></div><div class="det-sec"><div class="det-sec-label">What happened</div><div class="det-narrative">STIIIZY dropped Friendly Farms 3.5g Flower from $50 to $42 overnight — an $8 advantage for them on a brand you both carry. This is your #1 shared brand at WeHo.</div></div><div class="det-stats"><div class="det-stat"><div class="det-stat-n cn-danger">−$8</div><div class="det-stat-label">Gap vs you</div></div><div class="det-stat"><div class="det-stat-n cn-danger">−16%</div><div class="det-stat-label">Their cut</div></div><div class="det-stat"><div class="det-stat-n">#1</div><div class="det-stat-label">Shared rank</div></div><div class="det-stat"><div class="det-stat-n cn-warm">1h</div><div class="det-stat-label">Detected</div></div></div><div class="det-sec"><div class="det-sec-label">Price comparison</div><table class="price-table"><tr><th>Product</th><th>Your price</th><th>Their price</th><th>Gap</th></tr><tr><td>Friendly Farms 3.5g</td><td>$50</td><td class="price-new">$42</td><td><span class="price-delta">−$8</span></td></tr><tr><td>Friendly Farms 7g</td><td>$90</td><td class="price-new">$78</td><td><span class="price-delta">−$12</span></td></tr></table></div><div class="det-rec"><div class="det-sec-label">Recommendation</div><div class="det-narrative">Match Friendly Farms 3.5g at $42 to neutralize the gap on your #1 shared SKU, or run a 1g preroll bundle ($35) that pulls volume to a SKU STIIIZY does not carry. Matching is the safer play given the 7g gap is also $12.</div></div>',
+      footer:'<div class="footer-row"><button class="footer-btn" onclick="reviewAlert(\'ff-shared-weho\')">Mark reviewed</button><button class="footer-btn primary" onclick="go(\'cannaspy_s07_FINAL.html\')">Open price matrix →</button><button class="footer-btn fb-danger" onclick="toast(\'Respond flow opened\')">Respond →</button></div>'
+    }
+  },
+  {
+    id:'rg-shared-sf', type:'shared', loc:'sf', locLabel:'SoMa SF', rival:'Harborside SF', unread:true, sev:'critical',
+    icon:'danger', title:'Harborside dropped Raw Garden 1g vape — shared brand', sub:'$58 → $49 · $9 below your price · Recurring deal', time:'2h ago',
+    chips:[{t:'SHARED BRAND',c:'chip-shared'},{t:'SF',c:'chip-loc'},{t:'−$9 gap',c:'chip-danger'},{t:'RECURRING',c:'chip-warn'}],
+    detail:{
+      rival:'HARBORSIDE SAN FRANCISCO · 0.9 MI · TRACKING',
+      title:'Raw Garden 1g vape — shared brand price gap',
+      body:'<div class="amber-strip"><div class="bs-dot"></div><div class="bs-text">Harborside SJ is blocking your tracking — SF location remains visible</div><div class="bs-since">31 days</div></div><div class="shared-strip"><div class="ss-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" style="width:9px;height:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="ss-text"><strong>Shared brand alert</strong> — Raw Garden is your #2 brand by volume at SoMa SF and a top-5 brand at Harborside.</div></div><div class="det-sec"><div class="det-sec-label">What happened</div><div class="det-narrative">Harborside is running a recurring daily deal on Raw Garden 1g vapes at $49 — $9 below your regular price of $58. This is not a flash sale; it fires every day and has been running for 11 days.</div></div><div class="det-stats"><div class="det-stat"><div class="det-stat-n cn-danger">−$9</div><div class="det-stat-label">Gap vs you</div></div><div class="det-stat"><div class="det-stat-n">Daily</div><div class="det-stat-label">Frequency</div></div><div class="det-stat"><div class="det-stat-n">11</div><div class="det-stat-label">Days running</div></div><div class="det-stat"><div class="det-stat-n cn-warm">2h</div><div class="det-stat-label">Detected</div></div></div><div class="det-rec"><div class="det-sec-label">Recommendation</div><div class="det-narrative">Daily-recurring deals become customer habits — matching once is not enough. Counter with a 2-pack bundle ($95, +$3 of value) that protects margin while creating a price tier Harborside is not in. Re-evaluate after 14 days.</div></div>',
+      footer:'<div class="footer-row"><button class="footer-btn" onclick="reviewAlert(\'rg-shared-sf\')">Mark reviewed</button><button class="footer-btn primary" onclick="toast(\'SF Price matrix opened\')">View SF matrix →</button><button class="footer-btn fb-danger" onclick="toast(\'Respond flow opened\')">Respond →</button></div>'
+    }
+  },
+  {
+    id:'bd-price-weho', type:'price-drop', loc:'weho', locLabel:'WeHo Flagship', rival:'STIIIZY WeHo', unread:true, sev:'high',
+    icon:'danger', title:'STIIIZY dropped Blue Dream 22%', sub:'$45 → $35 · Their #2 volume SKU', time:'2h ago',
+    chips:[{t:'WEHO',c:'chip-loc'},{t:'−$10',c:'chip-danger'},{t:'FLOWER',c:'chip-loc'}],
+    detail:{
+      rival:'STIIIZY WEST HOLLYWOOD · 1.2 MI · BLOCKED',
+      title:'22% price cut on Blue Dream 3.5g',
+      body:'<div class="block-strip"><div class="bs-dot"></div><div class="bs-text">Rival is blocked — they cannot access CannaSpy</div><div class="bs-since">47 days</div></div><div class="det-sec"><div class="det-sec-label">What happened</div><div class="det-narrative">STIIIZY dropped Blue Dream 3.5g from $45 to $35 — a 22% cut on their #2 volume SKU. Note: Blue Dream is not a brand you currently carry at this location.</div></div><div class="det-stats"><div class="det-stat"><div class="det-stat-n cn-danger">−$10</div><div class="det-stat-label">Price cut</div></div><div class="det-stat"><div class="det-stat-n cn-danger">−22%</div><div class="det-stat-label">% change</div></div><div class="det-stat"><div class="det-stat-n">#2</div><div class="det-stat-label">Their volume rank</div></div><div class="det-stat"><div class="det-stat-n cn-warm">2h</div><div class="det-stat-label">Detected</div></div></div><div class="det-rec muted"><div class="det-sec-label">Recommendation</div><div class="det-narrative">No action needed — Blue Dream is not in your WeHo catalog. Worth noting STIIIZY is using a flagship SKU for an aggressive cut, which suggests pressure on volume. Watch for cuts on shared brands next.</div></div>',
+      footer:'<div class="footer-row"><button class="footer-btn" onclick="reviewAlert(\'bd-price-weho\')">Mark reviewed</button><button class="footer-btn primary" onclick="go(\'cannaspy_s07_FINAL.html\')">View price matrix →</button></div>'
+    }
+  },
+  {
+    id:'hh-promo-weho', type:'promo', loc:'weho', locLabel:'WeHo Flagship', rival:'MedMen WeHo', unread:true, sev:'high',
+    icon:'warn', title:'MedMen — new daily happy hour', sub:'20% off all vapes 4–7pm · starts today', time:'5h ago',
+    chips:[{t:'WEHO',c:'chip-loc'},{t:'NEW PROMO',c:'chip-warn'},{t:'VAPES',c:'chip-loc'}],
+    detail:{
+      rival:'MEDMEN WEST HOLLYWOOD · 0.8 MI · TRACKING',
+      title:'New daily happy hour — 20% off all vapes 4–7pm',
+      body:'<div class="det-sec"><div class="det-sec-label">What happened</div><div class="det-narrative">MedMen launched a new daily happy hour: 20% off all vape products from 4–7pm. Vapes are your #1 margin category at WeHo. This window overlaps with your peak evening traffic.</div></div><div class="det-stats"><div class="det-stat"><div class="det-stat-n cn-warm">20%</div><div class="det-stat-label">Discount</div></div><div class="det-stat"><div class="det-stat-n">Daily</div><div class="det-stat-label">Frequency</div></div><div class="det-stat"><div class="det-stat-n cn-warm">4–7pm</div><div class="det-stat-label">Window</div></div><div class="det-stat"><div class="det-stat-n">0.8mi</div><div class="det-stat-label">Distance</div></div></div><div class="det-rec"><div class="det-sec-label">Recommendation</div><div class="det-narrative">Counter-promote in a different window (12–2pm lunch) to differentiate on timing rather than matching their hours and depth. Matching head-on trains customers to wait for 4pm — owning a separate window splits the day between you.</div></div>',
+      footer:'<div class="footer-row"><button class="footer-btn" onclick="reviewAlert(\'hh-promo-weho\')">Mark reviewed</button><button class="footer-btn primary" onclick="toast(\'Promotions tracker opened\')">View promotions →</button><button class="footer-btn fb-danger" onclick="toast(\'Promo response flow opened\')">Respond →</button></div>'
+    }
+  },
+  {
+    id:'gel-price-dtla', type:'price-drop', loc:'dtla', locLabel:'DTLA Flagship', rival:'Off The Charts DTLA', unread:true, sev:'critical',
+    icon:'danger', title:'Off The Charts — Gelato #41 cut 25%', sub:'$80 → $60 · Their #1 volume SKU · Weekend push', time:'3h ago',
+    chips:[{t:'DTLA',c:'chip-loc'},{t:'−$20',c:'chip-danger'},{t:'FLOWER',c:'chip-loc'}],
+    detail:{
+      rival:'OFF THE CHARTS DTLA · 2.9 MI · BLOCKED',
+      title:'Gelato #41 7g — 25% weekend price push',
+      body:'<div class="block-strip"><div class="bs-dot"></div><div class="bs-text">Rival is blocked — they cannot access CannaSpy</div><div class="bs-since">22 days</div></div><div class="det-sec"><div class="det-sec-label">What happened</div><div class="det-narrative">Off The Charts dropped Gelato #41 7g from $80 to $60 — a $20 cut on their highest-volume premium flower SKU ahead of the weekend.</div></div><div class="det-stats"><div class="det-stat"><div class="det-stat-n cn-danger">−$20</div><div class="det-stat-label">Price cut</div></div><div class="det-stat"><div class="det-stat-n cn-danger">−25%</div><div class="det-stat-label">% change</div></div><div class="det-stat"><div class="det-stat-n">#1</div><div class="det-stat-label">Their volume rank</div></div><div class="det-stat"><div class="det-stat-n cn-warm">3h</div><div class="det-stat-label">Detected</div></div></div><div class="det-rec"><div class="det-sec-label">Recommendation</div><div class="det-narrative">Do not match $60 on Gelato #41 — that is their volume SKU, not yours. Run a weekend push on your top premium flower (Friendly Farms Reserve 7g at $75) to keep the premium-buyer foot traffic on your menu rather than chasing them on a SKU you do not own.</div></div>',
+      footer:'<div class="footer-row"><button class="footer-btn" onclick="reviewAlert(\'gel-price-dtla\')">Mark reviewed</button><button class="footer-btn primary" onclick="toast(\'DTLA matrix opened\')">View DTLA matrix →</button><button class="footer-btn fb-danger" onclick="toast(\'Respond flow opened\')">Respond →</button></div>'
+    }
+  },
+  {
+    id:'cat-skus-dtla', type:'sku', loc:'dtla', locLabel:'DTLA Flagship', rival:'Catalyst DTLA', unread:true, sev:'medium',
+    icon:'teal', title:'Catalyst added 14 new flower SKUs', sub:'Possible new brand partnership · Flower category', time:'6h ago',
+    chips:[{t:'DTLA',c:'chip-loc'},{t:'+14 SKUs',c:'chip-teal'},{t:'FLOWER',c:'chip-loc'}],
+    detail:{
+      rival:'CATALYST CANNABIS CO. DTLA · 1.9 MI · TRACKING',
+      title:'14 new flower SKUs added overnight',
+      body:'<div class="det-sec"><div class="det-sec-label">What happened</div><div class="det-narrative">Catalyst added 14 new flower SKUs in a single overnight batch — pattern suggests a new brand partnership or exclusivity deal. New brand launches typically drive traffic spikes in the first 2–3 weeks.</div></div><div class="det-stats"><div class="det-stat"><div class="det-stat-n cn-teal">+14</div><div class="det-stat-label">New SKUs</div></div><div class="det-stat"><div class="det-stat-n">481</div><div class="det-stat-label">Total SKUs</div></div><div class="det-stat"><div class="det-stat-n">Flower</div><div class="det-stat-label">Category</div></div><div class="det-stat"><div class="det-stat-n cn-warm">6h</div><div class="det-stat-label">Detected</div></div></div><div class="det-rec"><div class="det-sec-label">Recommendation</div><div class="det-narrative">Identify the new brand from the catalog diff and check whether it is available to you. If yes, request a sample order before Catalyst locks exclusivity. If exclusivity is already in place, plan a counter-launch with a comparable brand within 14 days to avoid losing flower-category share.</div></div>',
+      footer:'<div class="footer-row"><button class="footer-btn" onclick="reviewAlert(\'cat-skus-dtla\')">Mark reviewed</button><button class="footer-btn primary" onclick="toast(\'Catalog diff opened\')">View catalog diff →</button></div>'
+    }
+  },
+  {
+    id:'jb-skus-dtla', type:'sku', loc:'dtla', locLabel:'DTLA Flagship', rival:'Jungle Boys DTLA', unread:true, sev:'info',
+    icon:'slate', title:'Jungle Boys pulled 8 concentrate SKUs', sub:'Possible supply issue · Low priority', time:'8h ago',
+    chips:[{t:'DTLA',c:'chip-loc'},{t:'BLOCKING YOU',c:'chip-warn'},{t:'−8 SKUs',c:'chip-rose'}],
+    detail:{
+      rival:'JUNGLE BOYS DTLA · 2.4 MI · BLOCKING YOU',
+      title:'8 concentrate SKUs removed overnight',
+      body:'<div class="amber-strip"><div class="bs-dot"></div><div class="bs-text">Jungle Boys is blocking your tracking — limited intel available</div><div class="bs-since">63 days</div></div><div class="det-sec"><div class="det-sec-label">What happened</div><div class="det-narrative">Jungle Boys removed 8 concentrate SKUs simultaneously — pattern suggests supply chain issue, brand dispute, or compliance hold. Not an immediate threat but worth monitoring for market opportunity.</div></div><div class="det-stats"><div class="det-stat"><div class="det-stat-n cn-danger">−8</div><div class="det-stat-label">SKUs removed</div></div><div class="det-stat"><div class="det-stat-n">195</div><div class="det-stat-label">Remaining</div></div></div><div class="det-rec muted"><div class="det-sec-label">Recommendation</div><div class="det-narrative">Monitoring only. If the SKUs do not return within 7 days, run a concentrate promo at DTLA to capture the displaced demand. Limited intel from this rival means we will see the catalog change before we see the price reaction.</div></div>',
+      footer:'<div class="footer-row"><button class="footer-btn" onclick="reviewAlert(\'jb-skus-dtla\')">Mark reviewed</button><button class="footer-btn primary" onclick="toast(\'Catalog diff opened\')">View catalog diff →</button></div>'
+    }
+  },
+  {
+    id:'oak-new-rival', type:'block', loc:'oak', locLabel:'Oakland Telegraph', rival:'New rival detected', unread:true, sev:'medium',
+    icon:'rose', title:'New dispensary detected in Oakland market', sub:'Bloom Room Oakland · 0.6 mi from your location · Just opened', time:'Yesterday',
+    chips:[{t:'OAKLAND',c:'chip-loc'},{t:'NEW RIVAL',c:'chip-rose'}],
+    detail:{
+      rival:'NEW RIVAL · BLOOM ROOM OAKLAND · 0.6 MI',
+      title:'New dispensary opened in your market',
+      body:'<div class="det-sec"><div class="det-sec-label">What happened</div><div class="det-narrative">A new dispensary — Bloom Room Oakland — opened 0.6 miles from your Oakland Telegraph location. Initial menu shows 312 SKUs across flower, vapes, and edibles. No pricing data yet — first spy run scheduled tonight.</div></div><div class="det-stats"><div class="det-stat"><div class="det-stat-n">312</div><div class="det-stat-label">Initial SKUs</div></div><div class="det-stat"><div class="det-stat-n">0.6mi</div><div class="det-stat-label">Distance</div></div><div class="det-stat"><div class="det-stat-n">—</div><div class="det-stat-label">Price data</div></div><div class="det-stat"><div class="det-stat-n cn-warm">Tonight</div><div class="det-stat-label">First spy run</div></div></div><div class="det-rec muted"><div class="det-sec-label">Recommendation</div><div class="det-narrative">Start tracking now — pricing data lands tomorrow morning. Hold the block decision until you have one week of pricing and promo signal. Premature blocking on a new entrant burns a slot before you know if they are a real threat.</div></div>',
+      footer:'<div class="footer-row"><button class="footer-btn" onclick="reviewAlert(\'oak-new-rival\')">Mark reviewed</button><button class="footer-btn primary" onclick="toast(\'Tracking Bloom Room Oakland\')">Start tracking →</button></div>'
+    }
+  },
+  // Reviewed alerts below
+  {
+    id:'sd-price-rev', type:'price-drop', loc:'sd', locLabel:'San Diego Gaslamp', rival:'Mankind SD', unread:false, sev:'high',
+    icon:'danger', title:'Mankind dropped Jeeter prerolls 15%', sub:'$18 → $15 · Reviewed 3h ago', time:'Yesterday',
+    chips:[{t:'SAN DIEGO',c:'chip-loc'},{t:'−$3',c:'chip-danger'},{t:'PREROLLS',c:'chip-loc'}],
+    detail:{
+      rival:'MANKIND DISPENSARY SD · 1.1 MI · TRACKING',
+      title:'Jeeter prerolls — 15% price cut',
+      body:'<div class="det-sec"><div class="det-sec-label">What happened</div><div class="det-narrative">Mankind dropped Jeeter 1g prerolls from $18 to $15 — a $3 cut on a shared brand. Reviewed and no action taken.</div></div><div class="det-rec muted"><div class="det-sec-label">Recommendation at the time</div><div class="det-narrative">No action — the $3 gap was within the noise band on a low-margin SKU and Jeeter prerolls move on bundle promos rather than shelf price. Watch for Mankind running this as a recurring deal; if it returns daily, revisit.</div></div>',
+      footer:'<div class="footer-row"><button class="footer-btn active">✓ Reviewed</button><button class="footer-btn primary" onclick="go(\'cannaspy_s07_FINAL.html\')">View matrix →</button></div>'
+    }
+  }
+];
+
+/* ════ STATE ════ */
+var activeType = 'all', activeLoc = 'all', activeStatus = 'unreviewed', activeSort = 'newest';
+var selectedId = null;
+var reviewedSet = new Set();
+var snoozeMap = {};       // id -> ISO date string ("2026-04-30")
+var bulkSelected = new Set(); // ids currently bulk-selected
+
+// Seed two demo snoozes so the Snoozed filter has something to show out of the box
+(function seedSnoozes(){
+  var now = new Date();
+  // High-severity price drop snoozed until next Thursday's pricing meeting
+  var thu = new Date(now); thu.setDate(now.getDate() + ((4 - now.getDay() + 7) % 7 || 7));
+  snoozeMap['hh-promo-weho'] = thu.toISOString().slice(0,10);
+})();
+
+var SEV_ORDER = {critical:0,high:1,medium:2,info:3};
+var ICON_SVG = {
+  danger:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+  warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+  teal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  rose:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
+  slate:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>'
+};
+var PIP = {danger:'pip-danger',warn:'pip-warn',teal:'pip-teal',rose:'pip-rose',slate:'pip-teal'};
+var SEV_LABEL = {critical:'Critical',high:'High',medium:'Medium',info:'Info'};
+var SEV_CLASS = {critical:'sp-critical',high:'sp-high',medium:'sp-medium',info:'sp-info'};
+
+function isSnoozed(id) {
+  var until = snoozeMap[id];
+  if (!until) return false;
+  // A snooze is "active" if its until-date is today or later
+  var todayIso = new Date().toISOString().slice(0,10);
+  return until >= todayIso;
+}
+
+function visible() {
+  return ALERTS.filter(function(a){
+    var isReviewed = reviewedSet.has(a.id) || !a.unread;
+    var snoozed = isSnoozed(a.id);
+    // Status filter logic:
+    //   'unreviewed' (default) excludes both reviewed AND snoozed
+    //   'reviewed' shows only reviewed (snoozed-but-not-yet-reviewed not included)
+    //   'snoozed' shows only snoozed
+    //   'all' shows everything
+    if (activeStatus === 'unreviewed' && (isReviewed || snoozed)) return false;
+    if (activeStatus === 'reviewed' && !isReviewed) return false;
+    if (activeStatus === 'snoozed' && !snoozed) return false;
+    if (activeType !== 'all' && a.type !== activeType) return false;
+    if (activeLoc !== 'all' && a.loc !== activeLoc) return false;
+    return true;
+  }).sort(function(a,b){
+    if (activeSort === 'severity') return (SEV_ORDER[a.sev]||9) - (SEV_ORDER[b.sev]||9);
+    if (activeSort === 'rival') return a.rival.localeCompare(b.rival);
+    if (activeSort === 'location') return a.locLabel.localeCompare(b.locLabel);
+    return 0;
+  });
+}
+
+/* ════ RENDER ════ */
+function render() {
+  var list = visible();
+  var unreviewed = ALERTS.filter(function(a){
+    return a.unread && !reviewedSet.has(a.id) && !isSnoozed(a.id);
+  }).length;
+  var snoozedCount = ALERTS.filter(function(a){ return isSnoozed(a.id); }).length;
+  document.getElementById('topbarSub').textContent = 'All locations · ' + unreviewed + ' unreviewed';
+  // Greeting count: "8 unreviewed" or "8 unreviewed · 2 snoozed" if any snoozed
+  var greetingText = unreviewed + ' unreviewed';
+  if (snoozedCount > 0) greetingText += ' · ' + snoozedCount + ' snoozed';
+  document.getElementById('greetingCount').textContent = greetingText;
+
+  if (list.length === 0) {
+    document.getElementById('listScroll').innerHTML = emptyStateHtml();
+    refreshBulkBar();
+    return;
+  }
+
+  // Group by time
+  var groups = {today:[],yesterday:[],older:[]};
+  list.forEach(function(a){
+    if (a.time.indexOf('h ago') !== -1 || a.time === 'Just now') groups.today.push(a);
+    else if (a.time === 'Yesterday') groups.yesterday.push(a);
+    else groups.older.push(a);
+  });
+
+  var html = '';
+  if (groups.today.length) {
+    html += groupHeader('Today', groups.today.length);
+    html += groups.today.map(rowHtml).join('');
+  }
+  if (groups.yesterday.length) {
+    html += groupHeader('Yesterday', groups.yesterday.length);
+    html += groups.yesterday.map(rowHtml).join('');
+  }
+  if (groups.older.length) {
+    html += groupHeader('Earlier', groups.older.length);
+    html += groups.older.map(rowHtml).join('');
+  }
+  document.getElementById('listScroll').innerHTML = html;
+  refreshBulkBar();
+}
+
+function groupHeader(label, count) {
+  return '<div class="time-group-header"><div class="tgh-label">'+label+'</div><div class="tgh-line"></div><div class="tgh-count">'+count+'</div></div>';
+}
+
+function rowHtml(a) {
+  var isReviewed = reviewedSet.has(a.id) || !a.unread;
+  var isSelected = selectedId === a.id;
+  var isBulk = bulkSelected.has(a.id);
+  var snoozed = isSnoozed(a.id);
+  var selClass = isSelected ? (a.icon === 'danger' ? ' selected danger-sel' : ' selected') : '';
+  var revClass = isReviewed ? ' reviewed' : '';
+  var snoozeClass = snoozed ? ' snoozed' : '';
+  var bulkClass = isBulk ? ' bulk-checked' : '';
+  var chips = a.chips.map(function(c){ return '<span class="chip '+c.c+'">'+c.t+'</span>'; }).join('');
+  var snoozeTag = snoozed
+    ? '<div class="snooze-tag" onclick="event.stopPropagation();unsnoozeAlert(\''+a.id+'\')" title="Click to unsnooze">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>'
+      + 'Snoozed until ' + formatSnoozeLabel(snoozeMap[a.id])
+      + '</div>'
+    : '';
+  var bulkCheckbox =
+    '<div class="bulk-checkbox' + (isBulk ? ' checked' : '') + '" onclick="toggleBulk(\''+a.id+'\', event)" role="checkbox" aria-checked="'+isBulk+'" tabindex="-1">'
+    + (isBulk ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' : '')
+    + '</div>';
+  // Inject the per-card snooze button into the footer (between Mark reviewed and primary action).
+  // The footer string opens with `<div class="footer-row"><button class="footer-btn" onclick="reviewAlert('id')">Mark reviewed</button>...`
+  // We splice in the snooze wrap right after the closing </button> that follows "Mark reviewed".
+  var footer = a.detail.footer;
+  // Snooze isn't relevant once an alert is reviewed — keep it as a neutral state action only
+  if (!isReviewed && !snoozed) {
+    var snoozeBtn = '<div class="snooze-wrap" onclick="event.stopPropagation()">'
+      + '<button class="footer-btn" onclick="toggleSnoozePop(\''+a.id+'\', event)">'
+      +   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;margin-right:5px;display:inline;vertical-align:-2px;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>'
+      +   'Snooze'
+      +   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;margin-left:5px;opacity:0.55;display:inline;vertical-align:-1px;"><polyline points="6 9 12 15 18 9"/></svg>'
+      + '</button>'
+      + '<div class="snooze-pop" id="snoozePop-'+a.id+'">'
+      +   '<div class="snooze-opt" onclick="snoozeAlert(\''+a.id+'\',\'tomorrow\')"><span>Tomorrow morning</span><span class="snooze-opt-when">+1d</span></div>'
+      +   '<div class="snooze-opt" onclick="snoozeAlert(\''+a.id+'\',\'next-monday\')"><span>Next Monday</span><span class="snooze-opt-when">weekly review</span></div>'
+      +   '<div class="snooze-opt" onclick="snoozeAlert(\''+a.id+'\',\'next-thursday\')"><span>Next Thursday</span><span class="snooze-opt-when">pricing meeting</span></div>'
+      +   '<div class="snooze-opt-div"></div>'
+      +   '<div class="snooze-opt" onclick="snoozeAlert(\''+a.id+'\',\'next-week\')"><span>Next week</span><span class="snooze-opt-when">+7d</span></div>'
+      + '</div>'
+      + '</div>';
+    // Insert after the Mark reviewed </button> — find first </button> in the footer and splice
+    var firstBtnEnd = footer.indexOf('</button>');
+    if (firstBtnEnd !== -1) {
+      footer = footer.slice(0, firstBtnEnd + 9) + snoozeBtn + footer.slice(firstBtnEnd + 9);
+    }
+  }
+  var inlineDetail = '<div class="li-inline">' +
+    '<div class="det-rival-line">'+a.detail.rival+'</div>' +
+    '<div class="det-title-line">'+a.detail.title+'</div>' +
+    a.detail.body +
+    footer +
+  '</div>';
+  return '<div class="list-item'+selClass+revClass+snoozeClass+bulkClass+'" data-id="'+a.id+'" onclick="onRowClick(\''+a.id+'\', event)" role="button" tabindex="0">'+
+    bulkCheckbox +
+    '<div class="alert-row">'+
+      '<div class="unread-pip '+(isReviewed ? 'pip-none' : PIP[a.icon]||'pip-teal')+'"></div>'+
+      '<div class="alert-icon ai-'+a.icon+'">'+ICON_SVG[a.icon]+'</div>'+
+      '<div class="alert-content">'+
+        '<div class="alert-header">'+
+          '<div class="alert-title">'+a.title+'</div>'+
+          '<div class="alert-time">'+a.time+'</div>'+
+        '</div>'+
+        '<div class="alert-sub">'+a.sub+'</div>'+
+        '<div class="alert-chips">'+chips+'</div>'+
+        snoozeTag +
+      '</div>'+
+      '<span class="sev-pill '+(a.type==='shared'?'sp-shared':SEV_CLASS[a.sev])+'">'+
+        (a.type==='shared'?'Shared':SEV_LABEL[a.sev])+
+      '</span>'+
+    '</div>'+
+    inlineDetail +
+  '</div>';
+}
+
+/* ════ INTERACTION ════ */
+function onRowClick(id, e) {
+  if (e) {
+    e.stopPropagation();
+    // Don't hijack clicks on the checkbox or snooze tag — they handle themselves
+    if (e.target.closest('.bulk-checkbox')) return;
+    if (e.target.closest('.snooze-tag')) return;
+  }
+  // In bulk mode, row click toggles bulk membership (mirrors the checkbox)
+  if (bulkSelected.size > 0) {
+    toggleBulk(id, null);
+    return;
+  }
+  toggleSelect(id, null);
+}
+
+function toggleSelect(id, e) {
+  if (e) e.stopPropagation();
+  if (selectedId === id) {
+    selectedId = null;
+  } else {
+    selectedId = id;
+  }
+  render();
+  // Scroll the inline expansion into view
+  if (selectedId) {
+    setTimeout(function(){
+      var el = document.querySelector('.list-item.selected');
+      if (el) el.scrollIntoView({block:'nearest', behavior:'smooth'});
+    }, 50);
+  }
+}
+
+function closeDetail() {
+  selectedId = null;
+  render();
+}
+
+function reviewAlert(id) {
+  reviewedSet.add(id);
+  if (selectedId === id) selectedId = null;
+  render();
+  showToast('Alert marked as reviewed', 'var(--accent)');
+}
+
+function markReviewed(id) {
+  reviewAlert(id);
+}
+
+function markAllReviewed() {
+  ALERTS.forEach(function(a){ reviewedSet.add(a.id); });
+  selectedId = null;
+  bulkSelected.clear();
+  render();
+  showToast('All alerts marked as reviewed', 'var(--accent)');
+}
+
+/* ════ EMPTY STATE ════ */
+function emptyStateHtml() {
+  // Determine which empty state we're in based on whether the underlying
+  // unfiltered list also has no unreviewed items
+  var totalUnreviewed = ALERTS.filter(function(a){
+    return a.unread && !reviewedSet.has(a.id) && !isSnoozed(a.id);
+  }).length;
+  var hasFiltersActive = activeType !== 'all' || activeLoc !== 'all' || activeStatus !== 'unreviewed';
+
+  if (activeStatus === 'snoozed') {
+    return ''
+      + '<div class="empty-state-card">'
+      +   '<div class="es-card-icon warm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></div>'
+      +   '<div class="es-card-title">No alerts snoozed</div>'
+      +   '<div class="es-card-sub">When you snooze an alert, it parks here until its trigger date.</div>'
+      +   '<button class="es-card-btn" onclick="selStatus(\'unreviewed\',\'Unreviewed\',document.querySelector(\'#statusDd .dd-opt:nth-child(2)\'))">View unreviewed alerts</button>'
+      + '</div>';
+  }
+
+  if (totalUnreviewed === 0 && !hasFiltersActive) {
+    // True all-clear state
+    var lastRev = 'recently';
+    return ''
+      + '<div class="empty-state-card">'
+      +   '<div class="es-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'
+      +   '<div class="es-card-title">You\'re all caught up</div>'
+      +   '<div class="es-card-sub">Every alert in your feed has been reviewed or snoozed. We\'ll notify you when new intelligence arrives.</div>'
+      +   '<div class="es-card-meta">Next sweep · within the hour</div>'
+      +   '<button class="es-card-btn" onclick="selStatus(\'reviewed\',\'Reviewed\',document.querySelector(\'#statusDd .dd-opt:nth-child(3)\'))">View reviewed alerts</button>'
+      + '</div>';
+  }
+
+  // Filter combo with no matches
+  return ''
+    + '<div class="empty-state-card">'
+    +   '<div class="es-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg></div>'
+    +   '<div class="es-card-title">No alerts match</div>'
+    +   '<div class="es-card-sub">Your filters returned no results. Try adjusting type, location, or status.</div>'
+    +   '<button class="es-card-btn" onclick="resetFilters()">Clear all filters</button>'
+    + '</div>';
+}
+
+function resetFilters() {
+  activeType = 'all'; activeLoc = 'all'; activeStatus = 'unreviewed'; activeSort = 'newest';
+  // Reset the dropdown button labels too
+  var resetBtn = function(btnId, label){
+    var btn = document.getElementById(btnId);
+    if (!btn) return;
+    var svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;flex-shrink:0;opacity:0.55;"><polyline points="6 9 12 15 18 9"/></svg>';
+    btn.innerHTML = label + ' ' + svg;
+    btn.className = 'dd-btn' + (btnId === 'statusDdBtn' ? ' active-danger' : '');
+  };
+  resetBtn('typeDdBtn', 'All types');
+  resetBtn('locDdBtn', 'All locations');
+  resetBtn('statusDdBtn', 'Unreviewed');
+  resetBtn('sortDdBtn', 'Newest first');
+  // Clear .sel state inside each dd-pop and re-mark the default
+  var resetDdSel = function(popId, defaultIdx){
+    var pop = document.getElementById(popId);
+    if (!pop) return;
+    pop.querySelectorAll('.dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+    var opts = pop.querySelectorAll('.dd-opt');
+    if (opts[defaultIdx]) opts[defaultIdx].classList.add('sel');
+  };
+  resetDdSel('typeDd', 0);
+  resetDdSel('locDd', 0);
+  resetDdSel('statusDd', 1);   // Unreviewed is index 1 (after All)
+  resetDdSel('sortDd', 0);
+  render();
+}
+
+/* ════ SNOOZE ════ */
+function snoozeAlert(id, optionKey) {
+  var until = computeSnoozeDate(optionKey);
+  if (!until) return;
+  snoozeMap[id] = until;
+  if (selectedId === id) selectedId = null;
+  closeSnoozePopAll();
+  render();
+  showToast('Snoozed until ' + formatSnoozeLabel(until), 'var(--warm)');
+}
+
+function unsnoozeAlert(id) {
+  delete snoozeMap[id];
+  render();
+  showToast('Alert reactivated', 'var(--accent)');
+}
+
+function computeSnoozeDate(key) {
+  var d = new Date();
+  d.setHours(0,0,0,0);
+  if (key === 'tomorrow') {
+    d.setDate(d.getDate() + 1);
+  } else if (key === 'next-monday') {
+    var dow = d.getDay();
+    var add = (1 - dow + 7) % 7 || 7;
+    d.setDate(d.getDate() + add);
+  } else if (key === 'next-thursday') {
+    var dow2 = d.getDay();
+    var add2 = (4 - dow2 + 7) % 7 || 7;
+    d.setDate(d.getDate() + add2);
+  } else if (key === 'next-week') {
+    d.setDate(d.getDate() + 7);
+  } else {
+    return null;
+  }
+  return d.toISOString().slice(0,10);
+}
+
+function formatSnoozeLabel(iso) {
+  // "2026-04-30" -> "Thu Apr 30"
+  var parts = iso.split('-');
+  var d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+  var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return dayNames[d.getDay()] + ' ' + monthNames[d.getMonth()] + ' ' + d.getDate();
+}
+
+function toggleSnoozePop(id, e) {
+  if (e) { e.stopPropagation(); e.preventDefault(); }
+  var pop = document.getElementById('snoozePop-' + id);
+  if (!pop) return;
+  closeSnoozePopAll(pop);
+  pop.classList.toggle('open');
+}
+
+function closeSnoozePopAll(except) {
+  document.querySelectorAll('.snooze-pop').forEach(function(p){
+    if (p !== except) p.classList.remove('open');
+  });
+}
+
+/* ════ BULK SELECT ════ */
+function toggleBulk(id, e) {
+  if (e) { e.stopPropagation(); }
+  if (bulkSelected.has(id)) {
+    bulkSelected.delete(id);
+  } else {
+    bulkSelected.add(id);
+    // First bulk action exits inline-detail mode
+    if (selectedId) selectedId = null;
+  }
+  document.body.classList.toggle('bulk-mode', bulkSelected.size > 0);
+  render();
+}
+
+function bulkClear() {
+  bulkSelected.clear();
+  document.body.classList.remove('bulk-mode');
+  render();
+}
+
+function bulkSelectAllVisible() {
+  visible().forEach(function(a){ bulkSelected.add(a.id); });
+  document.body.classList.add('bulk-mode');
+  if (selectedId) selectedId = null;
+  render();
+}
+
+function bulkMarkReviewed() {
+  var n = bulkSelected.size;
+  bulkSelected.forEach(function(id){ reviewedSet.add(id); });
+  bulkSelected.clear();
+  document.body.classList.remove('bulk-mode');
+  render();
+  showToast(n + ' alert' + (n===1?'':'s') + ' marked reviewed', 'var(--accent)');
+}
+
+function bulkSnooze(optionKey) {
+  var until = computeSnoozeDate(optionKey);
+  if (!until) return;
+  var n = bulkSelected.size;
+  bulkSelected.forEach(function(id){ snoozeMap[id] = until; });
+  bulkSelected.clear();
+  document.body.classList.remove('bulk-mode');
+  closeSnoozePopAll();
+  render();
+  showToast(n + ' alert' + (n===1?'':'s') + ' snoozed until ' + formatSnoozeLabel(until), 'var(--warm)');
+}
+
+function refreshBulkBar() {
+  var bar = document.getElementById('bulkBar');
+  if (!bar) return;
+  if (bulkSelected.size === 0) {
+    bar.classList.remove('show');
+    return;
+  }
+  bar.classList.add('show');
+  var n = bulkSelected.size;
+  document.getElementById('bulkCount').innerHTML =
+    '<span class="bulk-count-pill">' + n + '</span> alert' + (n===1?'':'s') + ' selected';
+}
+
+/* ════ DROPDOWNS ════ */
+function toggleDd(id) {
+  document.querySelectorAll('.dd-pop').forEach(function(p){ if (p.id !== id) p.classList.remove('open'); });
+  document.getElementById(id).classList.toggle('open');
+}
+function closeDds() { document.querySelectorAll('.dd-pop').forEach(function(p){ p.classList.remove('open'); }); }
+document.addEventListener('click', function(e){
+  if (!e.target.closest('.dd-wrap')) closeDds();
+  if (!e.target.closest('.export-wrap')) {
+    var em = document.getElementById('exportMenu');
+    if (em) em.classList.remove('open');
+  }
+  if (!e.target.closest('.snooze-wrap')) {
+    closeSnoozePopAll();
+  }
+});
+
+function selOpt(popId, el, btnId, label, isDefault, extraClass) {
+  document.getElementById(popId).querySelectorAll('.dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+  el.classList.add('sel');
+  var svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:9px;height:9px;flex-shrink:0;opacity:0.55;"><polyline points="6 9 12 15 18 9"/></svg>';
+  var btn = document.getElementById(btnId);
+  btn.innerHTML = label + ' ' + svg;
+  btn.className = 'dd-btn' + (isDefault ? '' : ' ' + (extraClass || 'active'));
+  closeDds();
+  render();
+}
+function selType(v,l,el){ activeType=v; selOpt('typeDd',el,'typeDdBtn',l,v==='all'); }
+function selLoc(v,l,el){ activeLoc=v; selOpt('locDd',el,'locDdBtn',l,v==='all'); }
+function selStatus(v,l,el){ activeStatus=v; selOpt('statusDd',el,'statusDdBtn',l,v==='all','active-danger'); }
+function selSort(v,l,el){ activeSort=v; selOpt('sortDd',el,'sortDdBtn',l,v==='newest'); }
+
+/* ════ EXPORT ════ */
+function toggleExport(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('exportMenu').classList.toggle('open');
+}
+function doExport(type) {
+  document.getElementById('exportMenu').classList.remove('open');
+  var msgs = {
+    pdf: 'Generating daily brief PDF…',
+    csv: 'Downloading all alerts CSV…',
+    slack: 'Brief copied — ready to paste into Slack'
+  };
+  showToast(msgs[type] || 'Exporting…', 'var(--accent)');
+}
+
+/* ════ INLINE SEARCH FILTER ════ */
+function filterListBySearch(query) {
+  var q = (query || '').trim().toLowerCase();
+  var items = document.querySelectorAll('.list-item');
+  items.forEach(function(item){
+    if (!q) {
+      item.style.display = '';
+      return;
+    }
+    var text = item.textContent.toLowerCase();
+    item.style.display = text.indexOf(q) !== -1 ? '' : 'none';
+  });
+  // Hide empty time-group headers
+  document.querySelectorAll('.time-group-header').forEach(function(div){
+    var next = div.nextElementSibling;
+    var hasVisible = false;
+    while (next && !next.classList.contains('time-group-header')) {
+      if (next.classList.contains('list-item') && next.style.display !== 'none') {
+        hasVisible = true;
+        break;
+      }
+      next = next.nextElementSibling;
+    }
+    div.style.display = hasVisible || !q ? '' : 'none';
+  });
+}
+
+/* ════ KEYBOARD SHORTCUTS ════ */
+function toggleCheatsheet(e) {
+  if (e && e.target && !e.target.matches('.kbd-cheatsheet')) return;
+  document.getElementById('kbdCheat').classList.toggle('show');
+}
+function toggleSearchPalette(e) {
+  if (e && e.target && !e.target.matches('.search-palette')) return;
+  var pal = document.getElementById('searchPalette');
+  pal.classList.toggle('show');
+  if (pal.classList.contains('show')) {
+    setTimeout(function(){ pal.querySelector('.search-palette-input').focus(); }, 50);
+  }
+}
+
+document.addEventListener('keydown', function(e){
+  // Ignore if typing in an input
+  if (e.target.matches('input, textarea')) {
+    if (e.key === 'Escape') e.target.blur();
+    return;
+  }
+  // ⌘K / Ctrl+K — search palette
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    toggleSearchPalette();
+    return;
+  }
+  // ? — cheatsheet
+  if (e.key === '?') {
+    e.preventDefault();
+    toggleCheatsheet();
+    return;
+  }
+  // ⌘A / Ctrl+A — select all visible (only when not typing)
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
+    e.preventDefault();
+    bulkSelectAllVisible();
+    return;
+  }
+  // Esc — close anything open (priority order: snooze pop > search > cheat > bulk > detail)
+  if (e.key === 'Escape') {
+    var openSnooze = document.querySelector('.snooze-pop.open');
+    if (openSnooze) {
+      closeSnoozePopAll();
+    } else if (document.getElementById('searchPalette').classList.contains('show')) {
+      toggleSearchPalette();
+    } else if (document.getElementById('kbdCheat').classList.contains('show')) {
+      toggleCheatsheet();
+    } else if (bulkSelected.size > 0) {
+      bulkClear();
+    } else if (selectedId) {
+      closeDetail();
+    }
+    return;
+  }
+  // Space — toggle bulk membership of currently focused/selected row
+  if (e.key === ' ') {
+    var sel = document.querySelector('.list-item.selected');
+    if (sel) {
+      e.preventDefault();
+      var id = sel.getAttribute('data-id');
+      if (id) toggleBulk(id);
+    }
+    return;
+  }
+  // Enter — open / toggle selected
+  if (e.key === 'Enter') {
+    var sel = document.querySelector('.list-item.selected');
+    if (sel) {
+      // Already selected — let inline expansion stay open
+      return;
+    }
+    var first = document.querySelector('.list-item:not([style*="display: none"])');
+    if (first) {
+      e.preventDefault();
+      var id = first.getAttribute('data-id');
+      if (id) toggleSelect(id);
+    }
+    return;
+  }
+  // j / ArrowDown — next alert
+  if (e.key === 'j' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    var items = Array.from(document.querySelectorAll('.list-item:not([style*="display: none"])'));
+    if (!items.length) return;
+    var sel = document.querySelector('.list-item.selected');
+    var idx = sel ? items.indexOf(sel) : -1;
+    idx = Math.min(idx + 1, items.length - 1);
+    var target = items[idx];
+    if (target) {
+      var id = target.getAttribute('data-id');
+      if (id) {
+        selectedId = id;
+        render();
+        setTimeout(function(){
+          var el = document.querySelector('.list-item.selected');
+          if (el) el.scrollIntoView({block:'nearest', behavior:'smooth'});
+        }, 50);
+      }
+    }
+    return;
+  }
+  // k / ArrowUp — previous alert
+  if (e.key === 'k' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    var items = Array.from(document.querySelectorAll('.list-item:not([style*="display: none"])'));
+    if (!items.length) return;
+    var sel = document.querySelector('.list-item.selected');
+    var idx = sel ? items.indexOf(sel) : 1;
+    idx = Math.max(idx - 1, 0);
+    var target = items[idx];
+    if (target) {
+      var id = target.getAttribute('data-id');
+      if (id) {
+        selectedId = id;
+        render();
+        setTimeout(function(){
+          var el = document.querySelector('.list-item.selected');
+          if (el) el.scrollIntoView({block:'nearest', behavior:'smooth'});
+        }, 50);
+      }
+    }
+    return;
+  }
+  // r — mark reviewed
+  if (e.key === 'r' || e.key === 'R') {
+    var sel = document.querySelector('.list-item.selected');
+    if (sel) {
+      e.preventDefault();
+      var id = sel.getAttribute('data-id');
+      if (id) reviewAlert(id);
+    }
+    return;
+  }
+});
+
+/* ════ MISC ════ */
+var toastTimer;
+function showToast(msg, color) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  if (color) t.style.borderColor = color;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2400);
+}
+function toast(msg) { showToast(msg, 'var(--accent)'); }
+function go(url) { window.location.href = url; }
+
+/* ════ THEME ════ */
+function toggleTheme() {
+  var html = document.documentElement;
+  var isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeLabel').textContent = isDark ? 'Light mode' : 'Dark mode';
+  try { localStorage.setItem('cannaspy-theme', isDark ? 'light' : 'dark'); } catch (err) {}
+}
+(function(){
+  try {
+    var saved = localStorage.getItem('cannaspy-theme');
+    if (saved === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      var lbl = document.getElementById('themeLabel');
+      if (lbl) lbl.textContent = 'Dark mode';
+    }
+  } catch (err) {}
+})();
+
+/* ════ INITIAL RENDER ════ */
+render();
+
+</script>
+</body>
+</html>

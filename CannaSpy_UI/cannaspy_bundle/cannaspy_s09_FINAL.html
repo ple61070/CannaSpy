@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Price History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+[data-theme="light"]{
+  --bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);
+  --sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);--glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);--surface:rgba(255,255,255,0.97);--surface-solid:#ffffff;--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;
+  --border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);--border-hot:rgba(9,161,161,0.38);
+  --text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;
+  --accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);--accent-hover:#078484;
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);
+  --slate:#5484A4;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.08);--positive:#09A1A1;
+  --card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);
+  --btn-shadow:0 4px 18px rgba(9,161,161,0.32);
+  --noise-opacity:0.022;
+}
+[data-theme="dark"]{
+  --bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);
+  --sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);--glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);--surface:rgba(16,28,40,0.99);--surface-solid:#14202a;--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;
+  --border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);--border-hot:rgba(11,184,184,0.5);
+  --text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);--accent-hover:#0dcfcf;
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);
+  --slate:#acc0d3;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.10);--positive:#0bb8b8;
+  --card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);
+  --btn-shadow:0 4px 20px rgba(9,161,161,0.34);
+  --noise-opacity:0.04;
+}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--tr:all 0.2s cubic-bezier(.4,0,.2,1);--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise-opacity);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);background-attachment:fixed;}
+
+/* NAV */
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.nav-link.locked{opacity:0.45;pointer-events:none;}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;}
+.topbar-row1{display:flex;align-items:center;gap:14px;padding:12px 0 0;}
+.back-btn{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--accent);cursor:pointer;transition:var(--transition);flex-shrink:0;}
+.back-btn:hover{opacity:0.75;}
+.back-btn svg{width:12px;height:12px;}
+.topbar-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.topbar-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:2px;}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.tb-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.tb-btn svg{width:12px;height:12px;flex-shrink:0;}
+
+/* SUB-NAV TABS */
+.sub-nav{display:flex;align-items:center;gap:0;padding:0;border-top:1px solid var(--border);overflow-x:auto;}
+.sub-nav::-webkit-scrollbar{display:none;}
+.sn-tab{padding:10px 18px;font-size:12px;font-weight:600;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;transition:var(--transition);white-space:nowrap;display:flex;align-items:center;gap:6px;}
+.sn-tab:hover{color:var(--text-1);}
+.sn-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.sn-tab svg{width:13px;height:13px;}
+
+/* FILTER ROW */
+.filter-bar{padding:8px 24px;border-bottom:1px solid var(--border);background:var(--surface-2);display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:nowrap;}
+.dd-wrap{position:relative;display:inline-block;}
+.dd-btn{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:var(--r-sm);font-size:11px;font-weight:600;border:1.5px solid var(--border-2);background:var(--surface);color:var(--text-1);cursor:pointer;font-family:var(--sans);transition:var(--transition);white-space:nowrap;}
+.dd-btn:hover{border-color:var(--accent);color:var(--accent);}
+.dd-btn.dd-active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.dd-btn svg{width:10px;height:10px;flex-shrink:0;opacity:0.55;}
+.dd-pop{position:absolute;top:calc(100% + 5px);left:0;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);box-shadow:0 8px 32px rgba(30,60,80,0.14);z-index:200;min-width:160px;padding:5px;display:none;}
+.dd-pop.open{display:block;}
+.dd-opt{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;font-size:12px;color:var(--text-1);cursor:pointer;transition:background 0.1s;user-select:none;}
+.dd-opt:hover{background:var(--surface-3);}
+.dd-opt.sel{color:var(--accent);font-weight:700;}
+.dd-div{height:1px;background:var(--border);margin:4px 6px;}
+.dd-opt.sel::after{content:"✓";margin-left:auto;font-size:11px;}
+.dd-opt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.filter-sep{width:1px;height:20px;background:var(--border-2);flex-shrink:0;margin:0 4px;}
+.filter-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);}
+
+/* SCROLL AREA */
+.content-scroll{flex:1;overflow-y:auto;padding:24px;min-height:0;}
+.content-scroll::-webkit-scrollbar{width:5px;}
+.content-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px;}
+
+/* SKU PICKER RAIL */
+.sku-rail{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.sku-chip{padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--border-2);background:var(--surface);color:var(--text-2);cursor:pointer;transition:var(--transition);white-space:nowrap;display:flex;align-items:center;gap:5px;}
+.sku-chip:hover{border-color:var(--accent);color:var(--accent);}
+.sku-chip.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.sku-chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* CHART CARD */
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;box-shadow:var(--card-shadow);margin-bottom:16px;}
+.chart-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;}
+.chart-title-block{flex:1;min-width:0;}
+.chart-title{font-size:14px;font-weight:700;color:var(--text-1);letter-spacing:-0.01em;}
+.chart-meta{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:2px;}
+.chart-actions{display:flex;gap:6px;flex-shrink:0;}
+.chart-stat-row{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+.chart-stat{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 14px;flex:1;min-width:100px;}
+.cs-label{font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:3px;}
+.cs-val{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text-1);}
+.cs-val.up{color:var(--danger);}
+.cs-val.down{color:var(--accent);}
+.cs-val.flat{color:var(--text-2);}
+.cs-delta{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:1px;}
+
+/* SVG CHART */
+.chart-svg-wrap{position:relative;width:100%;height:220px;}
+.chart-svg-wrap svg{width:100%;height:100%;}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;}
+.cl-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-2);cursor:pointer;transition:opacity 0.15s;}
+.cl-item.hidden-line{opacity:0.3;}
+.cl-line{width:18px;height:2.5px;border-radius:2px;flex-shrink:0;}
+.cl-name{white-space:nowrap;}
+
+/* PRICE EVENT LOG */
+.event-log-section{margin-top:20px;}
+.section-label{font-family:var(--mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.event-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--border);margin-bottom:5px;transition:var(--transition);}
+.event-row:hover{border-color:var(--border-2);background:var(--surface);}
+.event-date{font-family:var(--mono);font-size:10px;color:var(--text-3);width:72px;flex-shrink:0;}
+.event-rival{font-size:11px;font-weight:600;color:var(--text-1);flex:1;min-width:0;}
+.event-rival-badge{font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:0.08em;padding:1px 5px;border-radius:3px;margin-left:5px;}
+.badge-blocked{background:var(--rose-soft);color:var(--rose);}
+.badge-tracking{background:var(--accent-soft);color:var(--accent);}
+.event-change{font-family:var(--mono);font-size:11px;font-weight:700;flex-shrink:0;}
+.event-change.drop{color:var(--accent);}
+.event-change.rise{color:var(--danger);}
+.event-type-tag{font-family:var(--mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;padding:2px 6px;border-radius:3px;flex-shrink:0;}
+.tag-flash{background:rgba(224,90,106,0.12);color:var(--danger);}
+.tag-perm{background:var(--accent-soft);color:var(--accent);}
+.tag-sale{background:var(--warm-soft);color:var(--warm);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:11px 18px;font-size:12px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:9000;transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.4,0,.2,1);pointer-events:none;display:flex;align-items:center;gap:8px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-row1">
+      <div class="back-btn" onclick="go('cannaspy_s07_v1.html')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Price Intelligence
+      </div>
+      <div style="width:1px;height:16px;background:var(--border-2);"></div>
+      <div class="topbar-title">Price History</div>
+      <div class="topbar-sub">90-DAY TREND · WEST HOLLYWOOD FLAGSHIP</div>
+      <div class="topbar-actions">
+        <button class="tb-btn" onclick="showToast('Exporting chart data as CSV…','var(--accent)')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+      </div>
+    </div>
+    <!-- SUB-NAV -->
+    <div class="sub-nav">
+      <div class="sn-tab active" onclick="go('cannaspy_s09_FINAL.html')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Price History
+      </div>
+      <div class="sn-tab" onclick="go('cannaspy_s10_FINAL.html')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h6"/></svg>
+        Catalog Comparison
+      </div>
+      <div class="sn-tab" onclick="go('cannaspy_s11_FINAL.html')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        Brand Coverage
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <span class="filter-label">SKU</span>
+    <div class="dd-wrap">
+      <div class="dd-btn dd-active" id="btn-sku" onclick="ddToggle('pop-sku',this,event)">
+        <span id="sku-label">Friendly Farms 3.5g</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="dd-pop" id="pop-sku">
+        <div class="dd-opt sel" onclick="selectSku('ff1','Friendly Farms 3.5g',this)"><span class="dd-opt-dot" style="background:#e05a6a;"></span>Friendly Farms 3.5g</div>
+        <div class="dd-opt" onclick="selectSku('ff3','Friendly Farms 1g Vape',this)"><span class="dd-opt-dot" style="background:#e05a6a;"></span>Friendly Farms 1g Vape</div>
+        <div class="dd-opt" onclick="selectSku('j1','Jeeter Juice 1g',this)"><span class="dd-opt-dot" style="background:#5484A4;"></span>Jeeter Juice 1g</div>
+        <div class="dd-opt" onclick="selectSku('j5','Jeeter XL Pre-Roll',this)"><span class="dd-opt-dot" style="background:#5484A4;"></span>Jeeter XL Pre-Roll</div>
+        <div class="dd-opt" onclick="selectSku('k2','Kanha Gummies 200mg',this)"><span class="dd-opt-dot" style="background:#09A1A1;"></span>Kanha Gummies 200mg</div>
+        <div class="dd-opt" onclick="selectSku('rg1','Raw Garden 1g Live Resin',this)"><span class="dd-opt-dot" style="background:#d4900a;"></span>Raw Garden 1g Live Resin</div>
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+    <span class="filter-label">Window</span>
+    <div class="dd-wrap">
+      <div class="dd-btn dd-active" id="btn-window" onclick="ddToggle('pop-window',this,event)">
+        <span id="window-label">90 Days</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="dd-pop" id="pop-window">
+        <div class="dd-opt" onclick="selectWindow(30,'30 Days',this)">30 Days</div>
+        <div class="dd-opt" onclick="selectWindow(60,'60 Days',this)">60 Days</div>
+        <div class="dd-opt sel" onclick="selectWindow(90,'90 Days',this)">90 Days</div>
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+    <span class="filter-label">Rivals</span>
+    <div class="dd-wrap">
+      <div class="dd-btn" id="btn-rival-filter" onclick="ddToggle('pop-rival',this,event)">
+        All rivals
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="dd-pop" id="pop-rival" style="min-width:180px;">
+        <div class="dd-opt sel" onclick="ddOptSel(this,'pop-rival')"><span class="dd-opt-dot" style="background:var(--text-3);"></span>All rivals</div>
+        <div class="dd-div"></div>
+        <div class="dd-opt" onclick="ddOptSel(this,'pop-rival')"><span class="dd-opt-dot" style="background:var(--rose);"></span>STIIIZY (blocked)</div>
+        <div class="dd-opt" onclick="ddOptSel(this,'pop-rival')"><span class="dd-opt-dot" style="background:var(--accent);"></span>MedMen (tracking)</div>
+        <div class="dd-opt" onclick="ddOptSel(this,'pop-rival')"><span class="dd-opt-dot" style="background:var(--rose);"></span>Off The Charts (blocked)</div>
+        <div class="dd-opt" onclick="ddOptSel(this,'pop-rival')"><span class="dd-opt-dot" style="background:var(--accent);"></span>Catalyst (tracking)</div>
+      </div>
+    </div>
+    <div style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--text-3);display:flex;align-items:center;gap:5px;">
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);animation:lpulse 2s ease-in-out infinite;"></div>
+      Updated 6 min ago
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content-scroll">
+    <!-- SKU CHIPS -->
+    <div class="sku-rail" id="sku-rail"></div>
+
+    <!-- MAIN CHART CARD -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title-block">
+          <div class="chart-title" id="chart-main-title">Friendly Farms 3.5g Flower — Price History</div>
+          <div class="chart-meta" id="chart-main-meta">Your price: $50 · 5 rivals tracked · Jan 15 – Apr 15, 2026</div>
+        </div>
+        <div class="chart-actions">
+          <button class="tb-btn" onclick="showToast('Setting price alert for this SKU…','var(--warm)')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Set alert
+          </button>
+        </div>
+      </div>
+
+      <!-- STAT STRIP -->
+      <div class="chart-stat-row" id="stat-row">
+        <div class="chart-stat">
+          <div class="cs-label">Your Price</div>
+          <div class="cs-val" id="cs-yours">$50</div>
+          <div class="cs-delta">Unchanged 90d</div>
+        </div>
+        <div class="chart-stat">
+          <div class="cs-label">Rival Low</div>
+          <div class="cs-val down" id="cs-low">$36</div>
+          <div class="cs-delta">STIIIZY flash sale</div>
+        </div>
+        <div class="chart-stat">
+          <div class="cs-label">Rival High</div>
+          <div class="cs-val up" id="cs-high">$50</div>
+          <div class="cs-delta">MedMen, OTC match</div>
+        </div>
+        <div class="chart-stat">
+          <div class="cs-label">Price Changes</div>
+          <div class="cs-val flat" id="cs-changes">7</div>
+          <div class="cs-delta">across all rivals</div>
+        </div>
+        <div class="chart-stat">
+          <div class="cs-label">Days w/ Promo</div>
+          <div class="cs-val flat" id="cs-promo">23</div>
+          <div class="cs-delta">at least 1 rival active</div>
+        </div>
+      </div>
+
+      <!-- SVG CHART -->
+      <div class="chart-svg-wrap">
+        <svg id="main-chart" viewBox="0 0 900 200" preserveAspectRatio="none"></svg>
+      </div>
+
+      <!-- LEGEND -->
+      <div class="chart-legend" id="chart-legend"></div>
+    </div>
+
+    <!-- PRICE EVENT LOG -->
+    <div class="event-log-section">
+      <div class="section-label">Price Change Events</div>
+      <div id="event-log"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<style>
+@keyframes lpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.75)}}
+</style>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+var RIVALS = [
+  {key:'stiiizy',name:'STIIIZY',status:'blocked',color:'#D396A6'},
+  {key:'medmen', name:'MedMen', status:'tracking',color:'#09A1A1'},
+  {key:'otc',    name:'Off The Charts',status:'blocked',color:'#5484A4'},
+  {key:'catalyst',name:'Catalyst',status:'tracking',color:'#d4900a'},
+  {key:'harbor', name:'Harborside',status:'tracking',color:'#e05a6a'},
+];
+
+// Historical price data per SKU — [day-offset from Jan 15, price] pairs
+var HISTORY = {
+  ff1:{
+    yours:50,
+    label:'Friendly Farms 3.5g Flower',
+    meta:'Your price: $50 · 5 rivals tracked',
+    low:{val:36,label:'STIIIZY flash sale'},
+    high:{val:50,label:'MedMen, OTC match'},
+    changes:7, promoDays:23,
+    series:{
+      stiiizy:[[0,42],[14,42],[21,36],[28,36],[35,42],[45,42],[60,36],[70,36],[90,42]],
+      medmen: [[0,50],[90,50]],
+      otc:    [[0,50],[90,50]],
+      catalyst:null,
+      harbor: null,
+      yours:  [[0,50],[90,50]]
+    },
+    events:[
+      {date:'Apr 10',rival:'STIIIZY',old:42,new_:36,type:'flash',label:'Weekend Flash'},
+      {date:'Mar 22',rival:'STIIIZY',old:36,new_:42,type:'perm',label:'Back to standard'},
+      {date:'Mar 8',rival:'STIIIZY',old:42,new_:36,type:'flash',label:'Weekend Flash'},
+      {date:'Feb 14',rival:'STIIIZY',old:36,new_:42,type:'perm',label:'Post-promo reset'},
+      {date:'Jan 28',rival:'STIIIZY',old:42,new_:36,type:'sale',label:'Brand Week Sale'},
+    ]
+  },
+  ff3:{
+    yours:55,
+    label:'Friendly Farms 1g Vape',
+    meta:'Your price: $55 · 3 rivals tracked',
+    low:{val:44,label:'MedMen happy hour'},
+    high:{val:55,label:'You, STIIIZY, OTC'},
+    changes:4, promoDays:31,
+    series:{
+      stiiizy:[[0,55],[90,55]],
+      medmen: [[0,55],[20,44],[35,44],[50,55],[90,55]],
+      otc:    [[0,52],[90,52]],
+      catalyst:null,
+      harbor: null,
+      yours:  [[0,55],[90,55]]
+    },
+    events:[
+      {date:'Mar 15',rival:'MedMen',old:44,new_:55,type:'perm',label:'Happy hour ended'},
+      {date:'Feb 20',rival:'MedMen',old:55,new_:44,type:'sale',label:'Happy Hour 4-7pm'},
+      {date:'Feb 5',rival:'OTC',old:55,new_:52,type:'perm',label:'Price reduction'},
+      {date:'Jan 20',rival:'OTC',old:52,new_:55,type:'perm',label:'Price restored'},
+    ]
+  },
+  j1:{
+    yours:42,
+    label:'Jeeter Juice 1g Vape',
+    meta:'Your price: $42 · 4 rivals tracked',
+    low:{val:32,label:'OTC Brand Day Sale'},
+    high:{val:42,label:'You, STIIIZY, MedMen'},
+    changes:6, promoDays:18,
+    series:{
+      stiiizy:[[0,42],[90,42]],
+      medmen: [[0,42],[90,42]],
+      otc:    [[0,40],[15,32],[22,40],[60,32],[68,40],[90,40]],
+      catalyst:null,
+      harbor: [[0,42],[90,42]],
+      yours:  [[0,42],[90,42]]
+    },
+    events:[
+      {date:'Apr 12',rival:'OTC',old:40,new_:32,type:'flash',label:'Brand Day Sale'},
+      {date:'Apr 5',rival:'OTC',old:32,new_:40,type:'perm',label:'Sale ended'},
+      {date:'Mar 1',rival:'OTC',old:40,new_:32,type:'flash',label:'Brand Day Sale'},
+      {date:'Feb 22',rival:'OTC',old:32,new_:40,type:'perm',label:'Sale ended'},
+    ]
+  },
+  j5:{
+    yours:38,
+    label:'Jeeter XL Pre-Roll',
+    meta:'Your price: $38 · 2 rivals tracked',
+    low:{val:35,label:'STIIIZY persistent'},
+    high:{val:38,label:'You, MedMen'},
+    changes:2, promoDays:0,
+    series:{
+      stiiizy:[[0,35],[90,35]],
+      medmen: [[0,38],[90,38]],
+      otc:    [[0,35],[90,35]],
+      catalyst:null,
+      harbor: null,
+      yours:  [[0,38],[90,38]]
+    },
+    events:[
+      {date:'Jan 30',rival:'STIIIZY',old:38,new_:35,type:'perm',label:'Price cut'},
+      {date:'Jan 22',rival:'OTC',old:38,new_:35,type:'perm',label:'Price cut'},
+    ]
+  },
+  k2:{
+    yours:35,
+    label:'Kanha Gummies 200mg',
+    meta:'Your price: $35 · 2 rivals tracked',
+    low:{val:32,label:'STIIIZY, OTC standard'},
+    high:{val:35,label:'You, MedMen'},
+    changes:1, promoDays:5,
+    series:{
+      stiiizy:[[0,32],[90,32]],
+      medmen: [[0,35],[90,35]],
+      otc:    [[0,32],[90,32]],
+      catalyst:null,
+      harbor: null,
+      yours:  [[0,35],[90,35]]
+    },
+    events:[
+      {date:'Feb 10',rival:'STIIIZY',old:35,new_:32,type:'perm',label:'Price reduction'},
+    ]
+  },
+  rg1:{
+    yours:58,
+    label:'Raw Garden 1g Live Resin Vape',
+    meta:'Your price: $58 · 2 rivals tracked',
+    low:{val:49,label:'Catalyst daily brand deal'},
+    high:{val:58,label:'You, OTC standard'},
+    changes:3, promoDays:90,
+    series:{
+      stiiizy:null,
+      medmen: null,
+      otc:    [[0,58],[90,58]],
+      catalyst:[[0,58],[10,49],[90,49]],
+      harbor: null,
+      yours:  [[0,58],[90,58]]
+    },
+    events:[
+      {date:'Jan 25',rival:'Catalyst',old:58,new_:49,type:'sale',label:'Daily Brand Deal (permanent)'},
+    ]
+  }
+};
+
+var currentSku = 'ff1';
+var hiddenLines = {};
+
+// ── CHART RENDERING ────────────────────────────────────────────────────────────
+var CHART_W = 900, CHART_H = 200;
+var PAD = {top:16, right:20, bottom:32, left:44};
+
+function priceToY(price, minP, maxP) {
+  var range = maxP - minP || 1;
+  var ratio = (price - minP) / range;
+  return PAD.top + (1 - ratio) * (CHART_H - PAD.top - PAD.bottom);
+}
+
+function dayToX(day) {
+  return PAD.left + (day / 90) * (CHART_W - PAD.left - PAD.right);
+}
+
+function buildPath(points, minP, maxP) {
+  if(!points || points.length < 2) return '';
+  var d = '';
+  for(var i=0;i<points.length;i++){
+    var x = dayToX(points[i][0]);
+    var y = priceToY(points[i][1], minP, maxP);
+    d += (i===0?'M':'L') + x.toFixed(1) + ' ' + y.toFixed(1);
+  }
+  return d;
+}
+
+function buildArea(points, minP, maxP) {
+  if(!points || points.length < 2) return '';
+  var path = buildPath(points, minP, maxP);
+  var lastX = dayToX(points[points.length-1][0]).toFixed(1);
+  var firstX = dayToX(points[0][0]).toFixed(1);
+  var baseY = (CHART_H - PAD.bottom).toFixed(1);
+  return path + ' L' + lastX + ' ' + baseY + ' L' + firstX + ' ' + baseY + ' Z';
+}
+
+function renderChart() {
+  var data = HISTORY[currentSku];
+  // collect all prices
+  var allPrices = [data.yours];
+  RIVALS.forEach(function(r){
+    var s = data.series[r.key];
+    if(s) s.forEach(function(p){ allPrices.push(p[1]); });
+  });
+  allPrices.push(data.yours);
+  var minP = Math.min.apply(null, allPrices) - 3;
+  var maxP = Math.max.apply(null, allPrices) + 3;
+
+  var svg = document.getElementById('main-chart');
+  var html = '';
+
+  // Y-axis grid + labels
+  var steps = 5;
+  for(var i=0;i<=steps;i++){
+    var price = minP + (maxP-minP)*(i/steps);
+    var y = priceToY(price, minP, maxP);
+    html += '<line x1="'+PAD.left+'" y1="'+y.toFixed(1)+'" x2="'+(CHART_W-PAD.right)+'" y2="'+y.toFixed(1)+'" stroke="currentColor" stroke-opacity="0.06" stroke-width="1"/>';
+    html += '<text x="'+(PAD.left-5)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="9" fill="currentColor" fill-opacity="0.4">$'+Math.round(price)+'</text>';
+  }
+  // X-axis labels: Jan 15, Feb, Mar, Apr
+  var months = [{label:'Jan 15',day:0},{label:'Feb',day:16},{label:'Mar',day:44},{label:'Apr',day:75}];
+  months.forEach(function(m){
+    var x = dayToX(m.day);
+    html += '<text x="'+x.toFixed(1)+'" y="'+(CHART_H-PAD.bottom+14)+'" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="currentColor" fill-opacity="0.4">'+m.label+'</text>';
+  });
+
+  // Area + line for "yours" first (bottom layer)
+  var yourPts = data.series.yours;
+  if(yourPts && !hiddenLines['yours']){
+    html += '<path d="'+buildArea(yourPts,minP,maxP)+'" fill="rgba(9,161,161,0.06)" stroke="none"/>';
+    html += '<path d="'+buildPath(yourPts,minP,maxP)+'" fill="none" stroke="#09A1A1" stroke-width="2.5" stroke-dasharray="5 3" stroke-opacity="0.7"/>';
+  }
+
+  // Rival lines
+  RIVALS.forEach(function(r){
+    if(hiddenLines[r.key]) return;
+    var pts = data.series[r.key];
+    if(!pts) return;
+    html += '<path d="'+buildPath(pts,minP,maxP)+'" fill="none" stroke="'+r.color+'" stroke-width="2"/>';
+    // dots at change points
+    pts.forEach(function(p,idx){
+      if(idx===0||idx===pts.length-1) return;
+      var cx = dayToX(p[0]).toFixed(1);
+      var cy = priceToY(p[1],minP,maxP).toFixed(1);
+      html += '<circle cx="'+cx+'" cy="'+cy+'" r="3.5" fill="'+r.color+'" stroke="var(--surface)" stroke-width="1.5"/>';
+    });
+  });
+
+  // Your price reference line (dashed)
+  if(yourPts && !hiddenLines['yours']){
+    var yP = priceToY(data.yours, minP, maxP).toFixed(1);
+    html += '<line x1="'+PAD.left+'" y1="'+yP+'" x2="'+(CHART_W-PAD.right)+'" y2="'+yP+'" stroke="#09A1A1" stroke-width="1" stroke-dasharray="3 2" stroke-opacity="0.25"/>';
+  }
+
+  svg.innerHTML = html;
+
+  // LEGEND
+  var legHtml = '<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--accent);cursor:pointer;" onclick="toggleLine(\'yours\')" id="leg-yours">';
+  legHtml += '<div style="width:18px;height:2.5px;border-radius:2px;background:#09A1A1;border-top:1.5px dashed #09A1A1;"></div><span>You ($'+data.yours+')</span></div>';
+  RIVALS.forEach(function(r){
+    if(!data.series[r.key]) return;
+    var hidden = hiddenLines[r.key] ? 'opacity:0.3;' : '';
+    var badge = r.status==='blocked' ? '<span style="font-family:JetBrains Mono,monospace;font-size:8px;background:rgba(211,150,166,0.15);color:'+r.color+';padding:1px 4px;border-radius:3px;margin-left:3px;">blocked</span>'
+      : r.status==='tracking' ? '' : '<span style="font-family:JetBrains Mono,monospace;font-size:8px;background:rgba(9,161,161,0.1);color:var(--accent);padding:1px 4px;border-radius:3px;margin-left:3px;">tracking</span>';
+    legHtml += '<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-2);cursor:pointer;'+hidden+'" onclick="toggleLine(\''+r.key+'\')" id="leg-'+r.key+'">';
+    legHtml += '<div style="width:18px;height:2.5px;border-radius:2px;background:'+r.color+';flex-shrink:0;"></div>';
+    legHtml += '<span>'+r.name+badge+'</span></div>';
+  });
+  document.getElementById('chart-legend').innerHTML = legHtml;
+}
+
+function toggleLine(key) {
+  hiddenLines[key] = !hiddenLines[key];
+  renderChart();
+}
+
+function renderEventLog() {
+  var data = HISTORY[currentSku];
+  var html = '';
+  data.events.forEach(function(ev){
+    var rival = RIVALS.find(function(r){ return r.name===ev.rival||r.key===ev.rival; });
+    var color = rival ? rival.color : 'var(--text-2)';
+    var status = rival ? rival.status : '';
+    var badgeHtml = status==='blocked' ? '<span class="event-rival-badge badge-blocked">blocked</span>' :
+                    status==='tracking' ? '<span class="event-rival-badge badge-tracking">tracking</span>' : '';
+    var isDown = ev.new_ < ev.old;
+    var delta = isDown ? '-$'+(ev.old-ev.new_) : '+$'+(ev.new_-ev.old);
+    var typeTag = ev.type==='flash' ? '<span class="event-type-tag tag-flash">Flash</span>' :
+                  ev.type==='sale'  ? '<span class="event-type-tag tag-sale">Sale</span>' :
+                                      '<span class="event-type-tag tag-perm">Perm</span>';
+    html += '<div class="event-row">';
+    html += '<div class="event-date">'+ev.date+'</div>';
+    html += '<div class="event-rival" style="color:'+color+';">'+ev.rival+badgeHtml+'</div>';
+    html += '<div style="font-size:11px;color:var(--text-3);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+ev.label+'</div>';
+    html += '<div class="event-change '+(isDown?'drop':'rise')+'">'+delta+'</div>';
+    html += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-3);width:48px;text-align:right;">$'+ev.old+' → $'+ev.new_+'</div>';
+    html += typeTag;
+    html += '</div>';
+  });
+  if(!html) html = '<div style="padding:16px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text-3);">No price changes detected in this window</div>';
+  document.getElementById('event-log').innerHTML = html;
+}
+
+function renderSkuRail() {
+  var skuDefs = [
+    {key:'ff1',label:'FF 3.5g',dot:'#e05a6a'},
+    {key:'ff3',label:'FF 1g Vape',dot:'#e05a6a'},
+    {key:'j1',label:'Jeeter Juice',dot:'#5484A4'},
+    {key:'j5',label:'Jeeter XL',dot:'#5484A4'},
+    {key:'k2',label:'Kanha 200mg',dot:'#09A1A1'},
+    {key:'rg1',label:'Raw Garden',dot:'#d4900a'},
+  ];
+  var html = '';
+  skuDefs.forEach(function(s){
+    html += '<div class="sku-chip '+(s.key===currentSku?'active':'')+'" onclick="switchSku(\''+s.key+'\')">';
+    html += '<span class="sku-chip-dot" style="background:'+s.dot+';'+(s.key===currentSku?'':'opacity:0.5;')+'"></span>'+s.label+'</div>';
+  });
+  document.getElementById('sku-rail').innerHTML = html;
+}
+
+function updateStats() {
+  var data = HISTORY[currentSku];
+  document.getElementById('chart-main-title').textContent = data.label + ' — Price History';
+  document.getElementById('chart-main-meta').textContent = data.meta + ' · Jan 15 – Apr 15, 2026';
+  document.getElementById('cs-yours').textContent = '$' + data.yours;
+  document.getElementById('cs-low').textContent = '$' + data.low.val;
+  document.getElementById('cs-low').parentElement.querySelector('.cs-delta').textContent = data.low.label;
+  document.getElementById('cs-high').textContent = '$' + data.high.val;
+  document.getElementById('cs-high').parentElement.querySelector('.cs-delta').textContent = data.high.label;
+  document.getElementById('cs-changes').textContent = data.changes;
+  document.getElementById('cs-promo').textContent = data.promoDays;
+}
+
+function switchSku(key) {
+  currentSku = key;
+  hiddenLines = {};
+  // Update sku label
+  var labels = {ff1:'Friendly Farms 3.5g',ff3:'Friendly Farms 1g Vape',j1:'Jeeter Juice 1g',j5:'Jeeter XL Pre-Roll',k2:'Kanha Gummies 200mg',rg1:'Raw Garden 1g Live Resin'};
+  document.getElementById('sku-label').textContent = labels[key]||key;
+  renderSkuRail();
+  updateStats();
+  renderChart();
+  renderEventLog();
+}
+
+function selectSku(key, label, el) {
+  document.getElementById('sku-label').textContent = label;
+  document.querySelectorAll('#pop-sku .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+  el.classList.add('sel');
+  document.getElementById('pop-sku').classList.remove('open');
+  switchSku(key);
+}
+
+function selectWindow(days, label, el) {
+  document.getElementById('window-label').textContent = label;
+  document.querySelectorAll('#pop-window .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+  el.classList.add('sel');
+  document.getElementById('pop-window').classList.remove('open');
+  showToast('Showing ' + label + ' of price history','var(--accent)');
+}
+
+function ddToggle(id, btn, event) {
+  if(event) event.stopPropagation();
+  var allPops = document.querySelectorAll('.dd-pop');
+  allPops.forEach(function(p){ if(p.id!==id) p.classList.remove('open'); });
+  document.getElementById(id).classList.toggle('open');
+}
+
+function ddOptSel(el, popId, event) {
+  if(event) event.stopPropagation();
+  document.querySelectorAll('#'+popId+' .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+  el.classList.add('sel');
+  document.getElementById(popId).classList.remove('open');
+}
+
+function closeDDs() {
+  document.querySelectorAll('.dd-pop').forEach(function(p){ p.classList.remove('open'); });
+}
+
+document.addEventListener('click', function(e) {
+  if(!e.target.closest('.dd-wrap')) closeDDs();
+});
+
+function go(url){ window.location.href = url; }
+
+function toggleTheme(){
+  var t = document.documentElement.getAttribute('data-theme')==='light'?'dark':'light';
+  document.documentElement.setAttribute('data-theme',t);
+}
+
+var toastTimer;
+function showToast(msg, color){
+  clearTimeout(toastTimer);
+  var t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  document.getElementById('toast-dot').style.background=color;
+  t.classList.add('show');
+  toastTimer=setTimeout(function(){ t.classList.remove('show'); }, 3200);
+}
+
+// INIT
+renderSkuRail();
+updateStats();
+renderChart();
+renderEventLog();
+</script>
+</body>
+</html>

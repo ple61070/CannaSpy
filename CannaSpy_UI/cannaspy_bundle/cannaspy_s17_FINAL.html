@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Block Confirm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+[data-theme="light"]{
+  --bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);
+  --sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);--glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);--surface:rgba(255,255,255,0.98);--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;
+  --border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);--border-hot:rgba(9,161,161,0.38);
+  --text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;
+  --accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);--accent-hover:#078484;
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);--rose-hover:#c07a92;
+  --slate:#5484A4;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.08);
+  --card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);
+  --card-lg:0 8px 40px rgba(30,60,80,0.13);
+  --btn-rose:0 4px 18px rgba(211,150,166,0.40);
+  --noise:0.022;
+}
+[data-theme="dark"]{
+  --bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);
+  --sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);--glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);--surface:rgba(16,28,40,0.99);--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;
+  --border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);--border-hot:rgba(11,184,184,0.5);
+  --text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);--accent-hover:#0dcfcf;
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);--rose-hover:#e8a8c0;
+  --slate:#acc0d3;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.10);
+  --card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);
+  --card-lg:0 12px 50px rgba(0,0,0,0.38);
+  --btn-rose:0 4px 20px rgba(211,150,166,0.32);
+  --noise:0.04;
+}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--tr:all 0.2s cubic-bezier(.4,0,.2,1);--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);min-height:100vh;display:flex;font-size:14px;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);}
+
+/* ── NAV ── */
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.nav-link.locked{opacity:0.45;pointer-events:none;}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;position:sticky;top:0;z-index:10;}
+.tb-inner{display:flex;align-items:center;gap:14px;padding:12px 0;}
+.back{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--accent);cursor:pointer;flex-shrink:0;transition:var(--tr);}
+.back:hover{opacity:0.75;}
+.back svg{width:12px;height:12px;}
+.tb-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.tb-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+
+/* ── CONTENT ── */
+.content{flex:1;padding:32px 24px;max-width:780px;margin:0 auto;width:100%;}
+
+/* ── STEP INDICATOR ── */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:32px;}
+.step{display:flex;align-items:center;gap:8px;flex:1;}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;flex-shrink:0;transition:var(--tr);}
+.step-num.done{background:var(--accent);color:#fff;}
+.step-num.active{background:var(--rose);color:#fff;box-shadow:0 0 0 3px rgba(211,150,166,0.25);}
+.step-num.pending{background:var(--surface-3);color:var(--text-3);border:1.5px solid var(--border-2);}
+.step-label{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:0.06em;color:var(--text-2);}
+.step-label.active{color:var(--rose);}
+.step-label.pending{color:var(--text-3);}
+.step-connector{flex:1;height:1px;background:var(--border-2);margin:0 8px;}
+.step-connector.done{background:var(--accent);}
+
+/* ── RIVAL CARD ── */
+.rival-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--card-shadow);margin-bottom:20px;}
+.rc-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.rc-avatar{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
+.rc-name{font-size:16px;font-weight:700;color:var(--text-1);margin-bottom:3px;}
+.rc-meta{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.rc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.rcs{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;}
+.rcs-n{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text-1);line-height:1;margin-bottom:3px;}
+.rcs-l{font-family:var(--mono);font-size:8px;color:var(--text-3);letter-spacing:0.06em;text-transform:uppercase;}
+
+/* ── SECTION CARD ── */
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--card-shadow);margin-bottom:16px;}
+.sc-title{font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:4px;}
+.sc-sub{font-size:12px;color:var(--text-2);margin-bottom:16px;}
+
+/* ── LOCATION SELECTOR ── */
+.loc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.loc-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--surface-2);cursor:pointer;transition:var(--tr);user-select:none;}
+.loc-item:hover{border-color:var(--rose);background:var(--rose-soft);}
+.loc-item.selected{border-color:var(--rose);background:var(--rose-soft);}
+.loc-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border-2);background:var(--surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:var(--tr);}
+.loc-item.selected .loc-check{background:var(--rose);border-color:var(--rose);}
+.loc-check svg{width:10px;height:10px;color:#fff;opacity:0;}
+.loc-item.selected .loc-check svg{opacity:1;}
+.loc-name{font-size:12px;font-weight:600;color:var(--text-1);flex:1;}
+.loc-tier{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;}
+.loc-tier.elite{background:rgba(211,150,166,0.14);color:var(--rose);}
+.loc-tier.comp{background:rgba(84,132,164,0.12);color:var(--slate);}
+.loc-tier.std{background:var(--surface-3);color:var(--text-3);}
+.loc-rate{font-family:var(--mono);font-size:10px;color:var(--text-3);flex-shrink:0;}
+
+.select-all-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.sel-all-btn{font-family:var(--mono);font-size:10px;color:var(--accent);cursor:pointer;transition:var(--tr);}
+.sel-all-btn:hover{opacity:0.7;}
+.sel-count{font-family:var(--mono);font-size:10px;color:var(--text-3);}
+
+/* ── COST SUMMARY ── */
+.cost-card{background:linear-gradient(135deg,rgba(211,150,166,0.12),rgba(211,150,166,0.05));border:1px solid rgba(211,150,166,0.3);border-radius:var(--r);padding:20px;margin-bottom:20px;}
+.cost-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+.cost-title{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--rose);margin-bottom:6px;}
+.cost-total{font-family:var(--mono);font-size:36px;font-weight:700;color:var(--rose);line-height:1;}
+.cost-per{font-family:var(--mono);font-size:11px;color:var(--text-3);margin-top:3px;}
+.cost-breakdown{border-top:1px solid rgba(211,150,166,0.2);padding-top:14px;}
+.cb-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:12px;}
+.cb-label{color:var(--text-2);}
+.cb-value{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text-1);}
+.cb-total-row{border-top:1px solid rgba(211,150,166,0.25);margin-top:6px;padding-top:10px;font-weight:700;}
+.cb-total-row .cb-label{color:var(--text-1);font-weight:700;}
+.cb-total-row .cb-value{color:var(--rose);font-size:13px;}
+
+/* ── WHAT HAPPENS BOX ── */
+.what-happens{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:24px;box-shadow:var(--card-shadow);}
+.wh-title{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:14px;}
+.wh-steps{display:flex;flex-direction:column;gap:0;}
+.wh-step{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid var(--border);}
+.wh-step:last-child{border-bottom:none;}
+.wh-num{width:24px;height:24px;border-radius:50%;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--accent);flex-shrink:0;margin-top:1px;}
+.wh-body{flex:1;}
+.wh-label{font-size:12px;font-weight:700;color:var(--text-1);margin-bottom:2px;}
+.wh-desc{font-size:11px;color:var(--text-2);line-height:1.6;}
+
+/* ── ACTIONS ── */
+.action-row{display:flex;gap:10px;margin-bottom:32px;}
+.btn{display:flex;align-items:center;justify-content:center;gap:7px;padding:12px 24px;border-radius:var(--r-sm);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:var(--tr);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn.primary{background:var(--rose);border-color:var(--rose);color:#fff;box-shadow:var(--btn-rose);flex:1;}
+.btn.primary:hover{background:var(--rose-hover);}
+.btn.primary:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;}
+.btn svg{width:14px;height:14px;flex-shrink:0;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text-1);color:var(--surface);padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;font-family:var(--mono);z-index:9000;transition:transform 0.3s cubic-bezier(.2,.8,.2,1),opacity 0.3s;opacity:0;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="tb-inner">
+      <div class="back" onclick="go('cannaspy_s16_FINAL.html')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Back to Block Management
+      </div>
+      <div>
+        <div class="tb-title">Block Confirm</div>
+        <div class="tb-sub">MedMen West Hollywood &middot; Step 1 of 2</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Step indicator -->
+    <div class="steps">
+      <div class="step">
+        <div class="step-num active">1</div>
+        <div class="step-label active">Select locations</div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-num pending">2</div>
+        <div class="step-label pending">Confirm &amp; activate</div>
+      </div>
+    </div>
+
+    <!-- Rival being blocked -->
+    <div class="rival-card">
+      <div class="rc-header">
+        <div class="rc-avatar" style="background:#c88a20;">MM</div>
+        <div>
+          <div class="rc-name">MedMen West Hollywood</div>
+          <div class="rc-meta">0.8 mi &middot; WeHo market &middot; Currently tracking &middot; 12 changes this week</div>
+        </div>
+      </div>
+      <div class="rc-stats">
+        <div class="rcs"><div class="rcs-n">1,847</div><div class="rcs-l">Total SKUs</div></div>
+        <div class="rcs"><div class="rcs-n">12</div><div class="rcs-l">Changes this week</div></div>
+        <div class="rcs"><div class="rcs-n">0.8 mi</div><div class="rcs-l">Nearest location</div></div>
+      </div>
+    </div>
+
+    <!-- Location selector -->
+    <div class="section-card">
+      <div class="sc-title">Select locations to block at</div>
+      <div class="sc-sub">Block hides this rival from every location you select. Each location is one slot at the market rate for that area.</div>
+      <div class="select-all-row">
+        <span class="sel-all-btn" onclick="toggleAll()">Select all</span>
+        <span class="sel-count" id="selCount">3 of 10 selected</span>
+      </div>
+      <div class="loc-grid" id="locGrid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- Cost summary -->
+    <div class="cost-card">
+      <div class="cost-header">
+        <div>
+          <div class="cost-title">Monthly block cost</div>
+          <div class="cost-total" id="costTotal">$600</div>
+          <div class="cost-per">per month &middot; billed with your current subscription</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--rose);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">Slots added</div>
+          <div style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--rose);" id="slotsAdded">3</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);">of 80 total</div>
+        </div>
+      </div>
+      <div class="cost-breakdown">
+        <div id="costRows"><!-- populated by JS --></div>
+        <div class="cb-row cb-total-row">
+          <span class="cb-label">Total added to monthly bill</span>
+          <span class="cb-value" id="costTotalLine">+$600/mo</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- What happens next -->
+    <div class="what-happens">
+      <div class="wh-title">What happens when you confirm</div>
+      <div class="wh-steps">
+        <div class="wh-step">
+          <div class="wh-num">1</div>
+          <div class="wh-body">
+            <div class="wh-label">Block activates immediately</div>
+            <div class="wh-desc">MedMen West Hollywood is removed from our active prospect list across all selected locations. No outbound sales contact will be made to them.</div>
+          </div>
+        </div>
+        <div class="wh-step">
+          <div class="wh-num">2</div>
+          <div class="wh-body">
+            <div class="wh-label">Prorated charge today + full charge on the 1st</div>
+            <div class="wh-desc">You&apos;ll be charged a prorated amount for the remaining days of this month, then the full slot rate on the 1st of each month going forward. Each slot carries a <strong>one-month minimum commitment</strong> — the earliest you can cancel and stop billing is the 1st of the month after your first full billing month.</div>
+          </div>
+        </div>
+        <div class="wh-step">
+          <div class="wh-num">3</div>
+          <div class="wh-body">
+            <div class="wh-label">Tracking continues as normal</div>
+            <div class="wh-desc">You continue to see their prices, promotions, and catalog changes in your intelligence dashboard. The block only affects their access to CannaSpy — not your visibility into them.</div>
+          </div>
+        </div>
+        <div class="wh-step">
+          <div class="wh-num">4</div>
+          <div class="wh-body">
+            <div class="wh-label">Cancelling the block has consequences</div>
+            <div class="wh-desc">If you cancel this block in the future, MedMen will be added back to our active prospect list. They will be able to access CannaSpy after subscribing. Full details are shown before any cancellation.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Billing preview -->
+    <div class="what-happens" style="margin-bottom:20px;">
+      <div class="wh-title">Billing preview — today is Apr 15</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:0;">
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Today (Apr 15)</div>
+          <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--rose);line-height:1;margin-bottom:3px;" id="proratedAmt">$320</div>
+          <div style="font-size:11px;color:var(--text-2);">Prorated &middot; 16 days &times; <span id="perDayAmt">$20</span>/day</div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">May 1st</div>
+          <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text-1);line-height:1;margin-bottom:3px;" id="may1Amt">$600</div>
+          <div style="font-size:11px;color:var(--text-2);">First full month &middot; <span id="slotCountPreview">3</span> slots</div>
+        </div>
+        <div style="background:var(--accent-soft);border:1px solid rgba(9,161,161,0.2);border-radius:var(--r-sm);padding:12px 14px;">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">Earliest exit</div>
+          <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent);line-height:1;margin-bottom:3px;">Jun 1</div>
+          <div style="font-size:11px;color:var(--text-2);">Cancel before Jun 1 to stop May billing</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:10px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);font-size:11px;color:var(--text-2);line-height:1.6;">
+        <strong style="color:var(--text-1);">Slots auto-renew on the 1st of each month.</strong> One-month minimum per slot — the earliest you can cancel and stop billing is Jun 1. After that, cancel before the 1st of any month to stop the following month's charge. No action needed to keep slots active.
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-row">
+      <button class="btn" onclick="go('cannaspy_s16_FINAL.html')">Cancel</button>
+      <button class="btn primary" id="confirmBtn" onclick="goConfirm()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        Confirm block — 3 locations &middot; $600/mo
+      </button>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+var LOCATIONS = [
+  {id:'weho',  name:'WeHo Flagship',   tier:'Elite',       rate:200, selected:true},
+  {id:'dtla',  name:'DTLA Flagship',   tier:'Elite',       rate:200, selected:false},
+  {id:'sf',    name:'SoMa SF',         tier:'Elite',       rate:200, selected:false},
+  {id:'oak',   name:'Oakland',         tier:'Hot',         rate:200, selected:false},
+  {id:'sd',    name:'San Diego',       tier:'Competitive', rate:150, selected:true},
+  {id:'lb',    name:'Long Beach',      tier:'Competitive', rate:150, selected:false},
+  {id:'kor',   name:'Koreatown',       tier:'Competitive', rate:150, selected:true},
+  {id:'culver',name:'Culver City',     tier:'Standard',    rate:100, selected:false},
+  {id:'pas',   name:'Pasadena',        tier:'Standard',    rate:100, selected:false},
+  {id:'corona',name:'Corona',          tier:'Standard',    rate:100, selected:false},
+];
+
+var TIER_CLASS = {Elite:'elite', Hot:'elite', Competitive:'comp', Standard:'std'};
+
+function renderLocs() {
+  var sel = LOCATIONS.filter(function(l){ return l.selected; });
+  document.getElementById('selCount').textContent = sel.length + ' of ' + LOCATIONS.length + ' selected';
+
+  document.getElementById('locGrid').innerHTML = LOCATIONS.map(function(l) {
+    return '<div class="loc-item'+(l.selected?' selected':'')+'" onclick="toggleLoc(\''+l.id+'\')" data-id="'+l.id+'">'+
+      '<div class="loc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>'+
+      '<div class="loc-name">'+l.name+'</div>'+
+      '<span class="loc-tier '+TIER_CLASS[l.tier]+'">'+l.tier+'</span>'+
+      '<div class="loc-rate">$'+l.rate+'/mo</div>'+
+    '</div>';
+  }).join('');
+
+  updateCost();
+}
+
+function toggleLoc(id) {
+  var loc = LOCATIONS.find(function(l){ return l.id===id; });
+  if (loc) loc.selected = !loc.selected;
+  renderLocs();
+}
+
+function toggleAll() {
+  var allSel = LOCATIONS.every(function(l){ return l.selected; });
+  LOCATIONS.forEach(function(l){ l.selected = !allSel; });
+  renderLocs();
+}
+
+function updateCost() {
+  var sel = LOCATIONS.filter(function(l){ return l.selected; });
+  var total = sel.reduce(function(s,l){ return s+l.rate; }, 0);
+  var slots = sel.length;
+
+  document.getElementById('costTotal').textContent = '$'+total.toLocaleString();
+  document.getElementById('slotsAdded').textContent = slots;
+  document.getElementById('costTotalLine').textContent = '+$'+total.toLocaleString()+'/mo';
+
+  // Group by tier for breakdown
+  var tiers = {};
+  sel.forEach(function(l){
+    if(!tiers[l.tier]) tiers[l.tier] = {count:0,rate:l.rate};
+    tiers[l.tier].count++;
+  });
+  var rows = Object.keys(tiers).map(function(t){
+    var ti = tiers[t];
+    return '<div class="cb-row"><span class="cb-label">'+ti.count+' location'+(ti.count>1?'s':'')+' &times; $'+ti.rate+'/slot ('+t+' rate)</span><span class="cb-value">$'+(ti.count*ti.rate).toLocaleString()+'/mo</span></div>';
+  }).join('');
+  document.getElementById('costRows').innerHTML = rows || '<div class="cb-row"><span class="cb-label" style="color:var(--text-3);">No locations selected</span></div>';
+
+  // Update billing preview
+  var today = new Date();
+  var daysInMonth = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
+  var daysRemaining = daysInMonth - today.getDate() + 1;
+  var dailyRate = total / daysInMonth;
+  var prorated = Math.round(dailyRate * daysRemaining);
+  var pEl = document.getElementById('proratedAmt');
+  var pdEl = document.getElementById('perDayAmt');
+  var m1El = document.getElementById('may1Amt');
+  var scEl = document.getElementById('slotCountPreview');
+  if (pEl) pEl.textContent = '$'+prorated.toLocaleString();
+  if (pdEl) pdEl.textContent = '$'+Math.round(dailyRate).toLocaleString();
+  if (m1El) m1El.textContent = '$'+total.toLocaleString();
+  if (scEl) scEl.textContent = slots;
+
+  var btn = document.getElementById('confirmBtn');
+  if (slots === 0) {
+    btn.disabled = true;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> Select at least one location';
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg> Confirm — pay $'+prorated.toLocaleString()+' today, then $'+total.toLocaleString()+'/mo from May 1';
+  }
+}
+
+function goConfirm() {
+  var sel = LOCATIONS.filter(function(l){ return l.selected; });
+  if(!sel.length) return;
+  toast('Block activated \u2014 MedMen blocked at '+sel.length+' location'+(sel.length>1?'s':''));
+  setTimeout(function(){ go('cannaspy_s16_FINAL.html'); }, 1800);
+}
+
+function go(url){ window.location.href=url; }
+var toastTmr;
+function toast(msg){ var t=document.getElementById('toastEl');t.textContent=msg;t.classList.add('show');clearTimeout(toastTmr);toastTmr=setTimeout(function(){t.classList.remove('show');},2600); }
+function toggleTheme(){ var h=document.documentElement;var d=h.getAttribute('data-theme')==='dark';h.setAttribute('data-theme',d?'light':'dark');document.getElementById('themeLabel').textContent=d?'Light mode':'Dark mode'; }
+
+renderLocs();
+</script>
+</body>
+</html>

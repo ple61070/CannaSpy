@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — New Rival Alert</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}html{-webkit-font-smoothing:antialiased;}
+[data-theme="light"]{--bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);--sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);--glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);--surface:rgba(255,255,255,0.97);--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;--border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);--border-hot:rgba(9,161,161,0.38);--text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;--accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);--warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);--rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);--slate:#5484A4;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.08);--card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);--noise-opacity:0.022;}
+[data-theme="dark"]{--bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);--sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);--glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);--surface:rgba(16,28,40,0.99);--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;--border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);--border-hot:rgba(11,184,184,0.5);--text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;--accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);--warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);--rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);--slate:#acc0d3;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.10);--card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);--noise-opacity:0.04;}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise-opacity);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);background-attachment:fixed;}
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.nav-link.locked{opacity:0.45;pointer-events:none;}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;}
+.topbar-row1{display:flex;align-items:center;gap:12px;padding:12px 0;}
+.topbar-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.topbar-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:2px;}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.tb-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.tb-btn.accent{background:var(--accent);border-color:var(--accent);color:#fff;}
+.tb-btn.accent:hover{background:var(--accent-hover,#078484);border-color:var(--accent-hover,#078484);}
+.tb-btn svg{width:12px;height:12px;}
+.content-scroll{flex:1;overflow-y:auto;padding:28px 32px;min-height:0;}
+.content-scroll::-webkit-scrollbar{width:5px;}
+.content-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px;}
+
+/* ALERT HERO BANNER */
+.alert-hero{background:linear-gradient(135deg,rgba(224,90,106,0.08) 0%,rgba(224,90,106,0.03) 100%);border:2px solid rgba(224,90,106,0.25);border-left:5px solid var(--danger);border-radius:var(--r);padding:22px 26px;margin-bottom:24px;display:flex;align-items:flex-start;gap:18px;}
+.ah-icon{width:44px;height:44px;border-radius:12px;background:var(--danger-soft);border:1.5px solid rgba(224,90,106,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ah-body{flex:1;}
+.ah-eyebrow{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--danger);margin-bottom:5px;}
+.ah-title{font-size:18px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;margin-bottom:5px;}
+.ah-sub{font-size:13px;color:var(--text-2);line-height:1.5;margin-bottom:12px;}
+.ah-meta{display:flex;gap:14px;flex-wrap:wrap;}
+.ah-meta-item{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--text-3);}
+.ah-meta-item svg{width:11px;height:11px;flex-shrink:0;}
+.ah-actions{display:flex;gap:8px;flex-shrink:0;flex-direction:column;align-items:flex-end;}
+
+/* TWO-COL LAYOUT */
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);overflow:hidden;}
+.card-header{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.card-title{font-size:12px;font-weight:700;color:var(--text-1);}
+.card-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:auto;}
+.card-body{padding:16px;}
+
+/* PROXIMITY MAP (SVG) */
+.prox-map{width:100%;height:220px;background:var(--surface-2);border-radius:var(--r-sm);position:relative;overflow:hidden;border:1px solid var(--border);}
+
+/* INTEL PREVIEW TABLE */
+.intel-table{width:100%;border-collapse:collapse;}
+.intel-table th{padding:7px 12px;text-align:left;font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);border-bottom:2px solid var(--border-2);background:var(--surface-2);}
+.intel-table td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
+.intel-table tr:last-child td{border-bottom:none;}
+
+/* DECISION PANEL */
+.decision-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);overflow:hidden;margin-bottom:16px;}
+.dp-header{padding:13px 16px;border-bottom:1px solid var(--border);background:var(--surface-2);display:flex;align-items:center;gap:8px;}
+.dp-option{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;display:flex;align-items:flex-start;gap:12px;}
+.dp-option:last-child{border-bottom:none;}
+.dp-option:hover{background:var(--surface-2);}
+.dp-option.selected{background:var(--accent-soft);border-left:3px solid var(--accent);}
+.dp-option.selected-warn{background:rgba(212,144,10,0.06);border-left:3px solid var(--warm);}
+.dp-radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--border-2);margin-top:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.dp-radio.checked{background:var(--accent);border-color:var(--accent);}
+.dp-radio.checked-warn{background:var(--warm);border-color:var(--warm);}
+.dp-opt-title{font-size:12px;font-weight:700;color:var(--text-1);margin-bottom:3px;}
+.dp-opt-sub{font-size:11px;color:var(--text-2);line-height:1.5;}
+.opt-tag{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;margin-left:8px;}
+.tag-teal{background:var(--accent-soft);color:var(--accent);}
+.tag-warn{background:var(--warm-soft);color:var(--warm);}
+.tag-grey{background:var(--surface-3);color:var(--text-3);}
+
+/* SIMILAR RIVALS */
+.rival-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.rival-row:last-child{border-bottom:none;}
+.rival-avatar{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;}
+.rival-info{flex:1;}
+.rival-name{font-size:12px;font-weight:700;color:var(--text-1);}
+.rival-meta{font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:1px;}
+.rival-status{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:11px 18px;font-size:12px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:9000;transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.4,0,.2,1);pointer-events:none;display:flex;align-items:center;gap:8px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+</style>
+</head>
+<body>
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar"><div class="topbar-row1">
+    <div class="topbar-title">New Rival Detected</div>
+    <div class="topbar-sub">WEST HOLLYWOOD &middot; 1.4 MILES FROM YOUR FLAGSHIP</div>
+    <div class="topbar-actions">
+      <button class="tb-btn" onclick="showToast('Dismissed — will resurface in 7 days','var(--text-3)')">Dismiss</button>
+      <button class="tb-btn accent" onclick="showToast('Cookies WeHo added to tracking','var(--accent)')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Start tracking
+      </button>
+    </div>
+  </div></div>
+
+  <div class="content-scroll">
+
+    <!-- ALERT HERO -->
+    <div class="alert-hero">
+      <div class="ah-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <div class="ah-body">
+        <div class="ah-eyebrow">New competitor detected</div>
+        <div class="ah-title">Cookies WeHo opened 1.4 miles from your flagship</div>
+        <div class="ah-sub">CannaSpy detected a new licensed dispensary within your 3-mile monitoring radius. First seen today at 2:47 AM. Menu is live with 84 SKUs across Flower, Vapes, and Pre-rolls — 12 overlap with your current inventory.</div>
+        <div class="ah-meta">
+          <div class="ah-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>1.4 miles — 8855 Santa Monica Blvd, WeHo</div>
+          <div class="ah-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Opened Apr 14, 2026 — 2 days ago</div>
+          <div class="ah-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>DCC License: C10-0001892-LIC</div>
+          <div class="ah-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>84 SKUs tracked &middot; 12 overlap with you</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROXIMITY MAP + INTEL PREVIEW -->
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div class="card-title">Proximity — WeHo Flagship</div>
+          <div class="card-sub">3-mile radius</div>
+        </div>
+        <div class="card-body">
+          <div class="prox-map">
+            <svg width="100%" height="100%" viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg">
+              <!-- Grid -->
+              <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="0.3" opacity="0.15"/>
+                </pattern>
+              </defs>
+              <rect width="420" height="220" fill="url(#grid)"/>
+              <!-- Roads -->
+              <line x1="0" y1="110" x2="420" y2="110" stroke="currentColor" stroke-width="1.5" opacity="0.1"/>
+              <line x1="210" y1="0" x2="210" y2="220" stroke="currentColor" stroke-width="1.5" opacity="0.1"/>
+              <line x1="0" y1="60" x2="420" y2="60" stroke="currentColor" stroke-width="0.8" opacity="0.08"/>
+              <line x1="0" y1="160" x2="420" y2="160" stroke="currentColor" stroke-width="0.8" opacity="0.08"/>
+              <!-- 3mi radius ring -->
+              <circle cx="210" cy="110" r="88" fill="none" stroke="#09A1A1" stroke-width="1" stroke-dasharray="4 3" opacity="0.35"/>
+              <!-- 1mi ring -->
+              <circle cx="210" cy="110" r="30" fill="none" stroke="#09A1A1" stroke-width="0.7" stroke-dasharray="2 2" opacity="0.2"/>
+              <!-- YOUR location -->
+              <circle cx="210" cy="110" r="14" fill="#09A1A1" fill-opacity="0.15" stroke="#09A1A1" stroke-width="2"/>
+              <circle cx="210" cy="110" r="5" fill="#09A1A1"/>
+              <text x="210" y="132" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-size="9" font-weight="700" fill="#09A1A1" opacity="0.9">Your Flagship</text>
+              <!-- NEW rival — 1.4 mi = ~42px at 30px/mi -->
+              <circle cx="258" cy="85" r="13" fill="#e05a6a" fill-opacity="0.15" stroke="#e05a6a" stroke-width="2"/>
+              <circle cx="258" cy="85" r="5" fill="#e05a6a"/>
+              <!-- Pulse ring on new rival -->
+              <circle cx="258" cy="85" r="18" fill="none" stroke="#e05a6a" stroke-width="1.5" opacity="0.5">
+                <animate attributeName="r" from="13" to="26" dur="2s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" from="0.5" to="0" dur="2s" repeatCount="indefinite"/>
+              </circle>
+              <text x="258" y="107" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-size="9" font-weight="700" fill="#e05a6a" opacity="0.9">NEW: Cookies WeHo</text>
+              <!-- Existing tracked rivals -->
+              <circle cx="175" cy="88" r="8" fill="#D396A6" fill-opacity="0.2" stroke="#D396A6" stroke-width="1.5"/>
+              <circle cx="175" cy="88" r="3" fill="#D396A6"/>
+              <text x="175" y="104" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-size="8" fill="#D396A6" opacity="0.75">STIIIZY</text>
+              <circle cx="238" cy="138" r="8" fill="#09A1A1" fill-opacity="0.2" stroke="#09A1A1" stroke-width="1.5"/>
+              <circle cx="238" cy="138" r="3" fill="#09A1A1"/>
+              <text x="238" y="154" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-size="8" fill="#09A1A1" opacity="0.75">MedMen</text>
+              <circle cx="163" cy="140" r="8" fill="#09A1A1" fill-opacity="0.2" stroke="#09A1A1" stroke-width="1.5"/>
+              <circle cx="163" cy="140" r="3" fill="#09A1A1"/>
+              <text x="163" y="156" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-size="8" fill="#09A1A1" opacity="0.75">Catalyst</text>
+              <!-- Distance line -->
+              <line x1="210" y1="110" x2="258" y2="85" stroke="#e05a6a" stroke-width="1" stroke-dasharray="3 2" opacity="0.5"/>
+              <text x="234" y="96" font-family="JetBrains Mono,monospace" font-size="8" fill="#e05a6a" opacity="0.8">1.4 mi</text>
+              <!-- Legend -->
+              <circle cx="18" cy="200" r="5" fill="#e05a6a"/>
+              <text x="28" y="204" font-family="Plus Jakarta Sans,sans-serif" font-size="9" fill="currentColor" opacity="0.6">New rival</text>
+              <circle cx="95" cy="200" r="5" fill="#09A1A1"/>
+              <text x="105" y="204" font-family="Plus Jakarta Sans,sans-serif" font-size="9" fill="currentColor" opacity="0.6">Tracking</text>
+              <circle cx="172" cy="200" r="5" fill="#D396A6"/>
+              <text x="182" y="204" font-family="Plus Jakarta Sans,sans-serif" font-size="9" fill="currentColor" opacity="0.6">Blocked</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDE: INTEL + SIMILAR -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="card">
+          <div class="card-header">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <div class="card-title">First Intel Snapshot</div>
+            <div class="card-sub">Apr 16, 2:47 AM</div>
+          </div>
+          <div style="padding:0;">
+            <table class="intel-table">
+              <thead><tr><th>Category</th><th>SKUs</th><th>Avg Price</th></tr></thead>
+              <tbody>
+                <tr><td style="font-weight:600;">Flower</td><td style="font-family:var(--mono);font-size:11px;">32</td><td style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--danger);">$58 <span style="font-size:9px;color:var(--text-3);font-weight:400;">+$9 vs. you</span></td></tr>
+                <tr><td style="font-weight:600;">Vapes</td><td style="font-family:var(--mono);font-size:11px;">28</td><td style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--danger);">$54 <span style="font-size:9px;color:var(--text-3);font-weight:400;">+$4 vs. you</span></td></tr>
+                <tr><td style="font-weight:600;">Pre-rolls</td><td style="font-family:var(--mono);font-size:11px;">24</td><td style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);">$26 <span style="font-size:9px;color:var(--text-3);font-weight:400;">−$2 vs. you</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+            <div class="card-title">Similar rivals you track</div>
+          </div>
+          <div style="padding:0 14px;">
+            <div class="rival-row">
+              <div class="rival-avatar" style="background:#D396A6;">ST</div>
+              <div class="rival-info"><div class="rival-name">STIIIZY WeHo</div><div class="rival-meta">0.8 mi &middot; 1,712 SKUs</div></div>
+              <span class="rival-status" style="background:var(--rose-soft);color:var(--rose);">Blocked</span>
+            </div>
+            <div class="rival-row">
+              <div class="rival-avatar" style="background:#09A1A1;">MM</div>
+              <div class="rival-info"><div class="rival-name">MedMen WeHo</div><div class="rival-meta">1.1 mi &middot; 953 SKUs</div></div>
+              <span class="rival-status" style="background:var(--accent-soft);color:var(--accent);">Tracking</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DECISION PANEL -->
+    <div class="decision-panel">
+      <div class="dp-header">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="card-title">What do you want to do?</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:auto;">Dismissed alerts resurface after 7 days if the rival is still untracked</div>
+      </div>
+      <div class="dp-option selected" id="opt-track" onclick="selectOpt('track')">
+        <div class="dp-radio checked" id="r-track"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" style="width:9px;height:9px;"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div>
+          <div class="dp-opt-title">Start tracking Cookies WeHo <span class="opt-tag tag-teal">Recommended</span></div>
+          <div class="dp-opt-sub">Add to your WeHo competitive set. 1 slot ($200/mo at Elite rate). Daily price and promo monitoring begins immediately. You will receive alerts when they change prices on shared SKUs.</div>
+        </div>
+      </div>
+      <div class="dp-option" id="opt-block" onclick="selectOpt('block')">
+        <div class="dp-radio" id="r-block"></div>
+        <div>
+          <div class="dp-opt-title">Track and block Cookies WeHo <span class="opt-tag tag-warn">Aggressive</span></div>
+          <div class="dp-opt-sub">Track + block them in CannaSpy. 2 slots ($400/mo at Elite rate). They can never see your data while the block is active. Auto-renews monthly.</div>
+        </div>
+      </div>
+      <div class="dp-option" id="opt-watch" onclick="selectOpt('watch')">
+        <div class="dp-radio" id="r-watch"></div>
+        <div>
+          <div class="dp-opt-title">Watch only — no slot used <span class="opt-tag tag-grey">Free</span></div>
+          <div class="dp-opt-sub">No alerts and no slot charge. CannaSpy continues to scrape them passively. You can upgrade to tracking at any time. They can subscribe to CannaSpy.</div>
+        </div>
+      </div>
+      <div class="dp-option" id="opt-dismiss" onclick="selectOpt('dismiss')">
+        <div class="dp-radio" id="r-dismiss"></div>
+        <div>
+          <div class="dp-opt-title">Dismiss this alert <span class="opt-tag tag-grey">Snooze 7 days</span></div>
+          <div class="dp-opt-sub">Hide this alert for 7 days. If Cookies WeHo is still untracked after that, a new alert fires automatically.</div>
+        </div>
+      </div>
+      <div style="padding:14px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;">
+        <button class="tb-btn" onclick="showToast('Dismissed for 7 days','var(--text-3)')">Skip for now</button>
+        <button class="tb-btn accent" id="confirm-btn" onclick="confirmAction()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Start tracking — 1 slot
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="toast-dot" id="toast-dot"></div><span id="toast-msg"></span></div>
+
+<script>
+var currentOpt = 'track';
+
+var OPT_CONFIG = {
+  track:   {label:'Start tracking — 1 slot', color:'var(--accent)'},
+  block:   {label:'Track and block — 2 slots', color:'var(--warm)'},
+  watch:   {label:'Watch only — no slot', color:'var(--text-2)'},
+  dismiss: {label:'Dismiss for 7 days', color:'var(--text-3)'},
+};
+
+function selectOpt(key) {
+  currentOpt = key;
+  ['track','block','watch','dismiss'].forEach(function(k) {
+    var opt = document.getElementById('opt-' + k);
+    var radio = document.getElementById('r-' + k);
+    opt.className = 'dp-option' + (k === key ? (key === 'block' ? ' selected-warn' : ' selected') : '');
+    radio.className = 'dp-radio' + (k === key ? (key === 'block' ? ' checked-warn' : ' checked') : '');
+    radio.innerHTML = k === key ? '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" style="width:9px;height:9px;"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+  });
+  var cfg = OPT_CONFIG[key];
+  var btn = document.getElementById('confirm-btn');
+  btn.textContent = cfg.label;
+  btn.style.background = cfg.color;
+  btn.style.borderColor = cfg.color;
+}
+
+function confirmAction() {
+  var messages = {
+    track:   'Cookies WeHo added to tracking — 1 slot activated',
+    block:   'Cookies WeHo tracked and blocked — 2 slots activated',
+    watch:   'Watching passively — no slot used',
+    dismiss: 'Alert dismissed for 7 days',
+  };
+  var colors = {track:'var(--accent)', block:'var(--warm)', watch:'var(--text-2)', dismiss:'var(--text-3)'};
+  showToast(messages[currentOpt], colors[currentOpt]);
+}
+
+function go(u) { window.location.href = u; }
+function toggleTheme() { document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); }
+var tt;
+function showToast(m, c) { clearTimeout(tt); var el = document.getElementById('toast'); document.getElementById('toast-msg').textContent = m; document.getElementById('toast-dot').style.background = c; el.classList.add('show'); tt = setTimeout(function() { el.classList.remove('show'); }, 3200); }
+</script>
+</body>
+</html>

@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Location Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+
+[data-theme="light"]{
+  --bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);
+  --sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);--glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);--surface:rgba(255,255,255,0.97);--surface-solid:#ffffff;--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;
+  --border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);--border-hot:rgba(9,161,161,0.38);
+  --text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;
+  --accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);--accent-hover:#078484;
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);
+  --slate:#5484A4;--danger:#e05a6a;--positive:#09A1A1;
+  --card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);
+  --card-shadow-lg:0 8px 40px rgba(30,60,80,0.13);
+  --btn-shadow:0 4px 18px rgba(9,161,161,0.32);
+  --map-bg:#e4eaf3;--map-grid:rgba(84,132,164,0.08);
+  --map-road:rgba(255,255,255,0.92);--map-road-minor:rgba(255,255,255,0.65);
+  --map-block:rgba(196,208,222,0.65);--map-block-2:rgba(178,194,212,0.55);--map-park:rgba(185,218,190,0.55);
+  --noise-opacity:0.022;
+}
+[data-theme="dark"]{
+  --bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);
+  --sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);--glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);--surface:rgba(16,28,40,0.99);--surface-solid:#14202a;--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;
+  --border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);--border-hot:rgba(11,184,184,0.5);
+  --text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);--accent-hover:#0dcfcf;
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);
+  --slate:#acc0d3;--danger:#e05a6a;--positive:#0bb8b8;
+  --card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);
+  --card-shadow-lg:0 12px 50px rgba(0,0,0,0.38);
+  --btn-shadow:0 4px 20px rgba(9,161,161,0.34);
+  --map-bg:#0f1e28;--map-grid:rgba(84,132,164,0.06);
+  --map-road:rgba(28,46,62,0.9);--map-road-minor:rgba(22,38,52,0.8);
+  --map-block:rgba(16,30,42,0.85);--map-block-2:rgba(13,26,38,0.75);--map-park:rgba(10,28,18,0.75);
+  --noise-opacity:0.04;
+}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--tr:all 0.2s cubic-bezier(.4,0,.2,1);--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise-opacity);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;transition:background 0.4s,color 0.3s;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);background-attachment:fixed;}
+
+/* ══ NAV SIDEBAR ══ */
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.nav-link.locked{opacity:0.45;pointer-events:none;}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+
+/* ══ WORKSPACE ══ */
+.workspace{flex:1;display:flex;height:100vh;overflow:hidden;position:relative;}
+
+/* ══ DETAIL PANEL — slides in from left ══ */
+.detail-panel{width:0;overflow:hidden;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100%;flex-shrink:0;transition:width 0.32s cubic-bezier(.2,.8,.2,1);z-index:8;}
+.detail-panel.open{width:var(--detail-w);box-shadow:4px 0 24px rgba(0,0,0,0.18);}
+.detail-inner{width:var(--detail-w);display:flex;flex-direction:column;height:100%;overflow:hidden;flex-shrink:0;}
+.detail-head{padding:15px 17px 13px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:flex-start;gap:10px;}
+.detail-back{width:28px;height:28px;border-radius:50%;background:var(--surface-3);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:var(--transition);color:var(--text-2);}
+.detail-back:hover{background:var(--border-2);color:var(--text-1);}
+.detail-back svg{width:13px;height:13px;}
+.detail-head-body{flex:1;min-width:0;}
+.det-sev{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:5px;}
+.sev-critical{background:rgba(224,90,106,0.15);color:var(--danger);}
+.sev-high{background:rgba(246,201,146,0.15);color:#c88a20;}
+[data-theme="dark"] .sev-high{color:var(--warm);}
+.sev-medium{background:rgba(9,161,161,0.12);color:var(--accent);}
+.sev-block{background:rgba(211,150,166,0.12);color:var(--rose);}
+.sev-info{background:var(--surface-3);color:var(--text-2);}
+.sev-tracking{background:rgba(9,161,161,0.1);color:var(--accent);}
+.det-rival{font-family:var(--mono);font-size:10px;color:var(--text-2);letter-spacing:0.05em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.det-title{font-size:14px;font-weight:700;color:var(--text-1);line-height:1.3;letter-spacing:-0.01em;}
+.detail-scroll{flex:1;overflow-y:auto;padding:14px 17px;min-height:0;}
+.detail-scroll::-webkit-scrollbar{width:3px;}
+.detail-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+.det-section{margin-bottom:16px;}
+.det-section-label{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;}
+.det-narrative{font-size:12px;color:var(--text-2);line-height:1.65;}
+.det-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px;}
+.det-stat{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 11px;}
+.det-stat-n{font-family:var(--mono);font-size:19px;font-weight:700;color:var(--text-1);font-variant-numeric:tabular-nums;line-height:1;margin-bottom:2px;}
+.cn-danger{color:var(--danger)!important;}
+.cn-teal{color:var(--accent)!important;}
+.cn-warm{color:#c88a20!important;}
+[data-theme="dark"] .cn-warm{color:var(--warm)!important;}
+.cn-rose{color:var(--rose)!important;}
+.det-stat-label{font-family:var(--mono);font-size:9px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;}
+.price-table{width:100%;border-collapse:collapse;font-size:11px;}
+.price-table th{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);padding:5px 7px;border-bottom:1px solid var(--border);text-align:left;}
+.price-table td{padding:7px;border-bottom:1px solid var(--border);color:var(--text-1);}
+.price-table tr:last-child td{border-bottom:none;}
+.price-table tr:hover td{background:var(--surface-2);}
+.price-old{color:var(--text-3);text-decoration:line-through;font-family:var(--mono);font-size:10px;}
+.price-new{color:var(--danger);font-family:var(--mono);font-size:11px;font-weight:600;}
+.price-delta{font-family:var(--mono);font-size:9px;background:rgba(224,90,106,0.1);color:var(--danger);padding:2px 5px;border-radius:3px;}
+.block-strip{display:flex;align-items:center;gap:9px;background:rgba(211,150,166,0.08);border:1px solid rgba(211,150,166,0.2);border-radius:var(--r-sm);padding:9px 13px;margin-bottom:14px;}
+.bs-dot{width:8px;height:8px;border-radius:50%;background:var(--rose);flex-shrink:0;}
+.bs-text{font-size:11px;color:var(--rose);font-weight:600;}
+.bs-since{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:auto;}
+.category-bars{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+.cat-bar-row{display:flex;align-items:center;gap:10px;}
+.cat-bar-label{font-family:var(--mono);font-size:10px;color:var(--text-2);width:80px;flex-shrink:0;}
+.cat-bar-track{flex:1;height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;}
+.cat-bar-fill{height:100%;border-radius:3px;transition:width 0.6s ease;}
+.cat-bar-val{font-family:var(--mono);font-size:10px;color:var(--text-1);width:36px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums;}
+.detail-footer{padding:13px 17px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:7px;flex-shrink:0;}
+.dfooter-row{display:flex;gap:7px;}
+.dfooter-btn{flex:1;padding:9px 12px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);text-align:center;}
+.dfooter-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.dfooter-btn:active{transform:scale(0.98);}
+.dfooter-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:var(--btn-shadow);}
+.dfooter-btn.primary:hover{background:var(--accent-hover);color:#fff;border-color:var(--accent-hover);}
+.dfooter-btn.btn-rose{border-color:var(--rose);color:var(--rose);}
+.dfooter-btn.btn-rose:hover{background:var(--rose-soft);color:var(--rose);}
+.dfooter-btn.btn-danger{background:var(--danger);border-color:var(--danger);color:#fff;}
+.dfooter-btn.full{flex:none;width:100%;}
+
+/* ══ LIST PANEL ══ */
+.list-panel{width:var(--list-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100%;flex-shrink:0;z-index:5;box-shadow:2px 0 16px rgba(0,0,0,0.12);}
+
+/* Location header at top */
+.loc-header{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface-2);}
+.loc-header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.loc-name{font-size:14px;font-weight:700;color:var(--text-1);letter-spacing:-0.01em;}
+.loc-back{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--accent);cursor:pointer;transition:var(--transition);}
+.loc-back:hover{opacity:0.8;}
+.loc-back svg{width:11px;height:11px;}
+.loc-stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.lss{background:var(--surface-3);border:1px solid var(--border);border-radius:var(--r-sm);padding:7px 8px;text-align:center;}
+.lss-n{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text-1);font-variant-numeric:tabular-nums;line-height:1;}
+.lss-n.c-danger{color:var(--danger);}
+.lss-n.c-teal{color:var(--accent);}
+.lss-n.c-rose{color:var(--rose);}
+.lss-label{font-family:var(--mono);font-size:8px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;}
+
+/* Category health strip */
+.health-strip{padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.hs-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:7px;}
+.hs-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:5px;}
+.hs-cat{background:var(--surface-3);border:1px solid var(--border);border-radius:6px;padding:6px 7px;text-align:center;cursor:pointer;transition:var(--transition);}
+.hs-cat:hover{border-color:var(--accent);background:var(--accent-soft);}
+.hs-cat.hs-alert{border-color:rgba(224,90,106,0.3);background:rgba(224,90,106,0.05);}
+.hs-cat.hs-warn{border-color:rgba(212,144,10,0.28);background:rgba(212,144,10,0.05);}
+.hs-cat-name{font-family:var(--mono);font-size:8.5px;color:var(--text-3);letter-spacing:0.06em;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hs-cat-status{font-family:var(--mono);font-size:10px;font-weight:700;}
+.hs-lead{color:var(--accent);}
+.hs-trail{color:var(--danger);}
+.hs-even{color:var(--text-3);}
+
+/* Filter tabs */
+.filter-tabs-wrap{padding:8px 14px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.filter-dd-group{display:flex;align-items:center;gap:6px;}
+.filter-dd-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3);}
+.filter-dd-wrap{position:relative;}
+.filter-dd-btn{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:var(--r-sm);font-size:11px;font-weight:600;border:1.5px solid var(--border-2);background:var(--surface);color:var(--text-1);cursor:pointer;font-family:var(--sans);transition:var(--transition);white-space:nowrap;}
+.filter-dd-btn:hover{border-color:var(--accent);color:var(--accent);}
+.filter-dd-btn.fdd-active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.filter-dd-btn.fdd-danger{background:var(--danger);border-color:var(--danger);color:#fff;}
+.filter-dd-btn svg{width:10px;height:10px;flex-shrink:0;opacity:0.6;}
+.filter-dd-pop{position:absolute;top:calc(100% + 5px);left:0;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);box-shadow:0 8px 32px rgba(30,60,80,0.14);z-index:200;min-width:160px;padding:5px;display:none;}
+.filter-dd-pop.open{display:block;}
+.filter-dd-opt{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;font-size:12px;color:var(--text-1);cursor:pointer;transition:background 0.1s;user-select:none;font-family:var(--sans);}
+.filter-dd-opt:hover{background:var(--surface-3);}
+.filter-dd-opt.fdo-sel{color:var(--accent);font-weight:700;}
+.filter-dd-opt.fdo-sel::after{content:"✓";margin-left:auto;font-size:11px;}
+.filter-dd-divider{height:1px;background:var(--border);margin:4px 0;}
+.fcount{font-family:var(--mono);font-size:9px;color:var(--text-3);margin-left:auto;white-space:nowrap;flex-shrink:0;align-self:center;}
+
+/* List */
+.list-scroll{flex:1;overflow-y:auto;min-height:0;}
+.list-scroll::-webkit-scrollbar{width:3px;}
+.list-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:2px;}
+.list-divider{padding:7px 16px 4px;font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);background:var(--surface-2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;}
+.list-item{display:flex;align-items:flex-start;gap:11px;padding:11px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.14s;position:relative;user-select:none;}
+.list-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent;transition:background 0.14s;}
+.list-item:hover{background:var(--surface-2);}
+.list-item:hover::before{background:var(--accent);}
+.list-item.selected{background:var(--accent-soft);}
+.list-item.selected::before{background:var(--accent);}
+.li-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.li-icon svg{width:15px;height:15px;}
+.icon-danger{background:rgba(224,90,106,0.15);color:var(--danger);}
+.icon-warn{background:rgba(246,201,146,0.15);color:#c88a20;}
+[data-theme="dark"] .icon-warn{color:var(--warm);}
+.icon-info{background:rgba(9,161,161,0.12);color:var(--accent);}
+.icon-block{background:rgba(211,150,166,0.12);color:var(--rose);}
+.icon-rival{background:var(--surface-3);color:var(--text-2);}
+.li-body{flex:1;min-width:0;}
+.li-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:2px;}
+.li-title{font-size:12px;font-weight:600;color:var(--text-1);line-height:1.3;}
+.li-time{font-family:var(--mono);font-size:9px;color:var(--text-3);white-space:nowrap;flex-shrink:0;}
+.li-sub{font-size:11px;color:var(--text-2);line-height:1.4;margin-bottom:4px;}
+.li-chips{display:flex;gap:4px;flex-wrap:wrap;}
+.li-chip{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;letter-spacing:0.04em;}
+.chip-loc{background:var(--surface-3);color:var(--text-2);}
+.chip-danger{background:rgba(224,90,106,0.12);color:var(--danger);}
+.chip-warn{background:rgba(246,201,146,0.12);color:#c88a20;}
+[data-theme="dark"] .chip-warn{color:var(--warm);}
+.chip-teal{background:rgba(9,161,161,0.1);color:var(--accent);}
+.chip-rose{background:rgba(211,150,166,0.1);color:var(--rose);}
+.unread-dot{width:7px;height:7px;border-radius:50%;background:var(--danger);flex-shrink:0;margin-top:4px;}
+
+/* ══ MAP ══ */
+.map-area{flex:1;position:relative;overflow:hidden;background:var(--map-bg);transition:background 0.4s;min-width:0;}
+.map-base{position:absolute;inset:0;background-image:linear-gradient(var(--map-grid) 1px,transparent 1px),linear-gradient(90deg,var(--map-grid) 1px,transparent 1px);background-size:36px 36px;}
+.road{position:absolute;background:var(--map-road);}
+.road-minor{background:var(--map-road-minor);}
+.block{position:absolute;border-radius:3px;}
+.block-base{background:var(--map-block);}
+.block-alt{background:var(--map-block-2);}
+.block-park{background:var(--map-park);}
+
+.map-topbar{position:absolute;top:14px;left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;z-index:20;pointer-events:none;}
+.map-pill{background:var(--surface);backdrop-filter:blur(10px);border:1px solid var(--border-2);border-radius:24px;padding:7px 16px;font-size:12px;font-weight:600;color:var(--text-1);box-shadow:var(--card-shadow);pointer-events:all;display:flex;align-items:center;gap:8px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:lpulse 2s ease-in-out infinite;flex-shrink:0;}
+@keyframes lpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.75)}}
+.map-stat-pills{display:flex;gap:6px;pointer-events:all;}
+.map-stat-pill{background:var(--surface);backdrop-filter:blur(10px);border:1px solid var(--border-2);border-radius:20px;padding:5px 12px;font-family:var(--mono);font-size:10px;color:var(--text-2);box-shadow:var(--card-shadow);display:flex;align-items:center;gap:5px;}
+.msp-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* Your location pin */
+.center-pin{position:absolute;transform:translate(-50%,-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.center-dot{width:14px;height:14px;background:#5484A4;border-radius:50%;border:3px solid white;box-shadow:0 2px 10px rgba(84,132,164,0.5);position:relative;}
+.center-pulse{position:absolute;top:-6px;left:-6px;width:26px;height:26px;border-radius:50%;background:rgba(84,132,164,0.18);animation:cpulse 2.2s ease-out infinite;}
+@keyframes cpulse{0%{transform:scale(0.6);opacity:0.9}100%{transform:scale(1.9);opacity:0}}
+.center-label{background:var(--surface);border:1px solid var(--border-2);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:var(--text-1);white-space:nowrap;box-shadow:var(--card-shadow);font-family:var(--mono);letter-spacing:0.04em;}
+
+/* Rival pins */
+.comp-pin{position:absolute;transform:translate(-50%,-100%);z-index:8;cursor:pointer;display:flex;flex-direction:column;align-items:center;transition:var(--transition);}
+.comp-pin:hover,.comp-pin.selected{transform:translate(-50%,-100%) scale(1.1);z-index:20;}
+.pin-blocking-you .pin-head{background:var(--warm) !important;box-shadow:0 0 0 3px rgba(212,144,10,0.28),0 4px 12px rgba(212,144,10,0.3);}
+.comp-pin.selected .pin-head{box-shadow:0 0 0 4px rgba(255,255,255,0.28),0 6px 20px rgba(0,0,0,0.35);}
+.comp-pin.selected .pin-tag{border-color:var(--accent);color:var(--accent);}
+.pin-head{width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.22);border:2px solid rgba(255,255,255,0.4);position:relative;}
+.pin-head-inner{transform:rotate(45deg);font-family:var(--mono);font-size:9px;font-weight:700;color:#fff;}
+.pin-alert{position:absolute;top:-4px;right:-4px;transform:rotate(45deg);width:15px;height:15px;background:var(--danger);border-radius:50%;border:2px solid var(--map-bg);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:8px;font-weight:700;color:#fff;}
+.pin-tag{margin-top:5px;background:var(--surface);border:1px solid var(--border-2);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:600;color:var(--text-1);white-space:nowrap;box-shadow:var(--card-shadow);text-align:center;}
+
+/* Map legend */
+.map-legend{position:absolute;bottom:14px;left:14px;background:var(--surface);backdrop-filter:blur(8px);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:9px 14px;box-shadow:var(--card-shadow);z-index:20;}
+.legend-row{display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:10px;color:var(--text-2);}
+.legend-row:last-child{margin-bottom:0;}
+.legend-swatch{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* Map zoom */
+.map-zoom{position:absolute;bottom:14px;right:14px;display:flex;flex-direction:column;gap:4px;z-index:20;}
+.zoom-btn{width:30px;height:30px;background:var(--surface);border:1px solid var(--border-2);border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);font-size:15px;box-shadow:var(--card-shadow);transition:var(--transition);user-select:none;}
+.zoom-btn:hover{background:var(--surface-2);color:var(--text-1);}
+
+/* ══ TOAST ══ */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surface-solid);border:1px solid var(--border-2);border-radius:24px;padding:9px 18px;font-size:12px;font-weight:500;color:var(--text-1);box-shadow:var(--card-shadow-lg);z-index:9998;display:flex;align-items:center;gap:7px;opacity:0;pointer-events:none;transition:all 0.28s cubic-bezier(.2,.8,.2,1);white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* ══ MODAL ══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9990;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.22s;}
+.modal-overlay.show{opacity:1;pointer-events:all;}
+.modal{background:var(--surface-solid);border:1px solid var(--border-2);border-radius:var(--r);padding:26px;width:400px;max-width:90vw;box-shadow:var(--card-shadow-lg);transform:scale(0.94) translateY(10px);transition:transform 0.26s cubic-bezier(.2,.8,.2,1);}
+.modal-overlay.show .modal{transform:scale(1) translateY(0);}
+.modal-title{font-size:15px;font-weight:700;color:var(--text-1);margin-bottom:8px;letter-spacing:-0.01em;}
+.modal-body{font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:18px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+.modal-btn{padding:8px 16px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.modal-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.modal-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.modal-btn.danger{background:var(--danger);border-color:var(--danger);color:#fff;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.list-item{animation:fadeUp 0.22s ease both;}
+</style>
+</head>
+<body>
+
+<!-- NAV SIDEBAR -->
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-inner">
+      <div class="detail-head">
+        <button class="detail-back" onclick="closeDetail()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="detail-head-body" id="detailHeadBody"></div>
+      </div>
+      <div class="detail-scroll" id="detailScroll"></div>
+      <div class="detail-footer" id="detailFooter"></div>
+    </div>
+  </div>
+
+  <!-- LIST PANEL -->
+  <div class="list-panel">
+
+    <!-- Location header -->
+    <div class="loc-header">
+      <div class="loc-header-top">
+        <div class="loc-name">West Hollywood Flagship</div>
+        <div class="loc-back" onclick="window.location.href='cannaspy_s04_v1.html'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          All locations
+        </div>
+      </div>
+      <div class="loc-stats-strip">
+        <div class="lss"><div class="lss-n c-danger">6</div><div class="lss-label">Alerts</div></div>
+        <div class="lss"><div class="lss-n">7</div><div class="lss-label">Tracked</div></div>
+        <div class="lss"><div class="lss-n c-rose">2</div><div class="lss-label">Blocked</div></div>
+        <div class="lss"><div class="lss-n c-teal">$1,400</div><div class="lss-label">MRR</div></div>
+      </div>
+    </div>
+
+    <!-- Shared brand overview strip -->
+    <div class="health-strip">
+      <div class="hs-label">Shared brand exposure vs. top rivals</div>
+      <div class="hs-cats">
+        <div class="hs-cat hs-alert" onclick="openDetail('stiiizy-rival')">
+          <div class="hs-cat-name">STIIIZY</div>
+          <div class="hs-cat-status hs-trail" style="color:var(--danger);">&#9889; promo</div>
+        </div>
+        <div class="hs-cat" onclick="openDetail('medmen-promo')">
+          <div class="hs-cat-name">MEDMEN</div>
+          <div class="hs-cat-status hs-even">2 shared</div>
+        </div>
+        <div class="hs-cat hs-warn" onclick="openDetail('catalyst-rival')">
+          <div class="hs-cat-name">CATALYST</div>
+          <div class="hs-cat-status" style="color:var(--warm);">&#8635; promo</div>
+        </div>
+        <div class="hs-cat" onclick="openDetail('otc-rival')">
+          <div class="hs-cat-name">OFF TC</div>
+          <div class="hs-cat-status hs-even">4 shared</div>
+        </div>
+        <div class="hs-cat" onclick="openDetail('harbor-rival')">
+          <div class="hs-cat-name">HARBOR</div>
+          <div class="hs-cat-status hs-even">1 shared</div>
+        </div>
+        <div class="hs-cat" onclick="openDetail('jungle-rival')">
+          <div class="hs-cat-name">JUNGLE</div>
+          <div class="hs-cat-status hs-even">0 shared</div>
+        </div>
+        <div class="hs-cat" onclick="openDetail('zen-rival')">
+          <div class="hs-cat-name">ZEN</div>
+          <div class="hs-cat-status hs-even">1 shared</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-tabs-wrap">
+      <div class="filter-dd-group">
+        <span class="filter-dd-label">Filter</span>
+        <div class="filter-dd-wrap">
+          <button class="filter-dd-btn fdd-danger" id="filterDdBtn" onclick="toggleFilterDd()">
+            All
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="filter-dd-pop" id="filterDdPop">
+            <div class="filter-dd-opt fdo-sel" onclick="selectFilter('all','All','danger',this)">All</div>
+            <div class="filter-dd-divider"></div>
+            <div class="filter-dd-opt" onclick="selectFilter('shared','Shared Brand','teal',this)">Shared Brand</div>
+            <div class="filter-dd-opt" onclick="selectFilter('alert','All Alerts','danger',this)">All Alerts</div>
+            <div class="filter-dd-opt" onclick="selectFilter('rival','Rivals','teal',this)">Rivals</div>
+            <div class="filter-dd-opt" onclick="selectFilter('blocked','Blocked','teal',this)">Blocked</div>
+          </div>
+        </div>
+      </div>
+      <div class="fcount" id="fcount">6 unreviewed</div>
+    </div>
+
+    <div class="list-scroll" id="listScroll"></div>
+  </div>
+
+  <!-- MAP -->
+  <div class="map-area">
+    <div class="map-base"></div>
+    <!-- City blocks -->
+    <div class="block block-base" style="top:4%;left:4%;width:17%;height:15%;"></div>
+    <div class="block block-alt" style="top:4%;left:24%;width:13%;height:11%;"></div>
+    <div class="block block-base" style="top:4%;left:40%;width:19%;height:13%;"></div>
+    <div class="block block-park" style="top:4%;left:62%;width:15%;height:17%;"></div>
+    <div class="block block-alt" style="top:4%;left:80%;width:16%;height:11%;"></div>
+    <div class="block block-base" style="top:24%;left:4%;width:11%;height:19%;"></div>
+    <div class="block block-alt" style="top:24%;left:18%;width:15%;height:17%;"></div>
+    <div class="block block-base" style="top:24%;left:62%;width:13%;height:15%;"></div>
+    <div class="block block-alt" style="top:24%;left:78%;width:18%;height:19%;"></div>
+    <div class="block block-park" style="top:50%;left:4%;width:19%;height:17%;"></div>
+    <div class="block block-base" style="top:50%;left:26%;width:13%;height:13%;"></div>
+    <div class="block block-alt" style="top:50%;left:42%;width:17%;height:19%;"></div>
+    <div class="block block-base" style="top:50%;left:62%;width:15%;height:15%;"></div>
+    <div class="block block-alt" style="top:50%;left:80%;width:16%;height:17%;"></div>
+    <div class="block block-alt" style="top:74%;left:4%;width:13%;height:20%;"></div>
+    <div class="block block-base" style="top:74%;left:20%;width:19%;height:18%;"></div>
+    <div class="block block-park" style="top:74%;left:42%;width:15%;height:20%;"></div>
+    <div class="block block-alt" style="top:74%;left:60%;width:17%;height:20%;"></div>
+    <div class="block block-base" style="top:74%;left:80%;width:16%;height:20%;"></div>
+    <!-- Roads -->
+    <div class="road" style="top:20.5%;left:0;right:0;height:5px;"></div>
+    <div class="road" style="top:46.5%;left:0;right:0;height:5px;"></div>
+    <div class="road" style="top:70.5%;left:0;right:0;height:5px;"></div>
+    <div class="road" style="left:37%;top:0;bottom:0;width:5px;"></div>
+    <div class="road" style="left:60%;top:0;bottom:0;width:5px;"></div>
+    <div class="road road-minor" style="left:16%;top:0;bottom:0;width:3px;"></div>
+    <div class="road road-minor" style="left:78%;top:0;bottom:0;width:3px;"></div>
+
+    <!-- Map topbar -->
+    <div class="map-topbar">
+      <div class="map-pill"><div class="live-dot"></div>WeHo Flagship · Elite Market</div>
+      <div class="map-stat-pills">
+        <div class="map-stat-pill"><div class="msp-dot" style="background:var(--danger);"></div>5 alerts</div>
+        <div class="map-stat-pill"><div class="msp-dot" style="background:var(--accent);"></div>7 tracked</div>
+        <div class="map-stat-pill"><div class="msp-dot" style="background:var(--rose);"></div>2 blocked</div>
+      </div>
+    </div>
+
+    <!-- Center pin (your dispensary) -->
+    <div class="center-pin" style="left:48%;top:50%;">
+      <div class="center-dot"><div class="center-pulse"></div></div>
+      <div class="center-label">WEHO FLAGSHIP</div>
+    </div>
+
+    <!-- Rival pins -->
+    <div class="comp-pin selected" id="pin-stiiizy" style="left:31%;top:36%;" onclick="openDetail('stiiizy-rival')">
+      <div class="pin-head" style="background:var(--rose);"><div class="pin-alert">3</div><div class="pin-head-inner">ST</div></div>
+      <div class="pin-tag">STIIIZY</div>
+    </div>
+    <div class="comp-pin" id="pin-medmen" style="left:23%;top:43%;" onclick="openDetail('medmen-rival')">
+      <div class="pin-head" style="background:#c88a20;"><div class="pin-alert">1</div><div class="pin-head-inner">MM</div></div>
+      <div class="pin-tag">MedMen</div>
+    </div>
+    <div class="comp-pin" id="pin-catalyst" style="left:63%;top:38%;" onclick="openDetail('catalyst-rival')">
+      <div class="pin-head" style="background:var(--accent);"><div class="pin-head-inner">CA</div></div>
+      <div class="pin-tag">Catalyst</div>
+    </div>
+    <div class="comp-pin pin-blocking-you" id="pin-jungle" style="left:55%;top:59%;" onclick="">
+      <div class="pin-head"><div class="pin-head-inner">JB</div></div>
+      <div class="pin-tag" style="color:var(--warm);">Jungle Boys</div>
+    </div>
+    <div class="comp-pin" id="pin-zen" style="left:38%;top:65%;" onclick="openDetail('zen-rival')">
+      <div class="pin-head" style="background:var(--slate);"><div class="pin-head-inner">ZN</div></div>
+      <div class="pin-tag">Zen</div>
+    </div>
+    <div class="comp-pin" id="pin-otc" style="left:72%;top:53%;" onclick="openDetail('otc-rival')">
+      <div class="pin-head" style="background:var(--rose);"><div class="pin-head-inner">OT</div></div>
+      <div class="pin-tag">Off The Charts</div>
+    </div>
+    <div class="comp-pin pin-blocking-you" id="pin-harborside" style="left:24%;top:62%;" onclick="">
+      <div class="pin-head"><div class="pin-head-inner">HB</div></div>
+      <div class="pin-tag" style="color:var(--warm);">Harborside</div>
+    </div>
+
+        <div class="comp-pin pin-blocking-you" id="pin-cookies" style="left:42%;top:74%;" onclick="">
+      <div class="pin-head"><div class="pin-head-inner">CK</div></div>
+      <div class="pin-tag" style="color:var(--warm);">Cookies SF</div>
+    </div>
+    <div class="map-legend">
+      <div class="legend-row"><div class="legend-swatch" style="background:var(--danger);"></div>Critical alert</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:#c88a20;"></div>High alert</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:var(--accent);"></div>Tracking</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:var(--rose);"></div>Blocked</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:var(--warm);"></div>Blocking you</div>
+    </div>
+
+    <div class="map-zoom">
+      <div class="zoom-btn" onclick="showToast('Zoom — live in production build','var(--accent)')">+</div>
+      <div class="zoom-btn" onclick="showToast('Zoom — live in production build','var(--accent)')">−</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><div class="toast-dot" id="toastDot"></div><span id="toastMsg"></span></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div id="modalBillingNote" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px;"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<script>
+
+/* ══════════════════════════════════════════════════════════
+   DATA MODEL
+   Each rival has structured fields — no inline HTML bodies.
+   Each alert has structured fields — no inline HTML bodies.
+   renderDetailBody() is the single template for everything.
+══════════════════════════════════════════════════════════ */
+
+const RIVALS = {
+  'stiiizy': {
+    name: 'STIIIZY West Hollywood',
+    rivalLine: 'STIIIZY WEST HOLLYWOOD · 1.2 MI',
+    distance: '1.2 mi',
+    status: 'blocked',   // blocked | tracking
+    blockedDays: 47,
+    changes: 12,
+    totalSkus: 1700,
+    sharedBrands: [
+      { name: 'Friendly Farms', gap: -8, pct: 80 },
+      { name: 'Jeeter',         gap:  0, pct: 50 },
+      { name: 'Kanha',          gap: +3, pct: 30 },
+    ],
+    latestAlert: 'ff-shared',
+    categories: [
+      { cat: 'Flower',       you: '45 SKUs', them: '62 SKUs', shared: '8 brands' },
+      { cat: 'Vapes',        you: '28 SKUs', them: '41 SKUs', shared: '4 brands' },
+      { cat: 'Edibles',      you: '18 SKUs', them: '22 SKUs', shared: '3 brands' },
+      { cat: 'Concentrates', you: '12 SKUs', them: '18 SKUs', shared: '2 brands' },
+    ],
+  },
+  'medmen': {
+    name: 'MedMen West Hollywood',
+    rivalLine: 'MEDMEN WEST HOLLYWOOD · 0.8 MI',
+    distance: '0.8 mi',
+    status: 'tracking',
+    blockedDays: null,
+    changes: 4,
+    totalSkus: 953,
+    sharedBrands: [
+      { name: 'Maven', gap: -4, pct: 35, isNew: true },
+      { name: 'Kanha', gap:  0, pct: 50 },
+    ],
+    latestAlert: 'maven-new-rival',
+    categories: [
+      { cat: 'Flower', you: '45 SKUs', them: '38 SKUs', shared: '2 brands' },
+      { cat: 'Vapes',  you: '28 SKUs', them: '24 SKUs', shared: '2 brands' },
+    ],
+  },
+  'catalyst': {
+    name: 'Catalyst Cannabis Co.',
+    rivalLine: 'CATALYST CANNABIS CO. · 1.9 MI',
+    distance: '1.9 mi',
+    status: 'tracking',
+    blockedDays: null,
+    changes: 15,
+    totalSkus: 481,
+    sharedBrands: [
+      { name: 'Raw Garden', gap: 0, pct: 50 },
+      { name: 'Gold Flora',  gap: 0, pct: 50 },
+    ],
+    latestAlert: 'catalyst-catalog',
+    categories: [
+      { cat: 'Flower', you: '45 SKUs', them: '32 SKUs', shared: '2 brands' },
+      { cat: 'Vapes',  you: '28 SKUs', them: '18 SKUs', shared: '1 brand'  },
+    ],
+  },
+  'otc': {
+    name: 'Off The Charts',
+    rivalLine: 'OFF THE CHARTS · 2.9 MI',
+    distance: '2.9 mi',
+    status: 'blocked',
+    blockedDays: 22,
+    changes: 3,
+    totalSkus: 2932,
+    sharedBrands: [
+      { name: 'CBX',       gap: +5, pct: 60 },
+      { name: 'Raw Garden',gap:  0, pct: 50 },
+      { name: 'Jeeter',    gap: -2, pct: 40 },
+      { name: 'Gold Flora', gap: 0, pct: 50 },
+    ],
+    latestAlert: 'cbx-shared',
+    categories: [
+      { cat: 'Flower',    you: '45 SKUs', them: '58 SKUs', shared: '3 brands' },
+      { cat: 'Vapes',     you: '28 SKUs', them: '35 SKUs', shared: '2 brands' },
+      { cat: 'Pre-rolls', you: '14 SKUs', them: '20 SKUs', shared: '1 brand'  },
+    ],
+  },
+  'harborside': {
+    name: 'Harborside Los Angeles',
+    rivalLine: 'HARBORSIDE LOS ANGELES · 3.6 MI',
+    distance: '3.6 mi',
+    status: 'blocking-you',  // they have blocked your account
+    blockedDays: null,
+    changes: 1,
+    totalSkus: 953,
+    sharedBrands: [
+      { name: 'Jeeter', gap: 0, pct: 50 },
+    ],
+    latestAlert: null,
+    categories: [
+      { cat: 'Flower', you: '45 SKUs', them: '40 SKUs', shared: '1 brand' },
+    ],
+  },
+  'jungle': {
+    name: 'Jungle Boys DTLA',
+    rivalLine: 'JUNGLE BOYS DTLA · 2.4 MI',
+    distance: '2.4 mi',
+    status: 'blocking-you',  // they have blocked your account
+    blockedDays: null,
+    changes: 8,
+    totalSkus: 195,
+    sharedBrands: [],
+    latestAlert: 'jungle-catalog',
+    categories: [
+      { cat: 'Concentrates', you: '12 SKUs', them: '8 SKUs',  shared: '0 brands' },
+      { cat: 'Flower',       you: '45 SKUs', them: '22 SKUs', shared: '0 brands' },
+    ],
+  },
+  'cookies': {
+    name: 'Cookies SF Haight',
+    rivalLine: 'COOKIES SF HAIGHT · 8.3 MI',
+    distance: '8.3 mi',
+    status: 'blocking-you',  // they have blocked your account
+    blockedDays: null,
+    changes: 0,
+    totalSkus: 710,
+    sharedBrands: [],
+    latestAlert: null,
+    categories: [
+      { cat: 'Flower', you: '45 SKUs', them: '38 SKUs', shared: '0 brands' },
+    ],
+  },
+  'zen': {
+    name: 'Zen Dispensary',
+    rivalLine: 'ZEN DISPENSARY · 4.3 MI',
+    distance: '4.3 mi',
+    status: 'tracking',
+    blockedDays: null,
+    changes: 2,
+    totalSkus: 924,
+    sharedBrands: [
+      { name: 'Kanha', gap: 0, pct: 50 },
+    ],
+    latestAlert: null,
+    categories: [
+      { cat: 'Edibles', you: '18 SKUs', them: '22 SKUs', shared: '1 brand' },
+      { cat: 'Flower',  you: '45 SKUs', them: '38 SKUs', shared: '1 brand' },
+    ],
+  },
+};
+
+const ALERTS = {
+  'ff-shared': {
+    type: 'shared_price',
+    rivalKey: 'stiiizy',
+    badge: 'SHARED BRAND ALERT',
+    badgeClass: 'sev-critical',
+    title: 'Friendly Farms 3.5g Flower — price drop',
+    ago: '1h ago',
+    urgent: true,  // you're higher = action needed
+    narrative: 'You and STIIIZY both carry Friendly Farms 3.5g Flower. A customer can walk across the street and buy the <strong>exact same product</strong> for $8 less. This is your highest-priority pricing exposure right now.',
+    stats: [
+      { value: '$50', label: 'Your price',    color: '' },
+      { value: '$42', label: 'Their price',   color: 'cn-danger' },
+      { value: '−$8', label: "You're higher", color: 'cn-danger' },
+      { value: '1h',  label: 'Detected',      color: 'cn-warm' },
+    ],
+    tableLabel: 'All shared Friendly Farms SKUs at this rival',
+    rows: [
+      { product: 'FF 3.5g Flower', yours: '$50', theirs: '$42', gap: '−$8',  gapClass: 'cn-danger' },
+      { product: 'FF 7g Flower',   yours: '$90', theirs: '$82', gap: '−$8',  gapClass: 'cn-danger' },
+      { product: 'FF 1g Vape',     yours: '$55', theirs: '$55', gap: 'Even', gapClass: '' },
+    ],
+    actions: [
+      { label: 'Mark reviewed',    style: '',        fn: "markReviewed('ff-shared')" },
+      { label: 'View price matrix →', style: 'primary', fn: "showToast('Opening Price Intelligence — Friendly Farms view…','var(--accent)')" },
+    ],
+    actionsFull: [
+      { label: 'Respond now →', style: 'btn-danger full', fn: "showModal('respond-ff','Match Friendly Farms pricing?','STIIIZY dropped FF 3.5g to $42. Match at $42 or close the gap to $46?','Hold at $50','Match at $42')" },
+    ],
+  },
+  'maven-new-rival': {
+    type: 'shared_new_brand',
+    rivalKey: 'medmen',
+    badge: 'SHARED BRAND ALERT',
+    badgeClass: 'sev-critical',
+    title: "Maven added to MedMen's menu — first time",
+    ago: '3h ago',
+    urgent: true,
+    narrative: "You carry 6 Maven SKUs across Flower and Vapes. MedMen just added Maven for the first time — 3 SKUs at launch. You are no longer the only local source for this brand at 0.8 miles away.",
+    stats: [
+      { value: '6',     label: 'Your Maven SKUs', color: 'cn-teal' },
+      { value: '3',     label: 'Their Maven SKUs', color: 'cn-danger' },
+      { value: '0.8mi', label: 'Distance',         color: '' },
+      { value: 'First', label: 'Time on menu',     color: 'cn-warm' },
+    ],
+    tableLabel: 'Their new Maven SKUs vs. yours',
+    rows: [
+      { product: 'Maven 3.5g Flower', yours: '$48', theirs: '$48', gap: 'Even', gapClass: '' },
+      { product: 'Maven 1g Vape',     yours: '$52', theirs: '$48', gap: '−$4',  gapClass: 'cn-danger' },
+      { product: 'Maven 7g Flower',   yours: '$85', theirs: '— not carried', gap: '—', gapClass: '' },
+    ],
+    actions: [
+      { label: 'Mark reviewed',       style: '',        fn: "markReviewed('maven-new-rival')" },
+      { label: 'View Maven comparison →', style: 'primary', fn: "showToast('Opening Maven brand view…','var(--accent)')" },
+    ],
+    actionsFull: [
+      { label: 'Block this rival →', style: 'full', fn: "showModal('block-medmen','Block MedMen West Hollywood?','Blocking MedMen adds 1 slot at $200/mo (Elite rate) and prevents them from accessing CannaSpy.','Cancel','Block rival →',makeBillingNote(1,200))" },
+    ],
+  },
+  'cbx-shared': {
+    type: 'shared_price',
+    rivalKey: 'otc',
+    badge: 'SHARED BRAND ALERT',
+    badgeClass: 'sev-medium',
+    title: 'CBX 3.5g Flower — price increase (opportunity)',
+    ago: '4h ago',
+    urgent: false,  // you're cheaper = opportunity
+    narrative: 'Off The Charts raised CBX 3.5g from $42 to $47. You carry CBX at $42 — you are now $5 cheaper on this shared brand. This is a pricing advantage you can lean into.',
+    stats: [
+      { value: '$42', label: 'Your price',     color: '' },
+      { value: '$47', label: 'Their price',    color: 'cn-teal' },
+      { value: '+$5', label: "You're cheaper", color: 'cn-teal' },
+      { value: '4h',  label: 'Detected',       color: 'cn-warm' },
+    ],
+    tableLabel: 'All shared CBX SKUs at this rival',
+    rows: [
+      { product: 'CBX 3.5g Flower', yours: '$42', theirs: '$47', gap: '+$5',  gapClass: 'cn-teal' },
+      { product: 'CBX 7g Flower',   yours: '$75', theirs: '$80', gap: '+$5',  gapClass: 'cn-teal' },
+    ],
+    actions: [
+      { label: 'Mark reviewed',         style: '',        fn: "markReviewed('cbx-shared')" },
+      { label: 'View CBX comparison →', style: 'primary', fn: "showToast('Opening CBX brand view…','var(--accent)')" },
+    ],
+    actionsFull: [],
+  },
+  'ff-promo-stiiizy': {
+    type: 'shared_promo',
+    rivalKey: 'stiiizy',
+    badge: 'SHARED BRAND ALERT',
+    badgeClass: 'sev-critical',
+    title: 'STIIIZY running flash sale on Friendly Farms — ends Sunday',
+    ago: '2h ago',
+    urgent: true,
+    narrative: 'STIIIZY is running a weekend flash sale on Friendly Farms 3.5g Flower. Their sale price is $36 — $14 below your everyday price of $50. Customers can compare this directly.',
+    stats: [
+      { value: '$50',  label: 'Your price',    color: '' },
+      { value: '$36',  label: 'Sale price',    color: 'cn-danger' },
+      { value: '−$14', label: "You're higher", color: 'cn-danger' },
+      { value: 'Sun',  label: 'Ends',          color: 'cn-warm' },
+    ],
+    tableLabel: 'Friendly Farms SKUs on promo at STIIIZY',
+    rows: [
+      { product: 'FF 3.5g Flower', yours: '$50', theirs: '$42 reg / $36 sale', gap: '−$14', gapClass: 'cn-danger' },
+      { product: 'FF 1g Vape',     yours: '$55', theirs: '$55 — not on sale', gap: 'Even', gapClass: '' },
+    ],
+    actions: [
+      { label: 'Mark reviewed',        style: '',        fn: "markReviewed('ff-promo-stiiizy')" },
+      { label: 'View price matrix →', style: 'primary', fn: "window.location.href='cannaspy_s07_v1.html'" },
+    ],
+    actionsFull: [
+      { label: 'Respond now →', style: 'btn-danger full', fn: "showModal('respond-ff-promo','Respond to flash sale?','STIIIZY has FF 3.5g on flash sale at $36. Run a counter-promo or hold?','Hold price','Plan counter-promo')" },
+    ],
+  },
+  'rg-promo-catalyst': {
+    type: 'shared_promo',
+    rivalKey: 'catalyst',
+    badge: 'SHARED BRAND ALERT',
+    badgeClass: 'sev-high',
+    title: 'Catalyst running daily deal on Raw Garden — recurring',
+    ago: '6h ago',
+    urgent: false,
+    narrative: "Catalyst runs a daily brand deal on Raw Garden 1g Vapes every day. Their recurring sale price is $49 vs. your $58. This is a standing discount, not a flash sale — it won't go away on its own.",
+    stats: [
+      { value: '$58',  label: 'Your price',   color: '' },
+      { value: '$49',  label: 'Daily price',  color: 'cn-warn' },
+      { value: '−$9',  label: "You're higher", color: 'cn-warn' },
+      { value: 'Daily', label: 'Frequency',  color: '' },
+    ],
+    tableLabel: 'Raw Garden SKUs on promo at Catalyst',
+    rows: [
+      { product: 'Raw Garden 1g Vape', yours: '$58', theirs: '$58 reg / $49 sale', gap: '−$9', gapClass: 'cn-warn' },
+      { product: 'Raw Garden 0.5g Vape', yours: '$38', theirs: '$38 — not on sale', gap: 'Even', gapClass: '' },
+    ],
+    actions: [
+      { label: 'Mark reviewed',        style: '',        fn: "markReviewed('rg-promo-catalyst')" },
+      { label: 'View price matrix →', style: 'primary', fn: "window.location.href='cannaspy_s07_v1.html'" },
+    ],
+    actionsFull: [],
+  },
+  'medmen-promo': {
+    type: 'promo',
+    rivalKey: 'medmen',
+    badge: 'PROMO ALERT',
+    badgeClass: 'sev-high',
+    title: 'New daily happy hour — 20% off all vapes 4–7pm',
+    ago: '5h ago',
+    urgent: false,
+    narrative: "MedMen launched a 20% vape happy hour 4–7pm daily. The specific vape brands they're discounting are not brands you currently carry — but the promo window overlaps your peak evening traffic.",
+    stats: [
+      { value: '20%',   label: 'Discount',      color: 'cn-warm' },
+      { value: 'Daily', label: 'Frequency',      color: '' },
+      { value: '4–7pm', label: 'Window',         color: 'cn-warm' },
+      { value: 'None',  label: 'Shared brands',  color: '' },
+    ],
+    tableLabel: null,
+    rows: [],
+    actions: [
+      { label: 'Mark reviewed',     style: '',        fn: "markReviewed('medmen-promo')" },
+      { label: 'View promotions →', style: 'primary', fn: "showToast('Opening Promotions tracker…','var(--accent)')" },
+    ],
+    actionsFull: [
+      { label: 'Block this rival →', style: 'full', fn: "showModal('block-medmen','Block MedMen West Hollywood?','Blocking MedMen adds 1 slot at $200/mo (Elite rate) and prevents them from accessing CannaSpy.','Cancel','Block rival →',makeBillingNote(1,200))" },
+    ],
+  },
+  'catalyst-catalog': {
+    type: 'catalog',
+    rivalKey: 'catalyst',
+    badge: 'CATALOG ALERT',
+    badgeClass: 'sev-medium',
+    title: '14 new flower SKUs — 2 from brands you carry',
+    ago: '6h ago',
+    urgent: false,
+    narrative: 'Catalyst added 14 new flower SKUs overnight — likely a new brand partnership. Of these, 2 are from brands you also carry: Raw Garden and Gold Flora. Watch for pricing on these shared brands.',
+    stats: [
+      { value: '+14', label: 'New SKUs total', color: 'cn-teal' },
+      { value: '2',   label: 'Your brands',    color: 'cn-warn' },
+      { value: '12',  label: 'Non-shared',     color: '' },
+    ],
+    tableLabel: 'Shared brand SKUs added',
+    rows: [
+      { product: 'Raw Garden 1g Vape', yours: '$58', theirs: '$58', gap: 'Even', gapClass: '' },
+      { product: 'Gold Flora 3.5g',    yours: '$44', theirs: '$44', gap: 'Even', gapClass: '' },
+    ],
+    actions: [
+      { label: 'Mark reviewed',      style: '',        fn: "markReviewed('catalyst-catalog')" },
+      { label: 'View catalog diff →', style: 'primary', fn: "showToast('Opening catalog diff…','var(--accent)')" },
+    ],
+    actionsFull: [],
+  },
+  'jungle-catalog': {
+    type: 'catalog',
+    rivalKey: 'jungle',
+    badge: 'CATALOG ALERT',
+    badgeClass: 'sev-info',
+    title: '8 concentrate SKUs removed — no shared brands affected',
+    ago: '8h ago',
+    urgent: false,
+    narrative: 'Jungle Boys removed 8 concentrate SKUs overnight. None of the removed brands are brands you carry — this does not directly affect your competitive position on shared products.',
+    stats: [
+      { value: '−8',  label: 'SKUs removed',    color: 'cn-danger' },
+      { value: '195', label: 'Remaining SKUs',   color: '' },
+      { value: '0',   label: 'Shared brands hit', color: '' },
+    ],
+    tableLabel: null,
+    rows: [],
+    actions: [
+      { label: 'Mark reviewed',      style: '',        fn: "markReviewed('jungle-catalog')" },
+      { label: 'View catalog diff →', style: 'primary', fn: "showToast('Opening catalog diff…','var(--accent)')" },
+    ],
+    actionsFull: [],
+  },
+};
+
+/* ══ LIST ITEMS — thin descriptors only, no HTML bodies ══ */
+const ITEMS = [
+  // TIER 1 — Shared Brand Alerts
+  { id:'ff-shared',       type:'alert', category:'shared',  pinId:'pin-stiiizy',    unread:true,  alertKey:'ff-shared',       icon:'danger', title:'STIIIZY dropped Friendly Farms 3.5g −$8',  sub:"You both carry this — you're now $8 above their price", time:'1h ago',  chips:[{t:'SHARED BRAND',c:'chip-teal'},{t:'FLOWER',c:'chip-loc'},{t:'−$8.00',c:'chip-danger'}] },
+  { id:'maven-new-rival', type:'alert', category:'shared',  pinId:'pin-medmen',     unread:true,  alertKey:'maven-new-rival',  icon:'block',  title:'MedMen just added Maven to their menu',   sub:"You carry Maven — they didn't before. First time.",       time:'3h ago',  chips:[{t:'SHARED BRAND',c:'chip-rose'},{t:'NEW THREAT',c:'chip-danger'}] },
+  { id:'cbx-shared',      type:'alert', category:'shared',  pinId:'pin-otc',        unread:true,  alertKey:'cbx-shared',       icon:'danger', title:'Off The Charts raised CBX 3.5g +$5',      sub:"You both carry CBX — you're now $5 cheaper",              time:'4h ago',  chips:[{t:'SHARED BRAND',c:'chip-teal'},{t:'OPPORTUNITY',c:'chip-teal'}] },
+  { id:'ff-promo-stiiizy',  type:'alert', category:'shared',  pinId:'pin-stiiizy',  unread:true,  alertKey:'ff-promo-stiiizy',  icon:'danger', title:'STIIIZY flash sale — Friendly Farms 3.5g ends Sunday', sub:"Sale price $36 vs. your $50 — you're $14 higher during promo", time:'2h ago', chips:[{t:'SHARED BRAND',c:'chip-teal'},{t:'FLASH SALE',c:'chip-danger'},{t:'FLOWER',c:'chip-loc'}] },
+  { id:'rg-promo-catalyst',  type:'alert', category:'shared',  pinId:'pin-catalyst', unread:true,  alertKey:'rg-promo-catalyst',  icon:'warn',   title:'Catalyst daily deal — Raw Garden 1g Vape', sub:"Recurring sale $49 vs. your $58 — you're $9 higher daily", time:'6h ago', chips:[{t:'SHARED BRAND',c:'chip-teal'},{t:'RECURRING',c:'chip-warn'},{t:'VAPES',c:'chip-loc'}] },
+  // TIER 2 — Non-shared Alerts
+  { id:'medmen-promo',    type:'alert', category:'alert',   pinId:'pin-medmen',     unread:true,  alertKey:'medmen-promo',     icon:'warn',   title:'MedMen — new happy hour 4–7pm daily',     sub:'20% off all vapes — not a brand you share',                time:'5h ago',  chips:[{t:'PROMO ALERT',c:'chip-warn'},{t:'NON-SHARED',c:'chip-loc'}] },
+  { id:'catalyst-catalog',type:'alert', category:'alert',   pinId:'pin-catalyst',   unread:true,  alertKey:'catalyst-catalog', icon:'info',   title:'Catalyst added 14 new flower SKUs',        sub:'2 from brands you also carry — watch for pricing',         time:'6h ago',  chips:[{t:'CATALOG ALERT',c:'chip-loc'},{t:'2 shared brands',c:'chip-warn'}] },
+  { id:'jungle-catalog',  type:'alert', category:'alert',   pinId:'pin-jungle',     unread:false, alertKey:'jungle-catalog',   icon:'block',  title:'Jungle Boys pulled 8 concentrate SKUs',   sub:'None are brands you carry — low priority',                 time:'8h ago',  chips:[{t:'CATALOG ALERT',c:'chip-loc'},{t:'0 shared brands',c:'chip-loc'}] },
+  // TIER 3 — Rivals
+  { id:'stiiizy-rival',   type:'rival', category:'blocked', pinId:'pin-stiiizy',    unread:false, rivalKey:'stiiizy',    icon:'block', title:'STIIIZY West Hollywood',    sub:'3 shared brands · 12 changes today · Blocked', time:'1.2 mi', chips:[{t:'BLOCKED',c:'chip-rose'},{t:'3 shared brands',c:'chip-danger'}] },
+  { id:'otc-rival',       type:'rival', category:'blocked', pinId:'pin-otc',        unread:false, rivalKey:'otc',        icon:'block', title:'Off The Charts',            sub:'4 shared brands · 3 changes today · Blocked',  time:'2.9 mi', chips:[{t:'BLOCKED',c:'chip-rose'},{t:'4 shared brands',c:'chip-loc'}] },
+  { id:'medmen-rival',    type:'rival', category:'rival',   pinId:'pin-medmen',     unread:false, rivalKey:'medmen',     icon:'rival', title:'MedMen West Hollywood',     sub:'2 shared brands · Maven newly added · Tracking', time:'0.8 mi', chips:[{t:'TRACKING',c:'chip-teal'},{t:'Maven new threat',c:'chip-danger'}] },
+  { id:'catalyst-rival',  type:'rival', category:'rival',   pinId:'pin-catalyst',   unread:false, rivalKey:'catalyst',   icon:'rival', title:'Catalyst Cannabis Co.',     sub:'2 shared brands just added · 15 changes · Tracking', time:'1.9 mi', chips:[{t:'TRACKING',c:'chip-teal'},{t:'2 shared brands',c:'chip-warn'}] },
+  { id:'harbor-rival',    type:'rival', category:'rival',   pinId:'pin-harborside', unread:false, rivalKey:'harborside', icon:'rival', title:'Harborside Los Angeles',    sub:'1 shared brand · 1 change today · Tracking',  time:'3.6 mi', chips:[{t:'TRACKING',c:'chip-teal'},{t:'1 shared brand',c:'chip-loc'}] },
+  { id:'jungle-rival',    type:'rival', category:'rival',   pinId:'pin-jungle',     unread:false, rivalKey:'jungle',     icon:'rival', title:'Jungle Boys DTLA',          sub:'0 shared brands · 8 changes today · Tracking', time:'2.4 mi', chips:[{t:'TRACKING',c:'chip-teal'},{t:'0 shared brands',c:'chip-loc'}] },
+  { id:'zen-rival',       type:'rival', category:'rival',   pinId:'pin-zen',        unread:false, rivalKey:'zen',        icon:'rival', title:'Zen Dispensary',            sub:'1 shared brand · 2 changes today · Tracking',  time:'4.3 mi', chips:[{t:'TRACKING',c:'chip-teal'},{t:'1 shared brand',c:'chip-loc'}] },
+];
+
+
+/* ══ TEMPLATE RENDERER ══ */
+
+function gapStyle(gap) {
+  if (!gap || gap === 'Even' || gap === '—') return 'color:var(--text-3);';
+  if (gap.startsWith('+')) return 'color:var(--accent);font-weight:700;';
+  if (gap.startsWith('−') || gap.startsWith('-')) return 'color:var(--danger);font-weight:700;';
+  return '';
+}
+
+function renderAlertDetail(item) {
+  const a = ALERTS[item.alertKey];
+  if (!a) return '<div style="padding:16px;color:var(--text-3);">No detail available.</div>';
+  const r = RIVALS[a.rivalKey];
+  var out = '';
+
+  if (r && r.status === 'blocked') {
+    out += '<div class="block-strip"><div class="bs-dot"></div><div class="bs-text">Rival is blocked \u2014 cannot access CannaSpy</div><div class="bs-since">' + r.blockedDays + ' days</div></div>';
+  }
+
+  out += '<div class="det-section"><div class="det-section-label">Why this matters</div><div class="det-narrative">' + a.narrative + '</div></div>';
+
+  if (a.stats.length) {
+    var cmap = { 'cn-danger':'var(--danger)', 'cn-teal':'var(--accent)', 'cn-warn':'var(--warm)', '':'var(--text-1)' };
+    out += '<div class="det-stats">';
+    a.stats.forEach(function(s) {
+      out += '<div class="det-stat"><div class="det-stat-n" style="color:' + (cmap[s.color]||'var(--text-1)') + '">' + s.value + '</div><div class="det-stat-label">' + s.label + '</div></div>';
+    });
+    out += '</div>';
+  }
+
+  if (a.rows && a.rows.length) {
+    out += '<div class="det-section"><div class="det-section-label">' + a.tableLabel + '</div>';
+    out += '<table class="price-table"><tr><th>Product</th><th>Your price</th><th>Their price</th><th>Gap</th></tr>';
+    a.rows.forEach(function(row) {
+      out += '<tr><td>' + row.product + '</td>';
+      out += '<td style="font-family:var(--mono);font-size:11px;">' + row.yours + '</td>';
+      out += '<td style="font-family:var(--mono);font-size:11px;font-weight:600;">' + row.theirs + '</td>';
+      out += '<td style="font-family:var(--mono);font-size:11px;' + gapStyle(row.gap) + '">' + row.gap + '</td></tr>';
+    });
+    out += '</table></div>';
+  }
+
+  return out;
+}
+
+function renderRivalProfile(item) {
+  const r = RIVALS[item.rivalKey];
+  if (!r) return '<div style="padding:16px;color:var(--text-3);">No rival data.</div>';
+  var out = '';
+
+  if (r.status === 'blocked') {
+    out += '<div class="block-strip"><div class="bs-dot"></div><div class="bs-text">Blocked \u2014 cannot access CannaSpy</div><div class="bs-since">' + r.blockedDays + ' days</div></div>';
+  } else if (r.status === 'blocking-you') {
+    out += '<div style="background:var(--warm-soft);border-bottom:1px solid rgba(212,144,10,0.25);padding:10px 16px;display:flex;align-items:center;gap:10px;">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="var(--warm)" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>' +
+      '<div style="flex:1;font-size:11px;color:var(--text-2);line-height:1.5;"><strong style="color:var(--warm);">This rival is blocking your account.</strong> Pricing, promotions, and catalog data are unavailable while their block is active. Go to Block Management to enable unblock notifications.</div>' +
+    '</div>';
+  }
+
+  // Shared brand bars
+  out += '<div class="det-section"><div class="det-section-label">Shared brands \u2014 price position</div>';
+  if (r.sharedBrands.length) {
+    out += '<div class="category-bars">';
+    r.sharedBrands.forEach(function(b) {
+      var color = b.gap < 0 ? 'var(--danger)' : b.gap > 0 ? 'var(--accent)' : 'var(--text-3)';
+      var valColor = b.gap < 0 ? 'var(--danger)' : b.gap > 0 ? 'var(--accent)' : 'var(--text-3)';
+      var valText = b.isNew ? 'New!' : b.gap === 0 ? 'Even' : (b.gap > 0 ? '+$' + b.gap : '\u2212$' + Math.abs(b.gap));
+      out += '<div class="cat-bar-row">';
+      out += '<div class="cat-bar-label">' + b.name + '</div>';
+      out += '<div class="cat-bar-track"><div class="cat-bar-fill" style="width:' + b.pct + '%;background:' + color + ';"></div></div>';
+      out += '<div class="cat-bar-val" style="color:' + valColor + ';font-weight:700;">' + valText + '</div>';
+      out += '</div>';
+    });
+    out += '</div>';
+  } else {
+    out += '<div class="det-narrative" style="font-style:italic;color:var(--text-3);">No brand overlap with your current menu \u2014 low direct pricing exposure.</div>';
+  }
+  out += '</div>';
+
+  // Latest alert card
+  if (r.latestAlert && ALERTS[r.latestAlert]) {
+    var a = ALERTS[r.latestAlert];
+    var urgent = a.urgent;
+    var bg = urgent ? 'rgba(224,90,106,0.07)' : 'rgba(9,161,161,0.08)';
+    var border = urgent ? 'rgba(224,90,106,0.22)' : 'rgba(9,161,161,0.2)';
+    var badgeColor = urgent ? 'var(--danger)' : 'var(--accent)';
+    var cmap = { 'cn-danger':'var(--danger)', 'cn-teal':'var(--accent)', 'cn-warm':'var(--warm)', '':'var(--text-1)' };
+    var alertItemId = '';
+    for (var i = 0; i < ITEMS.length; i++) {
+      if (ITEMS[i].alertKey === r.latestAlert) { alertItemId = ITEMS[i].id; break; }
+    }
+    if (!alertItemId) alertItemId = r.latestAlert;
+
+    out += '<div class="det-section"><div class="det-section-label">Latest shared brand alert</div>';
+    out += '<div style="background:' + bg + ';border:1px solid ' + border + ';border-radius:var(--r-sm);padding:10px 12px;cursor:pointer;" onclick="openDetail(\'' + alertItemId + '\')">';
+    out += '<div style="font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:' + badgeColor + ';margin-bottom:4px;">' + a.badge + ' \u2014 ' + a.ago + '</div>';
+    out += '<div style="font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:8px;">' + a.title + '</div>';
+    out += '<div style="display:flex;gap:8px;">';
+    a.stats.slice(0,3).forEach(function(s) {
+      out += '<div style="text-align:center;flex:1;">';
+      out += '<div style="font-family:var(--mono);font-size:13px;font-weight:700;color:' + (cmap[s.color]||'var(--text-1)') + ';">' + s.value + '</div>';
+      out += '<div style="font-family:var(--mono);font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-top:2px;">' + s.label + '</div>';
+      out += '</div>';
+    });
+    out += '</div>';
+    out += '<div style="font-family:var(--mono);font-size:9px;color:var(--text-3);margin-top:8px;border-top:1px solid ' + border + ';padding-top:6px;">Tap to view full alert detail \u2192</div>';
+    out += '</div></div>';
+  }
+
+  // Category overview
+  if (r.categories.length) {
+    out += '<div class="det-section"><div class="det-section-label">Category overview</div>';
+    out += '<table class="price-table"><tr><th>Category</th><th>You</th><th>Them</th><th>Shared</th></tr>';
+    r.categories.forEach(function(c) {
+      out += '<tr>';
+      out += '<td>' + c.cat + '</td>';
+      out += '<td style="font-family:var(--mono);font-size:10px;">' + c.you + '</td>';
+      out += '<td style="font-family:var(--mono);font-size:10px;">' + c.them + '</td>';
+      out += '<td style="font-family:var(--mono);font-size:10px;color:var(--accent);">' + c.shared + '</td>';
+      out += '</tr>';
+    });
+    out += '</table></div>';
+  }
+
+  return out;
+}
+
+function renderDetailBody(item) {
+  if (item.type === 'alert') return renderAlertDetail(item);
+  return renderRivalProfile(item);
+}
+
+function renderDetailFooter(item) {
+  var isBlocked = false;
+  var rivalKey = item.rivalKey;
+  if (!rivalKey && item.alertKey && ALERTS[item.alertKey]) {
+    rivalKey = ALERTS[item.alertKey].rivalKey;
+  }
+  var r = RIVALS[rivalKey];
+  if (r) isBlocked = r.status === 'blocked';
+  var rName = r ? r.name : '';
+
+  var out = '';
+
+  if (item.type === 'alert') {
+    var a = ALERTS[item.alertKey];
+    if (!a) return '';
+    if (a.actions && a.actions.length) {
+      out += '<div class="dfooter-row">';
+      a.actions.forEach(function(act) {
+        out += '<button class="dfooter-btn ' + act.style + '" onclick="' + act.fn + '">' + act.label + '</button>';
+      });
+      out += '</div>';
+    }
+    if (a.actionsFull && a.actionsFull.length) {
+      a.actionsFull.forEach(function(act) {
+        out += '<div class="dfooter-row"><button class="dfooter-btn ' + act.style + '" onclick="' + act.fn + '">' + act.label + '</button></div>';
+      });
+    }
+  } else {
+    out += '<div class="dfooter-row"><button class="dfooter-btn primary full" onclick="window.location.href=\'cannaspy_s06_FINAL.html\'">View full profile →</button></div>';
+    if (r && r.status === 'blocking-you') {
+      // They are blocking us — no track/block actions available
+      out += '<div class="dfooter-row"><div style="background:var(--warm-soft);border:1px solid rgba(212,144,10,0.25);border-radius:var(--r-sm);padding:9px 12px;font-size:11px;color:var(--text-2);line-height:1.5;text-align:center;width:100%;box-sizing:border-box;"><strong style="color:var(--warm);">Blocking you</strong> — ' + rName + ' is a paying CannaSpy customer who has blocked your account. Tracking and blocking are unavailable while their block is active. <span style="color:var(--accent);cursor:pointer;" onclick="document.getElementById(\'notif-\' + rivalKey) && toggleNotify(rivalKey)">Enable unblock notifications →</span></div></div>';
+    } else if (isBlocked) {
+      var cancelId = 'cancel-block-' + rivalKey;
+      out += '<div class="dfooter-row"><button class="dfooter-btn btn-rose full" onclick="showModal(\'' + cancelId + '\',\'Cancel block on ' + rName + '?\',\'Cancelling this block re-adds ' + rName + ' to our prospect list. They will be contacted within 24-48 hours. If they contact CannaSpy directly, they will receive a response.\',\'Keep blocking\',\'Cancel block\',makeCancelNote())">Cancel block</button></div>';
+    } else {
+      out += '<div class="dfooter-row"><button class="dfooter-btn btn-rose full" onclick="showModal(\'block-' + rivalKey + '\',\'Block ' + rName + '?\',\'Blocking ' + rName + ' adds 1 slot at $200/mo and prevents them from accessing CannaSpy.\',\'Cancel\',\'Block rival \u2192\',makeBillingNote(1,200))">Block this rival \u2192</button></div>';
+    }
+  }
+  return out;
+}
+
+function renderDetailHead(item) {
+  var sevClass, sev, rival, title;
+
+  if (item.type === 'alert') {
+    var a = ALERTS[item.alertKey];
+    if (!a) return '';
+    var r = RIVALS[a.rivalKey];
+    sevClass = a.badgeClass;
+    sev = a.badge;
+    rival = r ? (r.rivalLine + (r.status === 'blocked' ? ' \u00b7 BLOCKED' : '')) : '';
+    title = a.title;
+  } else {
+    var r = RIVALS[item.rivalKey];
+    if (!r) return '';
+    sevClass = r.status === 'blocked' ? 'sev-block' : 'sev-tracking';
+    sev = r.status === 'blocked' ? 'BLOCKED' : 'TRACKING';
+    rival = r.rivalLine;
+    title = 'Competitor profile \u2014 brand overlap';
+  }
+
+  return '<div class="det-sev ' + sevClass + '">' + sev + '</div><div class="det-rival">' + rival + '</div><div class="det-title">' + title + '</div>';
+}
+
+/* ══ STATE ══ */
+let currentKey = null;
+let activeFilter = 'all';
+let reviewedSet = new Set();
+
+/* ══ RENDER LIST ══ */
+function renderList() {
+  const scroll = document.getElementById('listScroll');
+  const visible = ITEMS.filter(item => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'shared') return item.category === 'shared';
+    if (activeFilter === 'alert') return item.type === 'alert';
+    if (activeFilter === 'rival') return item.type === 'rival' && item.category === 'rival';
+    if (activeFilter === 'blocked') return item.category === 'blocked';
+    return true;
+  });
+
+  const alerts = visible.filter(i => i.type === 'alert');
+  const rivals = visible.filter(i => i.type === 'rival');
+  let out = '';
+
+  if (alerts.length) {
+    out += '<div class="list-divider">Alerts — last 24 hours</div>';
+    alerts.forEach((item,i) => { out += renderItem(item, i); });
+  }
+  if (rivals.length) {
+    out += '<div class="list-divider">Rivals at this location</div>';
+    rivals.forEach((item,i) => { out += renderItem(item, alerts.length + i); });
+  }
+  if (!out) out = '<div style="padding:24px 16px;text-align:center;font-size:12px;color:var(--text-3);">No items match this filter.</div>';
+
+  scroll.innerHTML = out;
+  const unreviewedCount = ITEMS.filter(i => i.unread && !reviewedSet.has(i.id)).length;
+  document.getElementById('fcount').textContent = unreviewedCount + ' unreviewed';
+}
+
+function renderItem(item, idx) {
+  const isSelected = item.id === currentKey;
+  const isReviewed = reviewedSet.has(item.id);
+  const iconMap = {
+    danger: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    warn:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+    info:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+    block:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`,
+    rival:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
+  };
+  return `<div class="list-item ${isSelected?'selected':''}" style="animation-delay:${idx*0.03}s" onclick="openDetail('${item.id}')">
+    ${item.unread && !isReviewed ? '<div class="unread-dot"></div>' : '<div style="width:7px;flex-shrink:0;"></div>'}
+    <div class="li-icon icon-${item.icon}">${iconMap[item.icon]||''}</div>
+    <div class="li-body">
+      <div class="li-top"><div class="li-title">${item.title}</div><div class="li-time">${item.time}</div></div>
+      <div class="li-sub">${item.sub}</div>
+      <div class="li-chips">${item.chips.map(c=>`<span class="li-chip ${c.c}">${c.t}</span>`).join('')}</div>
+    </div>
+  </div>`;
+}
+
+/* ══ DETAIL ══ */
+function openDetail(key) {
+  const item = ITEMS.find(i => i.id === key);
+  if (!item) return;
+  currentKey = key;
+
+  document.getElementById('detailHeadBody').innerHTML = renderDetailHead(item);
+  document.getElementById('detailScroll').innerHTML = renderDetailBody(item);
+  document.getElementById('detailFooter').innerHTML = renderDetailFooter(item);
+  document.getElementById('detailPanel').classList.add('open');
+
+  document.querySelectorAll('.comp-pin').forEach(p => p.classList.remove('selected'));
+  const pin = document.getElementById(item.pinId);
+  if (pin) pin.classList.add('selected');
+
+  renderList();
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('open');
+  document.querySelectorAll('.comp-pin').forEach(p => p.classList.remove('selected'));
+  currentKey = null;
+  renderList();
+}
+
+/* ══ FILTER ══ */
+function toggleFilterDd() {
+  document.getElementById('filterDdPop').classList.toggle('open');
+}
+function selectFilter(f, label, style, el) {
+  activeFilter = f;
+  // update selected option
+  document.querySelectorAll('.filter-dd-opt').forEach(function(o){ o.classList.remove('fdo-sel'); });
+  el.classList.add('fdo-sel');
+  // update button label + style
+  var btn = document.getElementById('filterDdBtn');
+  var svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px;height:10px;flex-shrink:0;opacity:0.6;"><polyline points="6 9 12 15 18 9"/></svg>';
+  btn.innerHTML = label + ' ' + svg;
+  btn.className = 'filter-dd-btn ' + (style === 'teal' ? 'fdd-active' : 'fdd-danger');
+  document.getElementById('filterDdPop').classList.remove('open');
+  renderList();
+}
+// legacy alias kept for any stray calls
+function setFilter(f, btn) { renderList(); }
+
+document.addEventListener('click', function(e){
+  if (!e.target.closest('.filter-dd-wrap')) {
+    var pop = document.getElementById('filterDdPop');
+    if (pop) pop.classList.remove('open');
+  }
+});
+
+/* ══ MARK REVIEWED ══ */
+function markReviewed(key) {
+  reviewedSet.add(key);
+  const item = ITEMS.find(i => i.id === key || i.alertKey === key);
+  if (item) item.unread = false;
+  showToast('✓ Alert marked as reviewed','var(--accent)');
+  renderList();
+}
+
+/* ══ TOAST ══ */
+let toastTimer;
+function showToast(msg, color='var(--accent)') {
+  const t = document.getElementById('toast');
+  document.getElementById('toastDot').style.background = color;
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ══ MODAL ══ */
+function makeCancelNote() {
+  var today = new Date();
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var thisMonthEnd = months[today.getMonth()] + ' ' + new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
+  var nextMo = months[(today.getMonth()+1) % 12];
+  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:11px;">' +
+    '<div style="background:var(--accent-soft);border:1px solid rgba(9,161,161,0.2);border-radius:7px;padding:9px 11px;">' +
+      '<div style="font-family:var(--mono);font-size:8px;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Block stays active</div>' +
+      '<div style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--accent);line-height:1;margin-bottom:2px;">Until ' + thisMonthEnd + '</div>' +
+      '<div style="font-size:10px;color:var(--text-2);">No refund for remaining days</div>' +
+    '</div>' +
+    '<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:9px 11px;">' +
+      '<div style="font-family:var(--mono);font-size:8px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Billing stops</div>' +
+      '<div style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text-1);line-height:1;margin-bottom:2px;">From ' + nextMo + ' 1</div>' +
+      '<div style="font-size:10px;color:var(--text-2);">Slot removed next invoice</div>' +
+    '</div>' +
+  '</div>' +
+  '<div style="font-size:10px;color:var(--text-2);line-height:1.6;">' +
+    '<strong style="color:var(--text-1);">Prospect outreach:</strong> ' +
+    'This rival will be added to our active prospect list and contacted within 24–48 hours. If they contact CannaSpy directly, they will receive a response.' +
+  '</div>';
+}
+
+function makeBillingNote(slots, ratePerSlot) {
+  var rate = ratePerSlot || 200;
+  var total = slots * rate;
+  var today = new Date();
+  var daysInMonth = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
+  var daysRemaining = daysInMonth - today.getDate() + 1;
+  var prorated = Math.round((total / daysInMonth) * daysRemaining);
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var nextMo = months[(today.getMonth()+1) % 12];
+  var exitMo = months[(today.getMonth()+2) % 12];
+  return '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:11px;">' +
+    '<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:9px 11px;">' +
+      '<div style="font-family:var(--mono);font-size:8px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Charged today</div>' +
+      '<div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);line-height:1;margin-bottom:2px;">$' + prorated.toLocaleString() + '</div>' +
+      '<div style="font-size:10px;color:var(--text-2);">' + daysRemaining + ' days &times; $' + Math.round(total/daysInMonth) + '/day</div>' +
+    '</div>' +
+    '<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:9px 11px;">' +
+      '<div style="font-family:var(--mono);font-size:8px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">From ' + nextMo + ' 1</div>' +
+      '<div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text-1);line-height:1;margin-bottom:2px;">$' + total.toLocaleString() + '/mo</div>' +
+      '<div style="font-size:10px;color:var(--text-2);">Every month after</div>' +
+    '</div>' +
+    '<div style="background:var(--accent-soft);border:1px solid rgba(9,161,161,0.2);border-radius:7px;padding:9px 11px;">' +
+      '<div style="font-family:var(--mono);font-size:8px;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;">Earliest exit</div>' +
+      '<div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);line-height:1;margin-bottom:2px;">' + exitMo + ' 1</div>' +
+      '<div style="font-size:10px;color:var(--text-2);">Cancel before to stop billing</div>' +
+    '</div>' +
+  '</div>' +
+  '<div style="font-size:10px;color:var(--text-2);line-height:1.6;">' +
+    '<strong style="color:var(--text-1);">One-month minimum per slot.</strong> ' +
+    'Cancel before ' + exitMo + ' 1 to stop the following month&#39;s charge. No refund for remaining days in the current period.' +
+  '</div>';
+}
+
+function showModal(id, title, body, cancelLabel, confirmLabel, billingNote) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').textContent = body;
+  // Show billing note if provided (for block/track activations)
+  var bnEl = document.getElementById('modalBillingNote');
+  if (bnEl) {
+    if (billingNote) {
+      bnEl.innerHTML = billingNote;
+      bnEl.style.display = 'block';
+    } else {
+      bnEl.style.display = 'none';
+    }
+  }
+  const isDestructive = id.startsWith('cancel-block') || id.startsWith('respond');
+  document.getElementById('modalActions').innerHTML = `
+    <button class="modal-btn" onclick="closeModal()">${cancelLabel}</button>
+    <button class="modal-btn ${isDestructive?'danger':'primary'}" onclick="handleModalConfirm('${id}')">${confirmLabel}</button>`;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function handleModalConfirm(id) {
+  closeModal();
+  const key = id.replace('cancel-block-','').replace('block-','');
+  const rName = RIVALS[key]?.name || id;
+  if (id.startsWith('cancel-block')) {
+    showToast(`Block cancelled — ${rName} added to prospect list`,'var(--danger)');
+  } else if (id.startsWith('block-')) {
+    showToast(`✓ ${rName} blocked — 1 slot added`,'var(--rose)');
+  } else if (id.startsWith('respond')) {
+    showToast('Price matched — product updated','var(--accent)');
+  } else {
+    showToast('Action confirmed','var(--accent)');
+  }
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modalOverlay')) return;
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+/* ══ THEME ══ */
+function toggleTheme() {
+  const html = document.documentElement;
+  const dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('themeLabel').textContent = dark ? 'Dark mode' : 'Light mode';
+}
+
+/* ══ INIT ══ */
+renderList();
+openDetail('stiiizy-rival');
+</script>
+</body>
+</html>

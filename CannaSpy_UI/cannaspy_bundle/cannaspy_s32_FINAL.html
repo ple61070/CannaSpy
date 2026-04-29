@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Data Trust & Provenance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}html{-webkit-font-smoothing:antialiased;}
+[data-theme="light"]{--bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);--sidebar:rgba(255,255,255,0.72);--sidebar-fg:#0d1f2e;--sidebar-fg-mute:rgba(13,31,46,0.68);--sidebar-fg-dim:rgba(13,31,46,0.45);--glass-edge-top:rgba(255,255,255,0.95);--glass-edge-inner:rgba(9,161,161,0.12);--surface:rgba(255,255,255,0.97);--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;--border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);--border-hot:rgba(9,161,161,0.38);--text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;--accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);--warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);--rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);--slate:#5484A4;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.08);--card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);--noise-opacity:0.022;}
+[data-theme="dark"]{--bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);--sidebar:rgba(14,26,38,0.72);--sidebar-fg:#e6f0f7;--sidebar-fg-mute:rgba(230,240,247,0.72);--sidebar-fg-dim:rgba(230,240,247,0.45);--glass-edge-top:rgba(255,255,255,0.08);--glass-edge-inner:rgba(11,184,184,0.18);--surface:rgba(16,28,40,0.99);--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;--border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);--border-hot:rgba(11,184,184,0.5);--text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;--accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);--warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);--rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);--slate:#acc0d3;--danger:#e05a6a;--danger-soft:rgba(224,90,106,0.10);--card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);--noise-opacity:0.04;}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;--r:12px;--r-sm:8px;--tr:all 0.2s cubic-bezier(.4,0,.2,1);--transition:all 0.2s cubic-bezier(.4,0,.2,1);--ease-spring:cubic-bezier(.2,.8,.2,1);}
+/* ════ NAV RAIL TOKENS (canonical S12) ════ */
+:root{
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --nav-w:var(--rail-w);
+}
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:var(--noise-opacity);pointer-events:none;z-index:9999;mix-blend-mode:overlay;}
+body{font-family:var(--sans);color:var(--text-1);height:100vh;display:flex;font-size:14px;overflow:hidden;background:radial-gradient(ellipse 1200px 700px at 15% -5%,var(--bg-g1),transparent),radial-gradient(ellipse 900px 500px at 85% 5%,var(--bg-g2),transparent),radial-gradient(ellipse 600px 400px at 50% 100%,var(--bg-g3),transparent),var(--bg);background-attachment:fixed;}
+/* ════ NAV RAIL — canonical S12 reference (collapsed by default, expand on hover) ════ */
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh;display:flex;flex-direction:column;flex-shrink:0;
+  transition:width 0.22s var(--ease-spring);
+  overflow:hidden!important;position:relative;z-index:40;
+}
+.nav-sidebar::after{
+  content:'';position:absolute;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45);
+  z-index:50;
+}
+.nav-inner{padding:18px 0;display:flex;flex-direction:column;height:100%;position:relative;z-index:1;}
+.logo{padding:0 14px 18px;border-bottom:1px solid var(--rail-divider);margin-bottom:14px;}
+.logo-row{display:flex;align-items:center;gap:10px;overflow:hidden;}
+.logo-gem{width:36px;height:36px;background:linear-gradient(135deg,#09A1A1 0%,#F6C992 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(9,161,161,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.logo-gem svg{width:18px;height:18px;}
+.logo-name{font-size:15px;font-weight:700;color:var(--rail-fg);letter-spacing:-0.01em;white-space:nowrap;}
+.logo-tag{font-family:var(--mono);font-size:8.5px;color:var(--rail-fg-dim);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;white-space:nowrap;}
+.nav-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 10px;}
+.nav-scroll::-webkit-scrollbar{width:0;}
+.nav-group{padding:0 0 4px;}
+.nav-group-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--rail-fg-dim);padding:8px 8px 5px;white-space:nowrap;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-group-label{opacity:1;}
+.nav-link{display:flex;align-items:center;padding:8px 10px;border-radius:8px;color:var(--rail-fg-mute);font-size:13px;cursor:pointer;transition:var(--transition);margin-bottom:1px;user-select:none;white-space:nowrap;overflow:hidden;}
+.nav-link svg{width:15px;height:15px;flex-shrink:0;margin-right:9px;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1;}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.nav-link.active{background:var(--rail-accent-soft);color:var(--rail-fg);font-weight:600;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30);}
+.nav-link.active svg{color:var(--rail-accent);}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72);}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82);}
+.nav-link.locked{opacity:0.45;pointer-events:none;}
+.step-dot{width:14px;height:14px;border-radius:50%;background:rgba(11,213,213,0.20);color:var(--rail-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:9px;}
+.step-dot svg{width:9px;height:9px;margin:0;}
+.nav-footer{padding:14px;border-top:1px solid var(--rail-divider);margin-top:auto;}
+.theme-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:transparent;border:none;color:var(--rail-fg-mute);font-size:12px;cursor:pointer;width:100%;font-family:var(--sans);transition:var(--transition);white-space:nowrap;overflow:hidden;}
+.theme-row svg{width:14px;height:14px;flex-shrink:0;}
+.theme-row span{flex:1;text-align:left;opacity:0;transition:opacity 0.2s 0.05s;}
+.nav-sidebar:hover .theme-row span{opacity:1;}
+.theme-row:hover{background:rgba(255,255,255,0.07);color:var(--rail-fg);}
+.pill-toggle{width:30px;height:16px;border-radius:8px;background:rgba(255,255,255,0.18);position:relative;flex-shrink:0;transition:var(--transition);opacity:0;}
+.nav-sidebar:hover .pill-toggle{opacity:1;}
+.pill-knob{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.22s var(--ease-spring);}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent);}
+[data-theme="light"] .pill-knob{background:#fff;transform:translateX(14px);}
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;width:0;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0;}
+.topbar-row1{display:flex;align-items:center;gap:12px;padding:12px 0;}
+.topbar-title{font-size:17px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;}
+.topbar-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-left:2px;}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.tb-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:var(--r-sm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:var(--transition);border:1.5px solid var(--border-2);background:var(--surface-3);color:var(--text-1);}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);}
+.tb-btn svg{width:12px;height:12px;}
+.content-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:28px 36px;min-height:0;width:100%;}
+.content-scroll::-webkit-scrollbar{width:5px;}
+.content-scroll::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px;}
+.content-inner{width:100%;}
+
+/* PAGE HERO */
+.page-hero{margin-bottom:32px;}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+.hero-title{font-size:26px;font-weight:700;color:var(--text-1);letter-spacing:-0.03em;line-height:1.2;margin-bottom:10px;}
+.hero-sub{font-size:14px;color:var(--text-2);line-height:1.6;max-width:620px;}
+
+/* TRUST SCORE */
+.trust-score-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:28px;width:100%;}
+.ts-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--card-shadow);min-width:0;}
+.ts-val{font-family:var(--mono);font-size:26px;font-weight:700;line-height:1;margin-bottom:3px;}
+.ts-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);}
+.ts-sub{font-size:11px;color:var(--text-2);margin-top:5px;line-height:1.4;}
+
+/* PIPELINE DIAGRAM */
+.pipeline-section{margin-bottom:28px;}
+.section-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.pipeline-steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:stretch;gap:8px;position:relative;}
+.pipe-step{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--card-shadow);min-width:0;position:relative;}
+.pipe-step:first-child{border-radius:var(--r);}
+.pipe-step:last-child{border-radius:var(--r);}
+.pipe-arrow{display:none;}
+.pipe-num{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--accent);margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+.pipe-num::after{content:'→';font-size:10px;color:var(--accent);opacity:0.5;}
+.pipe-step:last-child .pipe-num::after{display:none;}
+.pipe-title{font-size:11px;font-weight:700;color:var(--text-1);margin-bottom:4px;}
+.pipe-body{font-size:10px;color:var(--text-2);line-height:1.5;}
+.pipe-badge{font-family:var(--mono);font-size:8px;font-weight:700;padding:2px 5px;border-radius:3px;margin-top:6px;display:inline-block;}
+
+/* FAQ ACCORDION */
+.faq-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:var(--card-shadow);}
+.faq-q{padding:14px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;transition:background 0.15s;}
+.faq-q:hover{background:var(--surface-2);}
+.faq-q-text{font-size:13px;font-weight:600;color:var(--text-1);}
+.faq-chevron{width:16px;height:16px;color:var(--text-3);transition:transform 0.2s;flex-shrink:0;}
+.faq-item.open .faq-chevron{transform:rotate(180deg);}
+.faq-a{display:none;padding:0 18px 14px;font-size:12px;color:var(--text-2);line-height:1.7;border-top:1px solid var(--border);}
+.faq-item.open .faq-a{display:block;padding-top:12px;}
+
+/* COVERAGE TABLE */
+.cov-table{width:100%;border-collapse:collapse;}
+.cov-table th{padding:8px 12px;text-align:left;font-family:var(--mono);font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);border-bottom:2px solid var(--border-2);background:var(--surface-2);}
+.cov-table td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
+.cov-check{width:16px;height:16px;border-radius:4px;background:var(--accent);display:inline-flex;align-items:center;justify-content:center;}
+.cov-x{width:16px;height:16px;border-radius:4px;background:var(--surface-3);display:inline-flex;align-items:center;justify-content:center;}
+
+/* DATA FRESHNESS TIMELINE */
+.freshness-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:28px;width:100%;}
+.freshness-step{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;box-shadow:var(--card-shadow);min-width:0;}
+.fs-time{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);margin-bottom:3px;}
+.fs-label{font-size:11px;font-weight:600;color:var(--text-1);margin-bottom:3px;}
+.fs-sub{font-size:10px;color:var(--text-2);line-height:1.4;}
+
+.card-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--card-shadow);overflow:hidden;margin-bottom:16px;}
+.card-header{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--surface-2);}
+.card-title{font-size:12px;font-weight:700;color:var(--text-1);}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--r-sm);padding:11px 18px;font-size:12px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:9000;transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(.4,0,.2,1);pointer-events:none;display:flex;align-items:center;gap:8px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+</style>
+</head>
+<body>
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar"><div class="topbar-row1">
+    <div class="topbar-title">Data Trust &amp; Provenance</div>
+    <div class="topbar-sub">HOW WE COLLECT DATA &amp; WHY YOU CAN RELY ON IT</div>
+    <div class="topbar-actions">
+      <button class="tb-btn" onclick="showToast('Opening data quality report…','var(--accent)')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Download data report
+      </button>
+    </div>
+  </div></div>
+
+  <div class="content-scroll">
+    <div class="content-inner">
+
+    <!-- HERO -->
+    <div class="page-hero">
+      <div class="hero-eyebrow">Data confidence</div>
+      <div class="hero-title">You are looking at real data.<br>Not estimates. Not surveys.</div>
+      <div class="hero-sub">CannaSpy collects pricing, product, and promotional data directly from publicly available cannabis market sources — the same information any consumer can access by browsing your competitors. Every price in your dashboard reflects what a customer would see if they walked in today.</div>
+    </div>
+
+    <!-- TRUST SCORE STRIP -->
+    <div class="trust-score-row">
+      <div class="ts-card">
+        <div class="ts-val" style="color:var(--accent);">98.7%</div>
+        <div class="ts-label">Data accuracy</div>
+        <div class="ts-sub">Price records verified against live source within 24 hours of display</div>
+      </div>
+      <div class="ts-card">
+        <div class="ts-val" style="color:var(--accent);">Daily</div>
+        <div class="ts-label">Refresh cadence</div>
+        <div class="ts-sub">Every tracked dispensary monitored between 2–5 AM Pacific, every day</div>
+      </div>
+      <div class="ts-card">
+        <div class="ts-val" style="color:var(--accent);">~1,300</div>
+        <div class="ts-label">CA dispensaries covered</div>
+        <div class="ts-sub">Every licensed California dispensary with a public menu is in scope</div>
+      </div>
+      <div class="ts-card">
+        <div class="ts-val" style="color:var(--accent);">Public</div>
+        <div class="ts-label">Data source type</div>
+        <div class="ts-sub">No authentication bypass. No ToS violation. Publicly accessible pricing only.</div>
+      </div>
+    </div>
+
+    <!-- DATA PIPELINE -->
+    <div class="pipeline-section">
+      <div class="section-label">How your data is collected</div>
+      <div class="pipeline-steps">
+        <div class="pipe-step">
+          <div class="pipe-num">01</div>
+          <div class="pipe-title">Discovery</div>
+          <div class="pipe-body">Licensed dispensaries identified via California DCC license database and public maps APIs. No competitor is added without a verified DCC license number.</div>
+          <div class="pipe-badge" style="background:var(--accent-soft);color:var(--accent);">Nightly scan</div>
+        </div>
+        <div class="pipe-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="pipe-step">
+          <div class="pipe-num">02</div>
+          <div class="pipe-title">Collection</div>
+          <div class="pipe-body">Full menu data collected from publicly available cannabis market data sources. Pricing, SKU details, sale flags, discount labels, and lab values are captured per item.</div>
+          <div class="pipe-badge" style="background:var(--accent-soft);color:var(--accent);">2–5 AM Pacific</div>
+        </div>
+        <div class="pipe-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="pipe-step">
+          <div class="pipe-num">03</div>
+          <div class="pipe-title">Normalization</div>
+          <div class="pipe-body">Product names are normalized across dispensaries so "Friendly Farms OG 1g" and "FF OG Cartridge 1000mg" resolve to the same SKU for accurate cross-market comparison.</div>
+          <div class="pipe-badge" style="background:var(--warm-soft);color:var(--warm);">AI-assisted</div>
+        </div>
+        <div class="pipe-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="pipe-step">
+          <div class="pipe-num">04</div>
+          <div class="pipe-title">Diff &amp; Alert</div>
+          <div class="pipe-body">Every new collection is compared to the prior snapshot. Price changes, new SKUs, removed products, and promo starts/ends generate alerts in real time.</div>
+          <div class="pipe-badge" style="background:var(--danger-soft);color:var(--danger);">Real-time events</div>
+        </div>
+        <div class="pipe-arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <div class="pipe-step">
+          <div class="pipe-num">05</div>
+          <div class="pipe-title">Redundancy</div>
+          <div class="pipe-body">A parallel fallback pipeline runs independently. If primary collection encounters an issue, fallback activates automatically — your data never goes stale.</div>
+          <div class="pipe-badge" style="background:var(--surface-3);color:var(--text-3);">Always-on backup</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATA FRESHNESS -->
+    <div class="section-label" style="margin-bottom:12px;">Data freshness — current status</div>
+    <div class="freshness-row">
+      <div class="freshness-step">
+        <div class="fs-time">2:34 AM</div>
+        <div class="fs-label">Last collection run</div>
+        <div class="fs-sub">Apr 16 &middot; All 10 tracked rivals refreshed &middot; 0 failures</div>
+      </div>
+      <div class="freshness-step">
+        <div class="fs-time">2:47 AM</div>
+        <div class="fs-label">Last normalization pass</div>
+        <div class="fs-sub">14 new product matches resolved across 3 dispensaries</div>
+      </div>
+      <div class="freshness-step">
+        <div class="fs-time">2:51 AM</div>
+        <div class="fs-label">Last alerts generated</div>
+        <div class="fs-sub">3 price changes, 1 new SKU, 1 promo start detected</div>
+      </div>
+      <div class="freshness-step">
+        <div class="fs-time">99.1%</div>
+        <div class="fs-label">30-day uptime</div>
+        <div class="fs-sub">2 minor outages, both recovered within 4 hours via fallback</div>
+      </div>
+    </div>
+
+    <!-- COVERAGE TABLE -->
+    <div class="card-box" style="margin-bottom:20px;">
+      <div class="card-header">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <div class="card-title">What data fields are collected per dispensary</div>
+      </div>
+      <table class="cov-table">
+        <thead><tr>
+          <th>Data field</th>
+          <th style="text-align:center;">Collected</th>
+          <th>Notes</th>
+        </tr></thead>
+        <tbody id="cov-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- FAQ ACCORDION -->
+    <div class="section-label" style="margin-bottom:12px;">Common questions about data quality</div>
+    <div id="faq-container"></div>
+
+    </div><!-- /content-inner -->
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="toast-dot" id="toast-dot"></div><span id="toast-msg"></span></div>
+
+<script>
+var COV_ROWS = [
+  {field:'Current price per SKU',         yes:true,  note:'Live price as shown to customers today'},
+  {field:'On-sale flag & original price',  yes:true,  note:'Detects active discounts and sale depth'},
+  {field:'Discount label text',            yes:true,  note:'e.g. "20% off", "BOGO", "Happy Hour"'},
+  {field:'Price vs. prior day (delta)',    yes:true,  note:'Computed by CannaSpy diff engine'},
+  {field:'Product brand & category',      yes:true,  note:'Flower, Vapes, Pre-rolls, Edibles, Concentrates'},
+  {field:'Strain name & genetics',         yes:true,  note:'Indica / Sativa / Hybrid + strain name where available'},
+  {field:'Lab-verified THC/CBD values',   yes:true,  note:'In mg per item when provided by the dispensary'},
+  {field:'New & discontinued products',   yes:true,  note:'Detected on each daily run by comparison to prior snapshot'},
+  {field:'Promotional schedule',          yes:true,  note:'Happy hours, daily brand deals, first-time offers'},
+  {field:'Business hours & open status',  yes:true,  note:'Current day hours and live open/closed flag'},
+  {field:'Online ordering availability',  yes:true,  note:'Whether delivery or pickup is currently active'},
+  {field:'Transaction-level sales data',  yes:false, note:'Not collected — CannaSpy accesses public menus only'},
+  {field:'Customer PII or loyalty data',  yes:false, note:'Not collected — no access to internal systems'},
+  {field:'Internal inventory quantities', yes:false, note:'Counts not publicly accessible; in-stock status only'},
+];
+
+function renderCovTable() {
+  var h = '';
+  COV_ROWS.forEach(function(r) {
+    h += '<tr>';
+    h += '<td style="font-size:12px;font-weight:600;color:var(--text-1);">' + r.field + '</td>';
+    h += '<td style="text-align:center;">';
+    if (r.yes) {
+      h += '<div class="cov-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" style="width:10px;height:10px;"><polyline points="20 6 9 17 4 12"/></svg></div>';
+    } else {
+      h += '<div class="cov-x"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="3" style="width:10px;height:10px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>';
+    }
+    h += '</td>';
+    h += '<td style="font-size:11px;color:var(--text-2);">' + r.note + '</td>';
+    h += '</tr>';
+  });
+  document.getElementById('cov-tbody').innerHTML = h;
+}
+
+var FAQS = [
+  {q:'Where does the pricing data come from?',
+   a:'CannaSpy aggregates pricing, product, and promotional data from publicly available cannabis market sources. Our data collection infrastructure is proprietary — what matters to you is that pricing and menu data is updated daily and covers every licensed dispensary in your competitive set.'},
+  {q:'Is this legal? Are you monitoring without permission?',
+   a:'CannaSpy collects only publicly available data — information that any consumer, competitor, or third party can access through normal browsing. We do not bypass authentication, access private systems, or collect data that requires a login. This is the same methodology used by price comparison services, market research firms, and competitive intelligence tools across every industry.'},
+  {q:'How fresh is the data? When was the last update?',
+   a:'Every tracked dispensary is refreshed daily between 2:00–5:00 AM Pacific. By the time you open your dashboard in the morning, the prior day\'s prices are already reflected. Price changes detected overnight appear as alerts immediately after the collection run completes, typically before 6 AM. The current collection run status is shown at the top of this page.'},
+  {q:'What happens if a competitor moves to a different menu platform?',
+   a:'Our data collection is designed to be platform-agnostic. We track what dispensaries make publicly available, regardless of which menu management system they use. Moving platforms does not meaningfully affect our coverage of that competitor. We maintain a fallback pipeline specifically to handle this scenario.'},
+  {q:'How accurate is the product normalization?',
+   a:'Product name normalization uses an AI-assisted matching system trained on the California cannabis market. Accuracy across identical products at different dispensaries is above 96%. Low-confidence matches are flagged with a reduced confidence indicator in the price matrix. You can always view the raw product name alongside the normalized name by hovering any SKU row.'},
+  {q:'Can a competitor see that CannaSpy is monitoring them?',
+   a:'No. CannaSpy accesses the same public menu data that any consumer or developer accesses when browsing. There is no tracking, fingerprinting, or identifiable signal that distinguishes CannaSpy requests from ordinary traffic. Competitors have no way to detect that they are being monitored through CannaSpy.'},
+  {q:'What if the data shows a price that looks wrong?',
+   a:'Every data point shows a timestamp and confidence level. If you see a price that looks inconsistent with what you know, use the "Flag data issue" button on any price cell to report it. Our team reviews flagged records within 24 hours and re-verifies against the live source. Confirmed errors are corrected and noted in the data provenance log.'},
+];
+
+function renderFAQ() {
+  var h = '';
+  FAQS.forEach(function(f, i) {
+    h += '<div class="faq-item" id="faq-' + i + '">';
+    h += '<div class="faq-q" onclick="toggleFAQ(' + i + ')">';
+    h += '<span class="faq-q-text">' + f.q + '</span>';
+    h += '<svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+    h += '</div>';
+    h += '<div class="faq-a">' + f.a + '</div>';
+    h += '</div>';
+  });
+  document.getElementById('faq-container').innerHTML = h;
+}
+
+function toggleFAQ(i) {
+  document.getElementById('faq-' + i).classList.toggle('open');
+}
+
+function go(u) { window.location.href = u; }
+function toggleTheme() { document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light'); }
+var tt;
+function showToast(m, c) { clearTimeout(tt); var el = document.getElementById('toast'); document.getElementById('toast-msg').textContent = m; document.getElementById('toast-dot').style.background = c; el.classList.add('show'); tt = setTimeout(function() { el.classList.remove('show'); }, 3200); }
+
+renderCovTable();
+renderFAQ();
+</script>
+</body>
+</html>

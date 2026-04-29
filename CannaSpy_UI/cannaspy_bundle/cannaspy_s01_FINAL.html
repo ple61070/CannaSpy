@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CannaSpy — Sign Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+
+/* ── FONT RENDERING ── */
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+/* ── THEME TOKENS ── */
+[data-theme="light"]{
+  --bg:#eef1f6;--bg-g1:rgba(9,161,161,0.07);--bg-g2:rgba(246,201,146,0.09);--bg-g3:rgba(211,150,166,0.05);
+  --sidebar:#30525C;
+  --surface:rgba(255,255,255,0.97);--surface-solid:#ffffff;--surface-2:rgba(247,249,251,0.97);--surface-3:#edf0f5;
+  --border:rgba(84,132,164,0.12);--border-2:rgba(84,132,164,0.22);
+  --text-1:#1a2a30;--text-2:#5484a4;--text-3:#8aafc8;
+  --accent:#09A1A1;--accent-soft:rgba(9,161,161,0.10);--accent-hover:#078484;
+  --warm:#d4900a;--warm-soft:rgba(246,201,146,0.18);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.11);
+  --slate:#5484A4;--danger:#e05a6a;--positive:#09A1A1;
+  --card-shadow:0 2px 8px rgba(30,60,80,0.06),0 8px 30px rgba(30,60,80,0.05);
+  --card-shadow-lg:0 8px 40px rgba(30,60,80,0.13);
+  --btn-shadow:0 4px 18px rgba(9,161,161,0.32);
+  --noise-opacity:0.022;
+}
+
+[data-theme="dark"]{
+  --bg:#0c1a1f;--bg-g1:rgba(9,161,161,0.06);--bg-g2:rgba(246,201,146,0.04);--bg-g3:rgba(211,150,166,0.04);
+  --sidebar:#091114;
+  --surface:rgba(16,28,40,0.99);--surface-solid:#14202a;--surface-2:rgba(20,34,48,0.99);--surface-3:#1e3044;
+  --border:rgba(84,132,164,0.11);--border-2:rgba(84,132,164,0.20);
+  --text-1:#d8e8f0;--text-2:#6a96b0;--text-3:#6a8ea6;
+  --accent:#0bb8b8;--accent-soft:rgba(11,184,184,0.11);--accent-hover:#0dcfcf;
+  --warm:#F6C992;--warm-soft:rgba(246,201,146,0.08);
+  --rose:#D396A6;--rose-soft:rgba(211,150,166,0.09);
+  --slate:#acc0d3;--danger:#e05a6a;--positive:#0bb8b8;
+  --card-shadow:0 2px 12px rgba(0,0,0,0.28),0 8px 36px rgba(0,0,0,0.20);
+  --card-shadow-lg:0 12px 50px rgba(0,0,0,0.38);
+  --btn-shadow:0 4px 20px rgba(9,161,161,0.34);
+  --noise-opacity:0.04;
+}
+
+:root {
+  --sans: 'Plus Jakarta Sans', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --r: 14px;
+  --r-sm: 9px;
+  --sidebar-w: 250px;
+  --transition: all 0.2s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── NOISE OVERLAY ── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: var(--noise-opacity);
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: overlay;
+}
+
+/* ── BODY + GRADIENT BG ── */
+body {
+  font-family: var(--sans);
+  color: var(--text-1);
+  min-height: 100vh;
+  display: flex;
+  font-size: 14px;
+  transition: background 0.4s, color 0.3s;
+  background:
+    radial-gradient(ellipse 1200px 700px at 15% -5%, var(--bg-grad-1), transparent),
+    radial-gradient(ellipse 900px 500px at 85% 5%, var(--bg-grad-2), transparent),
+    radial-gradient(ellipse 600px 400px at 50% 100%, var(--bg-grad-3), transparent),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--sidebar);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: relative;
+  transition: background 0.4s;
+  overflow: hidden;
+}
+
+/* Sidebar inner glow */
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: -60px; left: -60px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(9,161,161,0.12), transparent 70%);
+  pointer-events: none;
+}
+
+.sidebar-inner { padding: 22px 0; display: flex; flex-direction: column; height: 100%; position: relative; z-index: 1; }
+
+.logo { padding: 0 20px 22px; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 18px; }
+.logo-row { display: flex; align-items: center; gap: 10px; }
+.logo-gem {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #09A1A1 0%, #F6C992 100%);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(9,161,161,0.45), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.logo-gem svg { width: 18px; height: 18px; }
+.logo-name { font-size: 15px; font-weight: 700; color: var(--sidebar-text); letter-spacing: -0.01em; }
+.logo-tag { font-family: var(--mono); font-size: 8.5px; color: var(--sidebar-muted); letter-spacing: 0.14em; text-transform: uppercase; margin-top: 2px; }
+
+.nav-group { padding: 0 11px; margin-bottom: 4px; }
+.nav-group-label { font-family: var(--mono); font-size: 9px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(172,210,225,0.65); padding: 0 8px; margin-bottom: 5px; }
+
+.nav-link {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  color: var(--sidebar-muted);
+  font-size: 13px; font-weight: 400;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-bottom: 1px;
+  position: relative;
+}
+
+.nav-link:hover { background: var(--sidebar-item); color: var(--sidebar-text); transform: translateX(4px); }
+.nav-link svg { width: 15px; height: 15px; flex-shrink: 0; transition: var(--transition); }
+
+.nav-link.active {
+  background: var(--sidebar-active);
+  color: var(--sidebar-text);
+  font-weight: 500;
+  box-shadow: inset 0 0 0 1px rgba(9,161,161,0.25), 0 0 14px rgba(9,161,161,0.13);
+}
+
+.nav-link.done { color: var(--accent); background: var(--sidebar-done); }
+.nav-link.locked { opacity: 0.5; pointer-events: none; }
+
+.step-dot { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 9px; font-weight: 500; flex-shrink: 0; }
+.nav-link.done .step-dot { background: var(--accent); color: #fff; }
+.nav-link.active .step-dot { background: rgba(9,161,161,0.3); color: var(--accent); }
+.nav-link.locked .step-dot { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.25); }
+
+.sidebar-footer { margin-top: auto; padding: 14px 11px; border-top: 1px solid rgba(255,255,255,0.06); }
+
+.theme-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer; background: transparent; border: none; width: 100%;
+  color: var(--sidebar-muted); font-family: var(--sans); font-size: 12px;
+  transition: var(--transition);
+}
+.theme-row:hover { background: var(--sidebar-item); color: var(--sidebar-text); transform: translateX(2px); }
+.theme-row svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+.pill-toggle { margin-left: auto; width: 36px; height: 20px; background: rgba(255,255,255,0.12); border-radius: 10px; position: relative; transition: background 0.3s; flex-shrink: 0; }
+.pill-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: transform 0.3s cubic-bezier(.4,0,.2,1); box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+[data-theme="dark"] .pill-toggle { background: var(--accent); }
+[data-theme="dark"] .pill-knob { transform: translateX(16px); }
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; }
+.topbar {
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  height: 60px;
+  display: flex; align-items: center;
+  padding: 0 32px;
+  justify-content: space-between;
+  flex-shrink: 0;
+  transition: background 0.3s, border-color 0.3s;
+}
+.topbar-title { font-size: 15px; font-weight: 600; color: var(--text-1); letter-spacing: -0.01em; }
+.topbar-crumb { font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.08em; margin-top: 2px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.topbar-help { font-family: var(--mono); font-size: 10px; color: var(--text-3); letter-spacing: 0.1em; padding: 5px 10px; border: 1px solid var(--border-2); border-radius: 20px; cursor: pointer; transition: var(--transition); }
+.topbar-help:hover { color: var(--accent); border-color: var(--accent); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #09A1A1, #D396A6); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; box-shadow: 0 2px 8px rgba(9,161,161,0.3); }
+
+.page { flex: 1; padding: 30px 34px; overflow-y: auto; }
+
+/* ── STEP BAR ── */
+.stepbar {
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 28px;
+  display: flex; align-items: center;
+  margin-bottom: 26px;
+  box-shadow: var(--card-shadow);
+  animation: fadeUp 0.3s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.sb-step { display: flex; align-items: center; gap: 10px; flex: 1; position: relative; }
+.sb-step:not(:last-child)::after {
+  content: ''; position: absolute; left: 150px;
+  width: calc(100% - 155px); height: 2px;
+  background: var(--border-2); top: 50%; transform: translateY(-50%);
+  transition: background 0.4s;
+}
+.sb-step.s-done:not(:last-child)::after { background: var(--positive); }
+.sb-step.s-active:not(:last-child)::after {
+  background: linear-gradient(to right, var(--accent), var(--border-2));
+  animation: progressGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes progressGlow {
+  0%, 100% { opacity: 0.65; }
+  50%       { opacity: 1; }
+}
+
+.sb-num { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 500; flex-shrink: 0; transition: var(--transition); }
+.s-done .sb-num { background: var(--positive); color: #fff; box-shadow: 0 0 0 3px var(--accent-soft); }
+.s-active .sb-num { background: var(--accent); color: #fff; box-shadow: 0 0 0 4px var(--accent-soft), 0 4px 12px rgba(9,161,161,0.3); }
+.s-future .sb-num { background: var(--surface-3); color: var(--text-3); }
+.sb-label { font-size: 12px; font-weight: 600; color: var(--text-1); white-space: nowrap; }
+.s-future .sb-label { color: var(--text-3); }
+.sb-sub { font-size: 11px; color: var(--text-3); white-space: nowrap; }
+
+/* ── LAYOUT ── */
+.form-grid { display: grid; grid-template-columns: 1fr 355px; gap: 20px; align-items: start; }
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 26px 28px;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.25s cubic-bezier(.2,.8,.2,1), box-shadow 0.25s ease, background 0.3s, border-color 0.3s;
+  animation: fadeUp 0.45s cubic-bezier(.2,.8,.2,1) both;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; right: -100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(9,161,161,0.6), rgba(246,201,146,0.5), transparent);
+  opacity: 0;
+  transition: opacity 0.3s, left 0.6s ease;
+  border-radius: var(--r) var(--r) 0 0;
+}
+
+.card:hover::before { opacity: 1; left: 0; right: 0; }
+.card:hover { transform: translateY(-3px); box-shadow: var(--card-shadow-lg); }
+
+.card + .card { margin-top: 18px; }
+
+.card-head { margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.card-title { font-size: 16px; font-weight: 600; color: var(--text-1); margin-bottom: 3px; letter-spacing: -0.01em; }
+.card-sub { font-size: 12px; color: var(--text-2); line-height: 1.55; }
+
+/* ── FOCUS RING ── */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(9,161,161,0.35);
+  border-radius: var(--r-sm);
+}
+
+/* ── FIELDS ── */
+.field { margin-bottom: 16px; }
+.f2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+label { display: block; font-size: 11px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; letter-spacing: 0.03em; text-transform: uppercase; }
+.req { color: var(--rose); margin-left: 2px; }
+
+input, select {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1.5px solid var(--input-border);
+  border-radius: var(--r-sm);
+  padding: 10px 13px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--text-1);
+  outline: none;
+  transition: all 0.2s ease;
+  -webkit-appearance: none;
+}
+
+input::placeholder { color: var(--text-3); font-size: 13px; }
+
+input:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  transform: scale(1.005);
+  background: var(--surface-solid);
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235484A4' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+.hint { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+/* ── PLAN TILES ── */
+.plan-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.plan-tile {
+  border: 1.5px solid var(--border-2);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(.2,.8,.2,1);
+  position: relative;
+  background: var(--input-bg);
+}
+
+.plan-tile:hover { border-color: var(--accent); transform: translateY(-2px) scale(1.01); box-shadow: 0 6px 20px rgba(9,161,161,0.12); }
+.plan-tile.selected { border-color: var(--accent); background: var(--accent-soft); }
+.plan-tile.selected::after { content: '✓'; position: absolute; top: 10px; right: 12px; font-size: 11px; color: var(--accent); font-weight: 700; }
+
+.pt-name { font-size: 12px; font-weight: 600; color: var(--text-1); margin-bottom: 3px; }
+.pt-price { font-family: var(--mono); font-size: 16px; color: var(--accent); font-weight: 500; font-variant-numeric: tabular-nums; }
+.pt-desc { font-size: 11px; color: var(--text-3); margin-top: 4px; line-height: 1.5; }
+
+/* ── SLOT GRID ── */
+.slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+
+.slot-tile {
+  border: 1.5px solid var(--border-2);
+  border-radius: var(--r-sm);
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(.2,.8,.2,1);
+  background: var(--input-bg);
+}
+
+.slot-tile:hover { border-color: var(--accent); transform: translateY(-2px) scale(1.02); box-shadow: 0 6px 18px rgba(9,161,161,0.14); }
+.slot-tile.sel { border-color: var(--accent); background: var(--accent-soft); }
+
+.slot-n {
+  font-family: var(--mono);
+  font-size: 20px; font-weight: 500;
+  color: var(--accent);
+  display: block;
+  font-variant-numeric: tabular-nums;
+  transition: var(--transition);
+}
+
+.slot-mo { font-size: 10px; color: var(--text-3); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.slot-off { font-size: 9px; color: var(--positive); font-weight: 600; margin-top: 3px; font-family: var(--mono); }
+
+/* ── BUTTON ── */
+.btn-primary {
+  width: 100%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 12px;
+  font-family: var(--sans);
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(.2,.8,.2,1);
+  box-shadow: var(--btn-shadow);
+  letter-spacing: 0.01em;
+  margin-top: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.28) 50%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translateX(-100%);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--btn-shadow-lg);
+}
+
+.btn-primary:hover::after { opacity: 1; transform: translateX(100%); }
+.btn-primary:active { transform: translateY(0); box-shadow: var(--btn-shadow); }
+
+.btn-primary.loading {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+/* ── SUMMARY CARD ── */
+.sum-section { padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+.sum-section:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.sum-label { font-family: var(--mono); font-size: 9px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; }
+
+.sum-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.sum-k { font-size: 12px; color: var(--text-2); }
+.sum-v { font-family: var(--mono); font-size: 12px; color: var(--text-1); font-weight: 500; font-variant-numeric: tabular-nums; transition: all 0.3s ease; }
+.sum-v.pos { color: var(--positive); }
+
+.mrr-box {
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--warm-soft) 100%);
+  border: 1px solid rgba(9,161,161,0.22);
+  border-radius: var(--r-sm);
+  padding: 18px 16px;
+  text-align: center;
+  margin-top: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.mrr-box::before {
+  content: '';
+  position: absolute;
+  top: -20px; right: -20px;
+  width: 80px; height: 80px;
+  background: radial-gradient(circle, rgba(246,201,146,0.2), transparent 70%);
+  pointer-events: none;
+}
+
+.mrr-tag { font-family: var(--mono); font-size: 9px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+.mrr-n { font-family: var(--mono); font-size: 32px; font-weight: 700; color: var(--accent); line-height: 1; font-variant-numeric: tabular-nums; transition: all 0.35s cubic-bezier(.2,.8,.2,1); }
+.mrr-sub { font-size: 11px; color: var(--text-3); margin-top: 5px; transition: all 0.3s ease; }
+
+/* ── SLOT EXPLAINER ── */
+.slot-explainer {
+  background: var(--warm-soft);
+  border: 1px solid rgba(246,201,146,0.32);
+  border-left: 3px solid var(--warm);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 13px 15px;
+  font-size: 12px; color: var(--text-2); line-height: 1.7;
+  margin-top: 16px;
+}
+.slot-explainer strong { color: var(--text-1); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.stepbar { animation-delay: 0s; }
+.form-grid > div:first-child .card:nth-child(1) { animation-delay: 0.07s; }
+.form-grid > div:first-child .card:nth-child(2) { animation-delay: 0.13s; }
+.form-grid > div:last-child .card:nth-child(1) { animation-delay: 0.1s; }
+.form-grid > div:last-child .card:nth-child(2) { animation-delay: 0.17s; }
+
+/* ── SPINNER ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width:14px; height:14px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; display:inline-block; animation:spin 0.7s linear infinite; margin-right:8px; vertical-align:middle; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   NAV RAIL OVERRIDE — canonical S12 reference
+   Appended at end so it wins over the screen's existing .sidebar rules.
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --rail-w:64px;
+  --rail-expanded-w:240px;
+  --rail-bg:#1a2f42;
+  --rail-bg-edge:#243d52;
+  --rail-fg:rgba(230,240,247,0.92);
+  --rail-fg-mute:rgba(230,240,247,0.62);
+  --rail-fg-dim:rgba(230,240,247,0.42);
+  --rail-accent:#0bd5d5;
+  --rail-accent-soft:rgba(11,213,213,0.16);
+  --rail-divider:rgba(255,255,255,0.08);
+  --ease-spring:cubic-bezier(.2,.8,.2,1);
+}
+.nav-sidebar{
+  width:var(--rail-w)!important;
+  background:var(--rail-bg)!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--rail-divider)!important;
+  color:var(--rail-fg)!important;
+  height:100vh!important;display:flex!important;flex-direction:column!important;flex-shrink:0!important;
+  transition:width 0.22s var(--ease-spring)!important;
+  overflow:hidden!important;position:relative!important;z-index:40!important;
+}
+.nav-sidebar::after{
+  content:''!important;position:absolute!important;
+  top:-40px!important;left:-40px!important;
+  width:200px!important;height:200px!important;
+  background:radial-gradient(circle,rgba(11,213,213,0.10),transparent 70%)!important;
+  pointer-events:none!important;
+}
+.nav-sidebar:hover{
+  width:var(--rail-expanded-w)!important;
+  box-shadow:8px 0 40px -8px rgba(0,0,0,0.45)!important;
+  z-index:50!important;
+}
+.nav-inner{padding:18px 0!important;display:flex!important;flex-direction:column!important;height:100%!important;position:relative!important;z-index:1!important;}
+.logo{padding:0 14px 18px!important;border-bottom:1px solid var(--rail-divider)!important;margin-bottom:14px!important;}
+.logo-row{display:flex!important;align-items:center!important;gap:10px!important;overflow:hidden!important;}
+.logo-name{font-size:15px!important;font-weight:700!important;color:var(--rail-fg)!important;letter-spacing:-0.01em!important;white-space:nowrap!important;}
+.logo-tag{font-family:var(--mono)!important;font-size:8.5px!important;color:var(--rail-fg-dim)!important;letter-spacing:0.14em!important;text-transform:uppercase!important;margin-top:2px!important;white-space:nowrap!important;}
+.nav-scroll{flex:1!important;overflow-y:auto!important;overflow-x:hidden!important;padding:0 10px!important;}
+.nav-scroll::-webkit-scrollbar{width:0!important;}
+.nav-group{padding:0 0 4px!important;margin-bottom:0!important;}
+.nav-group-label{font-family:var(--mono)!important;font-size:9px!important;font-weight:600!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:var(--rail-fg-dim)!important;padding:8px 8px 5px!important;margin-bottom:0!important;white-space:nowrap!important;opacity:0!important;transition:opacity 0.2s 0.05s!important;}
+.nav-sidebar:hover .nav-group-label{opacity:1!important;}
+.nav-link{display:flex!important;align-items:center!important;gap:0!important;padding:8px 10px!important;border-radius:8px!important;color:var(--rail-fg-mute)!important;font-size:13px!important;cursor:pointer!important;transition:all 0.2s!important;margin-bottom:1px!important;user-select:none!important;white-space:nowrap!important;overflow:hidden!important;transform:none!important;}
+.nav-link svg{width:15px!important;height:15px!important;flex-shrink:0!important;margin-right:9px!important;}
+.nav-link > *:not(svg):not(.step-dot){opacity:0!important;transition:opacity 0.2s 0.05s!important;}
+.nav-sidebar:hover .nav-link > *:not(svg):not(.step-dot){opacity:1!important;}
+.nav-link:hover{background:rgba(255,255,255,0.07)!important;color:var(--rail-fg)!important;transform:none!important;}
+.nav-link.active{background:var(--rail-accent-soft)!important;color:var(--rail-fg)!important;font-weight:600!important;box-shadow:inset 0 0 0 1px rgba(11,213,213,0.30)!important;}
+.nav-link.active svg{color:var(--rail-accent)!important;}
+.nav-link.done:not(.active){color:rgba(11,213,213,0.72)!important;background:transparent!important;}
+.nav-link.done:not(.active) svg{color:rgba(11,213,213,0.82)!important;}
+.nav-link.locked{opacity:0.45!important;pointer-events:none!important;}
+.step-dot{width:14px!important;height:14px!important;border-radius:50%!important;background:rgba(11,213,213,0.20)!important;color:var(--rail-accent)!important;display:flex!important;align-items:center!important;justify-content:center!important;flex-shrink:0!important;margin-right:9px!important;}
+.step-dot svg{width:9px!important;height:9px!important;margin:0!important;}
+.nav-link.done .step-dot{background:var(--rail-accent)!important;color:#fff!important;}
+.nav-link.locked .step-dot{background:rgba(255,255,255,0.08)!important;color:rgba(255,255,255,0.25)!important;}
+.nav-footer, .sidebar-footer{padding:14px!important;border-top:1px solid var(--rail-divider)!important;margin-top:auto!important;}
+.theme-row{display:flex!important;align-items:center!important;gap:9px!important;padding:8px 10px!important;border-radius:8px!important;background:transparent!important;border:none!important;color:var(--rail-fg-mute)!important;font-size:12px!important;cursor:pointer!important;width:100%!important;font-family:var(--sans)!important;transition:all 0.2s!important;white-space:nowrap!important;overflow:hidden!important;transform:none!important;}
+.theme-row svg{width:14px!important;height:14px!important;flex-shrink:0!important;}
+.theme-row span{flex:1!important;text-align:left!important;opacity:0!important;transition:opacity 0.2s 0.05s!important;}
+.nav-sidebar:hover .theme-row span{opacity:1!important;}
+.theme-row:hover{background:rgba(255,255,255,0.07)!important;color:var(--rail-fg)!important;transform:none!important;}
+.pill-toggle{width:30px!important;height:16px!important;border-radius:8px!important;background:rgba(255,255,255,0.18)!important;position:relative!important;flex-shrink:0!important;transition:all 0.2s!important;opacity:0!important;}
+.nav-sidebar:hover .pill-toggle{opacity:1!important;}
+.pill-knob{width:12px!important;height:12px!important;border-radius:50%!important;background:#fff!important;position:absolute!important;top:2px!important;left:2px!important;transition:transform 0.22s var(--ease-spring)!important;}
+[data-theme="light"] .pill-toggle{background:var(--rail-accent)!important;}
+[data-theme="light"] .pill-knob{background:#fff!important;transform:translateX(14px)!important;}
+</style>
+</head>
+<body>
+
+<nav class="nav-sidebar">
+  <div class="nav-inner">
+    <div class="logo"><div class="logo-row"><div class="logo-gem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="8.5" x2="22" y2="8.5"/></svg></div><div><div class="logo-name">CannaSpy</div><div class="logo-tag">Intelligence Platform</div></div></div></div>
+    <div class="nav-scroll">
+    <div class="nav-group"><div class="nav-group-label">Onboarding</div>
+      <div class="nav-link active done" onclick="go('cannaspy_s01_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Org Setup</div>
+      <div class="nav-link done" onclick="go('cannaspy_s02_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Add Locations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s03_FINAL.html')"><div class="step-dot"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Find Rivals</div>
+    </div>
+    <div class="nav-group" style="margin-top:14px;"><div class="nav-group-label">Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s04_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Command Center</div>
+      <div class="nav-link done" onclick="go('cannaspy_s05_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Location Dashboard</div>
+      <div class="nav-link done" onclick="go('cannaspy_s07_v1.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Price Intelligence</div>
+      <div class="nav-link done" onclick="go('cannaspy_s12_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Feed</div>
+      <div class="nav-link done" onclick="go('cannaspy_s35_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Action Queue <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:var(--danger);color:#fff;margin-left:4px;">7</span></div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Market</div>
+      <div class="nav-link done" onclick="go('cannaspy_s21_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Market Heat Map</div>
+      <div class="nav-link done" onclick="go('cannaspy_s22_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Competitor Ranking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s23_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>My Benchmarks</div>
+      <div class="nav-link done" onclick="go('cannaspy_s25_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>SKU Gap Analysis</div>
+      <div class="nav-link done" onclick="go('cannaspy_s26_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Deal Effectiveness</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Team</div>
+      <div class="nav-link done" onclick="go('cannaspy_s27_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Annotations</div>
+      <div class="nav-link done" onclick="go('cannaspy_s29_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Location Access</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Blocking</div>
+      <div class="nav-link done" onclick="go('cannaspy_s16_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Block Management</div>
+    </div>
+    <div class="nav-group" style="margin-top:8px;"><div class="nav-group-label">Account</div>
+      <div class="nav-link done" onclick="go('cannaspy_s28_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Billing &amp; Slots</div>
+      <div class="nav-link done" onclick="go('cannaspy_s30_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Settings</div>
+      <div class="nav-link done" onclick="go('cannaspy_s32_FINAL.html')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;flex-shrink:0;margin-right:9px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Data Trust</div>
+    </div>
+    </div><!-- /.nav-scroll -->
+    <div class="nav-footer"><button class="theme-row" onclick="toggleTheme()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><span>Toggle theme</span><div class="pill-toggle"><div class="pill-knob"></div></div></button></div>
+  </div>
+</nav>
+
+<div class="main">
+
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Create your organization</div>
+      <div class="topbar-crumb">SCREEN 01 · ORG SETUP · STEP 1 OF 3</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-help">NEED HELP?</div>
+      <div class="avatar">PS</div>
+    </div>
+  </div>
+
+  <div class="page">
+
+    <div class="stepbar">
+      <div class="sb-step s-active">
+        <div class="sb-num">01</div>
+        <div><div class="sb-label">Org Setup</div><div class="sb-sub">Company &amp; billing</div></div>
+      </div>
+      <div class="sb-step s-future">
+        <div class="sb-num">02</div>
+        <div><div class="sb-label">Add Locations</div><div class="sb-sub">Your dispensaries</div></div>
+      </div>
+      <div class="sb-step s-future">
+        <div class="sb-num">03</div>
+        <div><div class="sb-label">Find Rivals</div><div class="sb-sub">Track &amp; block</div></div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+
+      <div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Company information</div>
+            <div class="card-sub">How your organization appears in CannaSpy.</div>
+          </div>
+
+          <div class="field f2">
+            <div><label>Company name <span class="req">*</span></label><input type="text" value="Pacific MSO Group"></div>
+            <div><label>DBA / Trade name</label><input type="text" placeholder="Optional"></div>
+          </div>
+
+          <div class="field f2">
+            <div><label>Primary contact <span class="req">*</span></label><input type="text" value="Patrick Simac"></div>
+            <div><label>Email <span class="req">*</span></label><input type="email" value="patrick@pacific-mso.com"></div>
+          </div>
+
+          <div class="field f2">
+            <div><label>Phone</label><input type="tel" placeholder="(555) 000-0000"></div>
+            <div>
+              <label>Locations <span class="req">*</span></label>
+              <select>
+                <option>1–2 locations</option>
+                <option>3–5 locations</option>
+                <option selected>10–15 locations</option>
+                <option>16–20 locations</option>
+                <option>20+ locations</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Billing &amp; plan</div>
+            <div class="card-sub">Pricing scales automatically as you add locations and rivals.</div>
+          </div>
+
+          <div class="field" style="margin-bottom:20px;">
+            <label>Plan type</label>
+            <div class="plan-tiles">
+              <div class="plan-tile selected" onclick="selectPlan(this)">
+                <div class="pt-name">À La Carte</div>
+                <div class="pt-price">$100<span style="font-size:11px;color:var(--text-3)">/slot</span></div>
+                <div class="pt-desc">Track or block — same price. Recommended for MSOs.</div>
+              </div>
+              <div class="plan-tile" onclick="selectPlan(this)">
+                <div class="pt-name">Slot Tiers</div>
+                <div class="pt-price">from $99<span style="font-size:11px;color:var(--text-3)">/mo</span></div>
+                <div class="pt-desc">Fixed bundles. Starter · Standard · Growth · Pro.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Starting slot count</label>
+            <div class="slot-grid">
+              <div class="slot-tile" onclick="selectSlot(this,10,'$950','$95/slot','5% off')">
+                <span class="slot-n">10</span>
+                <div class="slot-mo">$950/mo</div>
+                <div class="slot-off">5% off</div>
+              </div>
+              <div class="slot-tile" onclick="selectSlot(this,20,'$1,800','$90/slot','10% off')">
+                <span class="slot-n">20</span>
+                <div class="slot-mo">$1,800/mo</div>
+                <div class="slot-off">10% off</div>
+              </div>
+              <div class="slot-tile sel" onclick="selectSlot(this,50,'$4,250','$85/slot','15% off')">
+                <span class="slot-n">50</span>
+                <div class="slot-mo">$4,250/mo</div>
+                <div class="slot-off">15% off</div>
+              </div>
+              <div class="slot-tile" onclick="selectSlot(this,80,'$6,800','$85/slot','15% off')">
+                <span class="slot-n">80</span>
+                <div class="slot-mo">$6,800/mo</div>
+                <div class="slot-off">15% off</div>
+              </div>
+            </div>
+            <div class="hint" style="margin-top:8px;">Volume discounts: 10+ slots 5% · 20+ slots 10% · 50+ slots 15%</div>
+          </div>
+
+          <button class="btn-primary" id="continueBtn" onclick="handleContinue()">
+            Continue to Location Setup &nbsp;→
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Account summary</div>
+            <div class="card-sub">Updates live as you configure.</div>
+          </div>
+
+          <div class="sum-section">
+            <div class="sum-label">Organization</div>
+            <div class="sum-row"><div class="sum-k">Company</div><div class="sum-v">Pacific MSO Group</div></div>
+            <div class="sum-row"><div class="sum-k">Contact</div><div class="sum-v">Patrick Simac</div></div>
+            <div class="sum-row"><div class="sum-k">Locations</div><div class="sum-v">10–15</div></div>
+          </div>
+
+          <div class="sum-section">
+            <div class="sum-label">Billing</div>
+            <div class="sum-row"><div class="sum-k">Plan</div><div class="sum-v" id="s-plan">À La Carte</div></div>
+            <div class="sum-row"><div class="sum-k">Slots</div><div class="sum-v" id="s-slots">50 slots</div></div>
+            <div class="sum-row"><div class="sum-k">Rate</div><div class="sum-v" id="s-rate">$85/slot</div></div>
+            <div class="sum-row"><div class="sum-k">Discount</div><div class="sum-v pos" id="s-disc">15% off</div></div>
+          </div>
+
+          <div class="mrr-box">
+            <div class="mrr-tag">Monthly total</div>
+            <div class="mrr-n" id="s-mrr">$4,250</div>
+            <div class="mrr-sub" id="s-mrr-sub">50 slots × $85/slot/month</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" style="margin-bottom:14px;padding-bottom:12px;">
+            <div class="card-title" style="font-size:14px;">What is a slot?</div>
+          </div>
+          <div style="font-size:12px;color:var(--text-2);line-height:1.75;">
+            One slot = one tracked competitor <em>or</em> one blocked competitor per location. Both cost the same.<br><br>
+            A 10-location MSO tracking 4 rivals and blocking 1 per location = <strong style="color:var(--text-1);">50 slots</strong>.
+          </div>
+          <div class="slot-explainer">
+            <strong>Track:</strong> Daily prices, promos &amp; catalog.<br>
+            <strong>Block:</strong> Keep them off CannaSpy — permanently, while you pay.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('tl').textContent = dark ? 'Dark mode' : 'Light mode';
+}
+
+function selectPlan(el) {
+  document.querySelectorAll('.plan-tile').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+const slotData = {
+  10: { mo: '$950',   rate: '$95/slot', disc: '5% off',  sub: '10 slots × $95/slot/month' },
+  20: { mo: '$1,800', rate: '$90/slot', disc: '10% off', sub: '20 slots × $90/slot/month' },
+  50: { mo: '$4,250', rate: '$85/slot', disc: '15% off', sub: '50 slots × $85/slot/month' },
+  80: { mo: '$6,800', rate: '$85/slot', disc: '15% off', sub: '80 slots × $85/slot/month' },
+};
+
+function selectSlot(el, n) {
+  document.querySelectorAll('.slot-tile').forEach(t => t.classList.remove('sel'));
+  el.classList.add('sel');
+  const d = slotData[n];
+  document.getElementById('s-slots').textContent = n + ' slots';
+  document.getElementById('s-rate').textContent = d.rate;
+  document.getElementById('s-disc').textContent = d.disc;
+  document.getElementById('s-mrr').textContent = d.mo;
+  document.getElementById('s-mrr-sub').textContent = d.sub;
+}
+
+function handleContinue() {
+  const btn = document.getElementById('continueBtn');
+  btn.classList.add('loading');
+  btn.innerHTML = '<span class="spinner"></span>Setting up locations…';
+  btn.style.pointerEvents = 'none';
+  setTimeout(() => {
+    window.location.href = 'cannaspy_s02_FINAL.html';
+  }, 1200);
+}
+</script>
+</body>
+</html>
