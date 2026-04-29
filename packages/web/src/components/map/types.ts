@@ -10,7 +10,7 @@ export type MarketTier = 'standard' | 'competitive' | 'hot' | 'elite'
 
 export type TrackState = 'untracked' | 'tracked' | 'blocked'
 
-/** A single competitor point rendered on the map. */
+/** A single competitor point rendered on the map (legacy / setup flow). */
 export interface CompetitorFeatureProps {
   id: string
   name: string
@@ -24,6 +24,28 @@ export interface CompetitorFeatureProps {
   track_state?: TrackState
   /** Median price of a reference SKU in this zip (for hover detail). */
   median_price?: number | null
+}
+
+/**
+ * Live dispensary pin — comes from /api/v1/map/dispensaries GeoJSON.
+ * Three visual states driven by track_state + enriched:
+ *   BLOCKED   → amber  (track_state === 'blocked')
+ *   ENRICHED  → tier-color (enriched === true)
+ *   PROSPECT  → dim grey (default)
+ */
+export interface DispensaryFeatureProps {
+  id: string
+  dcc_license: string
+  name: string
+  city: string
+  county: string
+  license_type: LicenseType
+  market_tier: MarketTier | null
+  enriched: boolean
+  threat_score: number | null
+  price_observations_count: number
+  last_scraped_at: string | null
+  track_state: TrackState
 }
 
 /** Zip-code polygon feature for the choropleth. */

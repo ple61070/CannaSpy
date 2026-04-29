@@ -33,7 +33,11 @@ import Map, {
   type MapRef,
   type MapMouseEvent,
 } from 'react-map-gl'
-import type { FeatureCollection, Point, Polygon } from 'geojson'
+// GeoJSON types — use mapbox-gl's bundled types instead of the geojson package
+type GeoJSONFeatureCollection = { type: 'FeatureCollection'; features: unknown[] }
+type Point = { type: 'Point'; coordinates: [number, number] }
+type Polygon = { type: 'Polygon'; coordinates: [number, number][][] }
+type FeatureCollection<G = unknown, P = unknown> = { type: 'FeatureCollection'; features: Array<{ type: 'Feature'; geometry: G; properties: P }> }
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 import {
@@ -138,7 +142,8 @@ export default function CannaSpyMap({
     if (!map) return
     for (const { layer, property, value } of BASE_PAINT_OVERRIDES) {
       try {
-        map.setPaintProperty(layer, property, value)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        map.setPaintProperty(layer, property as any, value)
       } catch {
         // Layer may not exist in the chosen base style — safe to skip.
       }
@@ -215,7 +220,7 @@ export default function CannaSpyMap({
         onLoad={handleLoad}
         onClick={handleClick}
         interactiveLayerIds={interactiveLayerIds}
-        attributionControl={{ compact: true }}
+        attributionControl={true}
         cursor="default"
       >
         <NavigationControl

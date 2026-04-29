@@ -14,6 +14,7 @@ import { ZOOM } from './types'
 // ------------------------------------------------------------
 export const SOURCE = {
   COMPETITORS: 'cs-competitors',
+  DISPENSARIES: 'cs-dispensaries',
   ZIP_HEAT: 'cs-zip-heat',
   DELIVERY_ZONES: 'cs-delivery-zones',
 } as const
@@ -197,6 +198,99 @@ export const competitorPointLayer: LayerProps = {
     'circle-stroke-color': PALETTE.bgBase,
     'circle-stroke-width': 1.5,
     'circle-opacity': 0.95,
+  },
+}
+
+// ------------------------------------------------------------
+// Live dispensary pins — three-state visual system
+// ------------------------------------------------------------
+// Driven by track_state + enriched from /api/v1/map/dispensaries.
+//
+//  BLOCKED   → amber   (track_state === 'blocked')
+//  ENRICHED  → tier-matched color (enriched === true)
+//  PROSPECT  → dim grey (default — DCC record, no intel yet)
+//
+// Opacity also varies: enriched pins are solid, prospects are dim.
+// This lets the user see the full universe of CA dispensaries while
+// clearly identifying which ones have CannaSpy coverage.
+
+export const dispensaryClusterLayer: LayerProps = {
+  id: 'cs-dispensary-cluster',
+  type: 'circle',
+  source: SOURCE.DISPENSARIES,
+  filter: ['has', 'point_count'],
+  paint: {
+    'circle-color': [
+      'step',
+      ['get', 'point_count'],
+      PALETTE.accentTrust, 20,
+      PALETTE.accentBlock, 100,
+      PALETTE.accentAlert,
+    ],
+    'circle-radius': [
+      'step',
+      ['get', 'point_count'],
+      12, 20,
+      18, 100,
+      24,
+    ],
+    'circle-stroke-color': PALETTE.bgBase,
+    'circle-stroke-width': 1.5,
+    'circle-opacity': 0.88,
+  },
+}
+
+export const dispensaryClusterCountLayer: LayerProps = {
+  id: 'cs-dispensary-cluster-count',
+  type: 'symbol',
+  source: SOURCE.DISPENSARIES,
+  filter: ['has', 'point_count'],
+  layout: {
+    'text-field': ['get', 'point_count_abbreviated'],
+    'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+    'text-size': 10,
+  },
+  paint: {
+    'text-color': PALETTE.bgBase,
+  },
+}
+
+export const dispensaryPointLayer: LayerProps = {
+  id: 'cs-dispensary-point',
+  type: 'circle',
+  source: SOURCE.DISPENSARIES,
+  filter: ['!', ['has', 'point_count']],
+  paint: {
+    'circle-color': [
+      'case',
+      // Blocked → amber, always highest priority
+      ['==', ['get', 'track_state'], 'blocked'], '#d4900a',
+      // Enriched → tier-matched color
+      ['==', ['get', 'enriched'], true],
+        ['match', ['get', 'market_tier'],
+          'elite',       '#e05a6a',
+          'hot',         '#d4900a',
+          'competitive', '#09A1A1',
+          'standard',    '#5484A4',
+          /* default */  '#5484A4',
+        ],
+      // Prospect → dim grey
+      'rgba(160,155,148,0.5)',
+    ] as unknown as string,
+    'circle-radius': [
+      'interpolate', ['linear'], ['zoom'],
+      9, 3,
+      13, 6,
+      16, 9,
+    ],
+    'circle-stroke-color': PALETTE.bgBase,
+    'circle-stroke-width': 1,
+    'circle-opacity': [
+      'case',
+      ['==', ['get', 'enriched'], true], 0.9,
+      ['==', ['get', 'track_state'], 'blocked'], 0.95,
+      0.4,
+    ] as unknown as number,
   },
 }
 
