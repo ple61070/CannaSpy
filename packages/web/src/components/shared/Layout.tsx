@@ -112,6 +112,11 @@ const ExtraIcons = {
 }
 
 const navItems = [
+  // Setup / Onboarding
+  { label: 'Org Setup',       path: '/setup/org',               icon: ExtraIcons.checkSquare,  group: 'Setup' },
+  { label: 'Add Locations',   path: '/setup/locations',         icon: Icons.mapPin,            group: 'Setup' },
+  { label: 'Add Competitors', path: '/setup/competitors',       icon: ExtraIcons.target,       group: 'Setup' },
+
   // Intelligence
   { label: 'Command Center',  path: '/command-center',          icon: Icons.home,              group: 'Intelligence' },
   { label: 'Alert Feed',      path: '/alerts',                  icon: Icons.bell,              group: 'Intelligence' },
@@ -176,7 +181,7 @@ export default function Layout() {
   const toggleTheme = () => setTheme(t => t === 'light' ? 'dark' : 'light')
 
   // Group nav items
-  const groups = ['Intelligence', 'Market', 'Rivals', 'Team', 'Account']
+  const groups = ['Setup', 'Intelligence', 'Market', 'Rivals', 'Team', 'Account']
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
