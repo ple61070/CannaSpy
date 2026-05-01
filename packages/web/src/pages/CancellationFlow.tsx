@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthFetch } from '../lib/useAuthFetch'
 
@@ -633,11 +633,10 @@ export default function CancellationFlow() {
             onClick={() => setAcknowledged(!acknowledged)}
             style={{
               display: 'flex', alignItems: 'flex-start', gap: 12,
-              background: 'var(--surface)',
+              background: acknowledged ? 'var(--danger-soft)' : 'var(--surface)',
               border: `1.5px solid ${acknowledged ? 'var(--danger)' : 'var(--border-2)'}`,
               borderRadius: 8, padding: '14px 16px',
               marginBottom: 20, cursor: 'pointer', transition: 'all 0.2s',
-              background: acknowledged ? 'var(--danger-soft)' : 'var(--surface)',
             } as React.CSSProperties}
           >
             <div style={{

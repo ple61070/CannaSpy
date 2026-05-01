@@ -77,7 +77,7 @@ export default function CompetitorDiscovery() {
   const [locations, setLocations] = useState<Location[]>([])
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null)
   const [competitors, setCompetitors] = useState<Competitor[]>([])
-  const [selections, setSelections] = useState<Map<string, Selection>>(new Map())
+  const [selections, setSelections] = useState<globalThis.Map<string, Selection>>(new globalThis.Map())
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [scanned, setScanned] = useState(false)
@@ -105,7 +105,7 @@ export default function CompetitorDiscovery() {
   const handleDiscover = async () => {
     if (!selectedLocation?.id) return
     setLoading(true)
-    setSelections(new Map())
+    setSelections(new globalThis.Map())
     try {
       const res = await authFetch(`${API}/api/v1/locations/${selectedLocation.id}/discover`)
       const data = await res.json()
@@ -121,7 +121,7 @@ export default function CompetitorDiscovery() {
   const setSelection = useCallback((comp: Competitor, action: 'track' | 'block' | null) => {
     const key = comp.id || comp.google_place_id
     setSelections((prev) => {
-      const next = new Map(prev)
+      const next = new globalThis.Map(prev)
       if (action === null) next.delete(key)
       else next.set(key, { competitor: comp, action })
       return next
@@ -188,7 +188,7 @@ export default function CompetitorDiscovery() {
             initialViewState={CA_VIEWPORT}
             mapStyle="mapbox://styles/mapbox/dark-v11"
             style={{ width: '100%', height: '100%' }}
-            attributionControl={{ compact: true }}
+            attributionControl={true}
           >
             <NavigationControl position="top-right" showCompass={false} />
 
