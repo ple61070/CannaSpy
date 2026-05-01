@@ -26,9 +26,17 @@ const OPTIONS: { value: OperatorType; label: string; icon: string }[] = [
 export function OperatorTypeFilter({ value, onChange, className = '' }: OperatorTypeFilterProps) {
   return (
     <div
-      className={`inline-flex items-center rounded-md border border-white/10 bg-white/5 p-0.5 ${className}`}
       role="group"
       aria-label="Filter by operator type"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 2,
+        padding: 3,
+        borderRadius: 8,
+        border: '1px solid rgba(255,255,255,0.1)',
+        background: 'rgba(255,255,255,0.04)',
+      }}
     >
       {OPTIONS.map((opt) => {
         const active = value === opt.value
@@ -37,20 +45,22 @@ export function OperatorTypeFilter({ value, onChange, className = '' }: Operator
             key={opt.value}
             onClick={() => onChange(opt.value)}
             aria-pressed={active}
-            style={
-              active
-                ? {
-                    backgroundColor: 'var(--accent-intel)',
-                    color: '#ffffff',
-                    borderColor: 'transparent',
-                  }
-                : {
-                    backgroundColor: 'transparent',
-                    color: 'rgba(255,255,255,0.55)',
-                    borderColor: 'transparent',
-                  }
-            }
-            className="flex items-center gap-1.5 rounded px-3 py-1 text-xs font-medium transition-all duration-150 hover:text-white cursor-pointer border"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              padding: '4px 10px',
+              borderRadius: 6,
+              border: 'none',
+              fontSize: 11,
+              fontWeight: 600,
+              fontFamily: 'var(--sans)',
+              cursor: 'pointer',
+              transition: 'background 0.12s, color 0.12s',
+              background: active ? '#1d9e75' : 'transparent',
+              color: active ? '#ffffff' : 'rgba(255,255,255,0.5)',
+              whiteSpace: 'nowrap',
+            }}
           >
             <span aria-hidden="true">{opt.icon}</span>
             {opt.label}
