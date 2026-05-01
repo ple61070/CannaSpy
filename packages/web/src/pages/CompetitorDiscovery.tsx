@@ -102,6 +102,16 @@ export default function CompetitorDiscovery() {
     })
   }, [selectedLocation])
 
+  // Also fly on map load in case selectedLocation was set before map was ready
+  const handleMapLoad = useCallback(() => {
+    if (!selectedLocation?.lat || !selectedLocation?.lng) return
+    mapRef.current?.flyTo({
+      center: [Number(selectedLocation.lng), Number(selectedLocation.lat)],
+      zoom: 12,
+      duration: 800,
+    })
+  }, [selectedLocation])
+
   const handleDiscover = async () => {
     if (!selectedLocation?.id) return
     setLoading(true)
@@ -189,6 +199,7 @@ export default function CompetitorDiscovery() {
             mapStyle="mapbox://styles/mapbox/dark-v11"
             style={{ width: '100%', height: '100%' }}
             attributionControl={true}
+            onLoad={handleMapLoad}
           >
             <NavigationControl position="top-right" showCompass={false} />
 

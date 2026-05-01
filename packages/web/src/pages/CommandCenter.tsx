@@ -1,11 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import Map, { Marker, NavigationControl, type MapRef } from 'react-map-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
 import { useAlerts, type Alert } from '../hooks/useAlerts'
 import { useBlocks } from '../hooks/useBlocks'
 import { useAuthFetch } from '../lib/useAuthFetch'
 import { useStore } from '../store'
 
 const API = import.meta.env.VITE_API_URL ?? ''
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
+
+// Default to LA if no location coords
+const LA_VIEWPORT = { longitude: -118.2437, latitude: 34.0522, zoom: 11 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -121,18 +127,6 @@ function Sparkline({ color }: { color: string }) {
   )
 }
 
-// ── Map Components ─────────────────────────────────────────────────────────
-
-// Static pin positions (percentage-based on the CSS map)
-const PIN_POSITIONS = [
-  { left: '32%', top: '36%' },
-  { left: '24%', top: '43%' },
-  { left: '63%', top: '38%' },
-  { left: '56%', top: '59%' },
-  { left: '38%', top: '65%' },
-  { left: '72%', top: '53%' },
-]
-
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export default function CommandCenter() {
@@ -158,7 +152,8 @@ export default function CommandCenter() {
   const [toast, setToast] = useState<{ msg: string; color: string } | null>(null)
 
   // Locations list
-  const [locations, setLocations] = useState<{ id: string; name: string }[]>([])
+  const mapRef = useRef<MapRef | null>(null)
+  const [locations, setLocations] = useState<{ id: string; name: string; lat?: number | null; lng?: number | null }[]>([])
   const [locationName, setLocationName] = useState('All locations')
 
   const { alerts, loading, markReviewed } = useAlerts({ reviewed: statusFilter })
@@ -208,32 +203,20 @@ export default function CommandCenter() {
   const lastScan = `Today ${String(2).padStart(2, '0')}:47 AM PT`
   const nextScan = 'Tomorrow 2:30 AM'
 
-  // Competitor pins for the map (up to 6 from blocks + tracked)
-  const mapPins = [
-    ...blocks.slice(0, 3).map((b, i) => ({
-      initials: b.competitor_name.slice(0, 2).toUpperCase(),
-      name: b.competitor_name,
-      color: 'var(--rose)',
-      type: 'blocked',
-      pos: PIN_POSITIONS[i] || PIN_POSITIONS[0],
-    })),
-    ...blocks.slice(3, 6).map((b, i) => ({
-      initials: b.competitor_name.slice(0, 2).toUpperCase(),
-      name: b.competitor_name,
-      color: 'var(--accent)',
-      type: 'tracked',
-      pos: PIN_POSITIONS[3 + i] || PIN_POSITIONS[3],
-    })),
-  ]
+  const firstLocation = locations[0]
+  const mapCenter = firstLocation?.lat && firstLocation?.lng
+    ? { longitude: Number(firstLocation.lng), latitude: Number(firstLocation.lat), zoom: 12 }
+    : LA_VIEWPORT
 
-  // If no blocks data, show sample pins
-  const displayPins = mapPins.length > 0 ? mapPins : [
-    { initials: 'ST', name: 'STIIIZY', color: 'var(--rose)', type: 'blocked', pos: PIN_POSITIONS[0] },
-    { initials: 'MM', name: 'MedMen', color: 'var(--warning)', type: 'tracked', pos: PIN_POSITIONS[1] },
-    { initials: 'OT', name: 'Off The Charts', color: 'var(--danger)', type: 'tracked', pos: PIN_POSITIONS[2] },
-    { initials: 'CA', name: 'Catalyst', color: 'var(--accent)', type: 'tracked', pos: PIN_POSITIONS[3] },
-    { initials: 'JB', name: 'Jungle Boys', color: 'var(--slate)', type: 'tracked', pos: PIN_POSITIONS[4] },
-  ]
+  // Fly to first location when it loads
+  const handleMapLoad = useCallback(() => {
+    if (!firstLocation?.lat || !firstLocation?.lng) return
+    mapRef.current?.flyTo({
+      center: [Number(firstLocation.lng), Number(firstLocation.lat)],
+      zoom: 12,
+      duration: 800,
+    })
+  }, [firstLocation])
 
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
@@ -691,168 +674,44 @@ export default function CommandCenter() {
         flex: 1, position: 'relative', overflow: 'hidden',
         background: 'var(--bg)',
       }}>
-        {/* City block grid (CSS map) */}
-        <div style={{ position: 'absolute', inset: 0, background: 'var(--map-bg, #eaf2f5)', overflow: 'hidden' }}>
-          {/* Grid overlay */}
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(var(--map-grid, rgba(9,161,161,0.08)) 1px, transparent 1px), linear-gradient(90deg, var(--map-grid, rgba(9,161,161,0.08)) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-
-          {/* City blocks */}
-          {[
-            { top:'4%', left:'4%', w:'17%', h:'15%', type:'base' },
-            { top:'4%', left:'24%', w:'13%', h:'11%', type:'alt' },
-            { top:'4%', left:'40%', w:'19%', h:'13%', type:'base' },
-            { top:'4%', left:'62%', w:'15%', h:'17%', type:'park' },
-            { top:'4%', left:'80%', w:'16%', h:'11%', type:'alt' },
-            { top:'24%', left:'4%', w:'11%', h:'19%', type:'base' },
-            { top:'24%', left:'18%', w:'15%', h:'17%', type:'alt' },
-            { top:'24%', left:'62%', w:'13%', h:'15%', type:'base' },
-            { top:'24%', left:'78%', w:'18%', h:'19%', type:'alt' },
-            { top:'50%', left:'4%', w:'19%', h:'17%', type:'park' },
-            { top:'50%', left:'26%', w:'13%', h:'13%', type:'base' },
-            { top:'50%', left:'42%', w:'17%', h:'19%', type:'alt' },
-            { top:'50%', left:'62%', w:'15%', h:'15%', type:'base' },
-            { top:'50%', left:'80%', w:'16%', h:'17%', type:'alt' },
-            { top:'74%', left:'4%', w:'13%', h:'22%', type:'alt' },
-            { top:'74%', left:'20%', w:'19%', h:'22%', type:'base' },
-            { top:'74%', left:'42%', w:'15%', h:'22%', type:'park' },
-            { top:'74%', left:'60%', w:'17%', h:'22%', type:'alt' },
-            { top:'74%', left:'80%', w:'16%', h:'22%', type:'base' },
-          ].map((b, i) => (
-            <div key={i} style={{
-              position: 'absolute',
-              top: b.top, left: b.left, width: b.w, height: b.h,
-              background: b.type === 'park'
-                ? 'var(--map-park, rgba(185,218,190,0.55))'
-                : b.type === 'alt'
-                  ? 'var(--map-block-2, rgba(194,214,222,0.55))'
-                  : 'var(--map-block, rgba(210,224,232,0.65))',
-              borderRadius: 2,
-            }} />
-          ))}
-
-          {/* Roads */}
-          {[
-            { top:'20.5%', left:'0', right:'0', h:'5px' },
-            { top:'46.5%', left:'0', right:'0', h:'5px' },
-            { top:'70.5%', left:'0', right:'0', h:'5px' },
-          ].map((r, i) => (
-            <div key={`hr${i}`} style={{
-              position: 'absolute', top: r.top, left: r.left || 0, right: r.right ? 0 : undefined,
-              width: r.right ? undefined : r.h, height: r.right ? r.h : undefined,
-              bottom: r.right ? undefined : 0,
-              background: 'var(--map-road, rgba(255,255,255,0.92))',
-            }} />
-          ))}
-          {[
-            { left:'37%', top:'0', bottom:'0', w:'5px' },
-            { left:'60%', top:'0', bottom:'0', w:'5px' },
-            { left:'16%', top:'0', bottom:'0', w:'3px' },
-            { left:'78%', top:'0', bottom:'0', w:'3px' },
-          ].map((r, i) => (
-            <div key={`vr${i}`} style={{
-              position: 'absolute', left: r.left, top: r.top, bottom: r.bottom ? 0 : undefined,
-              width: r.w, height: r.bottom ? undefined : r.w,
-              background: i < 2
-                ? 'var(--map-road, rgba(255,255,255,0.92))'
-                : 'var(--map-road-minor, rgba(255,255,255,0.65))',
-            }} />
-          ))}
-        </div>
-
-        {/* Heat overlay */}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 5,
-          background: `
-            radial-gradient(circle at 32% 36%, rgba(196,59,78,0.28), transparent 18%),
-            radial-gradient(circle at 63% 38%, rgba(196,59,78,0.22), transparent 16%),
-            radial-gradient(circle at 24% 43%, rgba(234,150,90,0.20), transparent 14%),
-            radial-gradient(circle at 56% 59%, rgba(11,184,184,0.20), transparent 14%),
-            radial-gradient(circle at 20% 60%, rgba(212,144,10,0.22), transparent 14%),
-            radial-gradient(circle at 57% 72%, rgba(212,144,10,0.20), transparent 14%)
-          `,
-          mixBlendMode: 'multiply',
-        }} />
-
-        {/* Distance rings */}
-        <div style={{ position: 'absolute', left: '48%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 8, pointerEvents: 'none' }}>
-          {[{ size: 140, label: '1mi' }, { size: 280, label: '3mi' }, { size: 460, label: '5mi' }].map(ring => (
-            <div key={ring.size} style={{
-              position: 'absolute',
-              width: ring.size, height: ring.size,
-              border: '1px dashed rgba(11,184,184,0.35)',
-              borderRadius: '50%',
-              transform: 'translate(-50%, -50%)',
-              top: '50%', left: '50%',
-            }}>
-              <span style={{
-                position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)',
-                fontFamily: 'var(--mono)', fontSize: 8.5, color: 'rgba(11,184,184,0.65)',
-                letterSpacing: '0.08em', whiteSpace: 'nowrap',
-                background: 'var(--map-bg, #eaf2f5)', padding: '0 4px',
-              }}>
-                {ring.label}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Your location center pin */}
-        <div style={{
-          position: 'absolute', left: '48%', top: '50%',
-          transform: 'translate(-50%, -100%)', zIndex: 15, pointerEvents: 'none',
-        }}>
-          <div style={{
-            width: 14, height: 14, borderRadius: '50%',
-            background: 'var(--accent)',
-            boxShadow: '0 0 0 4px rgba(11,184,184,0.25), 0 0 0 8px rgba(11,184,184,0.12)',
-          }} />
-          <div style={{
-            marginTop: 5, fontFamily: 'var(--mono)', fontSize: 8, fontWeight: 700,
-            color: 'var(--accent)', letterSpacing: '0.12em',
-            textAlign: 'center', whiteSpace: 'nowrap',
-            textShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          }}>YOUR LOCATION</div>
-        </div>
-
-        {/* Competitor pins */}
-        {displayPins.map((pin, i) => (
-          <div
-            key={i}
-            style={{
-              position: 'absolute', left: pin.pos.left, top: pin.pos.top,
-              transform: 'translate(-50%, -100%)',
-              cursor: 'pointer', zIndex: 12,
-            }}
-            onClick={() => showToast(`${pin.name} — view in Price Intelligence`, 'var(--accent)')}
+        {/* Real Mapbox map */}
+        {MAPBOX_TOKEN && (
+          <Map
+            ref={mapRef}
+            mapboxAccessToken={MAPBOX_TOKEN}
+            initialViewState={mapCenter}
+            mapStyle="mapbox://styles/mapbox/dark-v11"
+            style={{ position: 'absolute', inset: 0 }}
+            attributionControl={false}
+            onLoad={handleMapLoad}
           >
-            <div style={{
-              width: 32, height: 32, borderRadius: '50% 50% 50% 0%',
-              background: pin.color,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transform: 'rotate(-45deg)',
-              boxShadow: `0 4px 12px ${pin.color}88`,
-            }}>
-              <span style={{
-                transform: 'rotate(45deg)',
-                fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700,
-                color: '#fff', letterSpacing: '0.05em',
-              }}>
-                {pin.initials}
-              </span>
-            </div>
-            <div style={{
-              marginTop: 6, fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 600,
-              color: pin.type === 'blocked' ? 'var(--rose)' : 'var(--text-2)',
-              textAlign: 'center', whiteSpace: 'nowrap',
-              background: 'var(--surface)',
-              padding: '2px 6px', borderRadius: 4,
-              boxShadow: 'var(--card-shadow)',
-              border: '1px solid var(--border)',
-            }}>
-              {pin.name.length > 10 ? pin.name.slice(0, 10) + '…' : pin.name}
-            </div>
-          </div>
-        ))}
+            <NavigationControl position="bottom-right" showCompass={false} />
+            {/* Your location marker */}
+            {firstLocation?.lat && firstLocation?.lng && (
+              <Marker
+                longitude={Number(firstLocation.lng)}
+                latitude={Number(firstLocation.lat)}
+                anchor="bottom"
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  <div style={{
+                    width: 14, height: 14, borderRadius: '50%',
+                    background: 'var(--accent)',
+                    boxShadow: '0 0 0 4px rgba(29,158,117,0.3), 0 0 0 8px rgba(29,158,117,0.15)',
+                  }} />
+                  <div style={{
+                    fontFamily: 'var(--mono)', fontSize: 8, fontWeight: 700,
+                    color: 'var(--accent)', letterSpacing: '0.12em',
+                    whiteSpace: 'nowrap',
+                    background: 'rgba(13,15,17,0.85)', backdropFilter: 'blur(8px)',
+                    padding: '2px 6px', borderRadius: 4,
+                    border: '1px solid rgba(29,158,117,0.4)',
+                  }}>YOUR LOCATION</div>
+                </div>
+              </Marker>
+            )}
+          </Map>
+        )}
 
         {/* Map topbar */}
         <div style={{
@@ -909,32 +768,6 @@ export default function CommandCenter() {
           <span style={{ color: 'var(--border-2)' }}>·</span>
           <span style={{ color: 'var(--text-3)' }}>Next</span>
           <span style={{ color: 'var(--text-1)', fontWeight: 600 }}>{nextScan}</span>
-        </div>
-
-        {/* Map zoom controls */}
-        <div style={{
-          position: 'absolute', bottom: 24, right: 14, zIndex: 20,
-          display: 'flex', flexDirection: 'column', gap: 2,
-        }}>
-          {['+', '−'].map(btn => (
-            <button
-              key={btn}
-              onClick={() => showToast('Map zoom — live in production build', 'var(--accent)')}
-              style={{
-                width: 32, height: 32, borderRadius: 8,
-                background: 'var(--surface)', backdropFilter: 'blur(16px)',
-                border: '1px solid var(--border-2)',
-                color: 'var(--text-2)', fontSize: 16, fontWeight: 400,
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: 'var(--card-shadow)',
-                transition: 'var(--transition)',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent)'; (e.currentTarget as HTMLElement).style.color = 'var(--accent)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-2)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-2)' }}
-            >
-              {btn}
-            </button>
-          ))}
         </div>
 
         {/* Map legend */}
