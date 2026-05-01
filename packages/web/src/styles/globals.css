@@ -9,6 +9,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Brand semantic colors (theme-invariant) ── */
+:root {
+  --accent-intel: #1d9e75;   /* intelligence / teal */
+  --accent-block: #ba7517;   /* blocking / amber */
+  --accent-alert: #d4537e;   /* alerts / coral */
+}
+
 /* ── Light theme tokens ── */
 [data-theme="light"] {
   --bg: #eef1f5;
