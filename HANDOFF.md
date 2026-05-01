@@ -1,5 +1,68 @@
 # CannaSpy Session Handoff
-**Date:** 2026-05-01 (Session 7 — Live Maps on CommandCenter + CompetitorDiscovery)
+**Date:** 2026-05-01 (Session 8 — Delivery operator type support across full stack)
+
+---
+
+## Session 8 — 2026-05-01
+
+**Commit:** `5e6f552` — `feat(data): delivery operator type support — migration 011 + business_type across full stack`
+**Deploy:** Vercel production live ✅ — https://web-rouge-one-15.vercel.app (HTTP 200 confirmed)
+**Railway:** `railway up --detach` triggered ✅ — backend deploying
+
+---
+
+### What Was Done
+
+#### 1. Migration 011 — `business_type` column added to `competitors` + `dispensaries`
+
+- `packages/api/src/db/migrations/011_business_type.sql`
+- Adds `business_type TEXT CHECK IN ('storefront', 'delivery', 'both') DEFAULT 'storefront'` to both tables
+- Backfills `dispensaries.business_type` from existing `license_type`:
+  - `retail` → `storefront`, `delivery` → `delivery`, `microbusiness` → `both`
+- **Applied to Railway prod. Verified distribution: storefront=1211, delivery=229, both=347**
+
+#### 2. Shared `OperatorTypeFilter` component
+
+- `packages/web/src/components/filters/OperatorTypeFilter.tsx`
+- 3-pill toggle: Storefronts 🏪 / Delivery 🚗 / Both ⊕
+- Default: `'both'` (show all)
+- Active state uses `var(--accent-intel)` — CannaSpy palette
+
+#### 3. API-level `?type` filtering added to 5 routes
+
+- `map.ts` — filters `dispensaries.business_type`
+- `competitors.ts` — `business_type` added to GET SELECT + POST INSERT
+- `pricing.ts` — `?type` filters `tracked_competitors` join
+- `blocks.ts` — `?type` filters competitor join
+- `alerts.ts` — `?type` filters competitor join
+
+#### 4. Hook updates
+
+- `usePriceMatrix.ts` — added `type?` param, passes to API
+- `useAlerts.ts` — added `type?` to `UseAlertsOptions`, passes to API
+
+#### 5. `dcc_ingest.py` updated
+
+- Added `license_type_to_business_type()` mapping function
+- UPSERT now writes `business_type` column
+
+#### 6. `OperatorTypeFilter` wired into 6 screens
+
+- `MarketHeatMap` — passes `operatorType` to `useDispensaryMap` (API-level filter)
+- `PriceIntelligence` — passes `operatorType` to `usePriceMatrix` (API-level filter)
+- `AlertFeed` — passes `operatorType` to `useAlerts` (API-level filter)
+- `CommandCenter` — UI state only (no type-specific API yet)
+- `BlockManagement` — UI state only (page uses mock data)
+- `CompetitorDiscovery` — client-side filter on `business_type` field (Places-discovered competitors may not have it)
+
+---
+
+### What Is Next (Immediate)
+
+1. **Verify OperatorTypeFilter in browser** — confirm pill toggles work on MarketHeatMap, PriceIntelligence, AlertFeed
+2. **Check map filter** — switch to "Delivery" on MarketHeatMap, confirm count drops from ~1,787 to ~229
+3. **Wellgreens live simulation** — seed org, add locations, run scraper, wire all screens to real API data
+4. **Wire `alert.worker.ts` to Resend** — currently logs only, no emails sent
 
 ---
 
