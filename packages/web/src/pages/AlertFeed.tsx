@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAlerts, type Alert } from '../hooks/useAlerts'
 import { useAuthFetch } from '../lib/useAuthFetch'
 import { useStore } from '../store'
+import { OperatorTypeFilter, type OperatorType } from '../components/filters/OperatorTypeFilter'
 
 const API = import.meta.env.VITE_API_URL ?? ''
 
@@ -177,6 +178,7 @@ export default function AlertFeed() {
 
   const [typeFilter, setTypeFilter] = useState('all')
   const [locFilter, setLocFilter] = useState('all')
+  const [operatorType, setOperatorType] = useState<OperatorType>('both')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('unreviewed')
   const [sortKey, setSortKey] = useState<SortKey>('newest')
   const [search, setSearch] = useState('')
@@ -192,7 +194,10 @@ export default function AlertFeed() {
 
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([])
 
-  const { alerts, loading, markReviewed, refetch } = useAlerts({ reviewed: statusFilter })
+  const { alerts, loading, markReviewed, refetch } = useAlerts({
+    reviewed: statusFilter,
+    type: operatorType === 'both' ? undefined : operatorType,
+  })
 
   useEffect(() => {
     authFetch(`${API}/api/v1/locations`)
@@ -455,6 +460,9 @@ export default function AlertFeed() {
             ]} current={sortKey} onSelect={v => { setSortKey(v as SortKey); setSortDdOpen(false) }} />}
           </div>
         </div>
+
+        {/* Operator type filter */}
+        <OperatorTypeFilter value={operatorType} onChange={setOperatorType} />
 
         {/* Filter count */}
         {filtered.length > 0 && (

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePriceMatrix } from '../hooks/usePriceMatrix'
 import { useAuthFetch } from '../lib/useAuthFetch'
+import { OperatorTypeFilter, type OperatorType } from '../components/filters/OperatorTypeFilter'
 
 const API = import.meta.env.VITE_API_URL ?? ''
 
@@ -532,8 +533,9 @@ export default function PriceIntelligence() {
   const [gapFilter, setGapFilter] = useState<GapFilter>('all')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerData, setDrawerData] = useState<DrawerData | null>(null)
+  const [operatorType, setOperatorType] = useState<OperatorType>('both')
 
-  const { matrix, loading, error } = usePriceMatrix(selectedLocation, category || undefined)
+  const { matrix, loading, error } = usePriceMatrix(selectedLocation, category || undefined, operatorType === 'both' ? undefined : operatorType)
 
   useEffect(() => {
     authFetch(`${API}/api/v1/locations`)
@@ -638,6 +640,9 @@ export default function PriceIntelligence() {
           </div>
 
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Operator type filter */}
+            <OperatorTypeFilter value={operatorType} onChange={setOperatorType} />
+            {sep}
             {/* Legend */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
               {[

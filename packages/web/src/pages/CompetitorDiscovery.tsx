@@ -4,6 +4,7 @@ import Map, { Source, Layer, Marker, NavigationControl, type MapRef } from 'reac
 import type { LayerProps } from 'react-map-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useAuthFetch } from '../lib/useAuthFetch'
+import { OperatorTypeFilter, type OperatorType } from '../components/filters/OperatorTypeFilter'
 
 const API = import.meta.env.VITE_API_URL ?? ''
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
@@ -81,6 +82,7 @@ export default function CompetitorDiscovery() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [scanned, setScanned] = useState(false)
+  const [operatorType, setOperatorType] = useState<OperatorType>('both')
 
   useEffect(() => {
     authFetch(`${API}/api/v1/locations`)
@@ -178,6 +180,14 @@ export default function CompetitorDiscovery() {
   const centerLat = selectedLocation?.lat ? Number(selectedLocation.lat) : null
   const centerLng = selectedLocation?.lng ? Number(selectedLocation.lng) : null
   const radiusGeoJSON = centerLat && centerLng ? makeCircleGeoJSON(centerLat, centerLng, 5) : null
+
+  // Filter competitors by operator type — fall back to showing all if business_type not set
+  const filteredCompetitors = operatorType === 'both'
+    ? competitors
+    : competitors.filter(c => {
+        const bt = (c as any).business_type
+        return !bt || bt === operatorType
+      })
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 128px)', minHeight: 560, maxHeight: 780 }}>
@@ -323,6 +333,10 @@ export default function CompetitorDiscovery() {
             Track monitors prices and promotions. Block suppresses a rival from the platform entirely.
           </div>
 
+          <div style={{ marginTop: 12 }}>
+            <OperatorTypeFilter value={operatorType} onChange={setOperatorType} />
+          </div>
+
           <div style={{ display: 'flex', gap: 8, marginTop: 14, alignItems: 'center' }}>
             {locations.length > 1 && (
               <select
@@ -371,7 +385,7 @@ export default function CompetitorDiscovery() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {competitors.map((comp) => {
+              {filteredCompetitors.map((comp) => {
                 const key = comp.id || comp.google_place_id
                 const sel = selections.get(key)
                 const isBlocked = sel?.action === 'block'

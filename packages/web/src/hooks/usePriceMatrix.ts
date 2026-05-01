@@ -13,7 +13,7 @@ export interface PriceRow {
   last_updated: string
 }
 
-export function usePriceMatrix(locationId: string | null, category?: string) {
+export function usePriceMatrix(locationId: string | null, category?: string, type?: string) {
   const authFetch = useAuthFetch()
   const [matrix, setMatrix] = useState<PriceRow[]>([])
   const [loading, setLoading] = useState(false)
@@ -25,6 +25,7 @@ export function usePriceMatrix(locationId: string | null, category?: string) {
     setError(null)
     const params = new URLSearchParams({ location_id: locationId })
     if (category) params.set('category', category)
+    if (type && type !== 'both') params.set('type', type)
 
     authFetch(`${API}/api/v1/prices/matrix?${params}`)
       .then((r) => r.json())
@@ -36,7 +37,7 @@ export function usePriceMatrix(locationId: string | null, category?: string) {
         setError(err.message)
         setLoading(false)
       })
-  }, [locationId, category])
+  }, [locationId, category, type])
 
   return { matrix, loading, error }
 }

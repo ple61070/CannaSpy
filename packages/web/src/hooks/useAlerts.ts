@@ -20,6 +20,7 @@ interface UseAlertsOptions {
   // 'unreviewed' (default) = only unreviewed, 'all' = all, 'reviewed' = reviewed only
   reviewed?: 'unreviewed' | 'all' | 'reviewed'
   limit?: number
+  type?: string  // 'storefront' | 'delivery' — filter by competitor business_type
 }
 
 export function useAlerts(options: UseAlertsOptions = {}) {
@@ -35,6 +36,7 @@ export function useAlerts(options: UseAlertsOptions = {}) {
       const params = new URLSearchParams()
       if (options.locationId) params.set('location_id', options.locationId)
       if (options.limit) params.set('limit', String(options.limit))
+      if (options.type && options.type !== 'both') params.set('type', options.type)
 
       if (options.reviewed === 'all') {
         params.set('reviewed', 'all')  // API shows all when value is non-true/false
@@ -59,7 +61,7 @@ export function useAlerts(options: UseAlertsOptions = {}) {
     setAlerts((prev) => prev.map((a) => a.id === alertId ? { ...a, reviewed: true } : a))
   }
 
-  useEffect(() => { fetchAlerts() }, [options.locationId, options.reviewed])
+  useEffect(() => { fetchAlerts() }, [options.locationId, options.reviewed, options.type])
 
   return { alerts, loading, error, markReviewed, refetch: fetchAlerts }
 }

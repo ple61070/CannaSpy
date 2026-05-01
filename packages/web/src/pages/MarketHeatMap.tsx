@@ -12,6 +12,7 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { MAPBOX_TOKEN, CANNASPY_STYLE_URL, isMapConfigured } from '../components/map/mapStyle'
 import { CALIFORNIA_VIEWPORT } from '../components/map/types'
 import type { DispensaryFeatureProps } from '../components/map/types'
+import { OperatorTypeFilter, type OperatorType } from '../components/filters/OperatorTypeFilter'
 import {
   dispensaryClusterLayer,
   dispensaryClusterCountLayer,
@@ -156,7 +157,10 @@ export default function MarketHeatMap() {
   const [bbox, setBbox]                     = useState<string | null>(null)
   const [zoom, setZoom]                     = useState<number>(CALIFORNIA_VIEWPORT.zoom)
 
-  const { data: dispensaries, loading: dispensariesLoading, count: dispCount } = useDispensaryMap(bbox)
+  const [operatorType, setOperatorType] = useState<OperatorType>('both')
+  const { data: dispensaries, loading: dispensariesLoading, count: dispCount } = useDispensaryMap(bbox, {
+    type: operatorType === 'both' ? undefined : operatorType,
+  })
 
   const sorted = [...MARKETS].sort((a, b) => {
     const order: Record<Tier, number> = { elite: 0, hot: 1, competitive: 2, standard: 3 }
@@ -260,6 +264,7 @@ export default function MarketHeatMap() {
   const [filter, setFilter] = useState<'all' | 'enriched' | 'tracked' | 'blocked'>('all')
 
   const activeFilters = {
+    type:     operatorType === 'both' ? undefined : operatorType,
     enriched: filter === 'enriched' ? true : undefined,
   }
 
@@ -279,8 +284,10 @@ export default function MarketHeatMap() {
               ? `${dispCount.toLocaleString()} DISPENSARIES IN VIEW`
               : '12 MARKETS TRACKED'}
         </span>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-          {/* Filter pills */}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Operator type toggle */}
+          <OperatorTypeFilter value={operatorType} onChange={setOperatorType} />
+          {/* Enrichment filter pills */}
           {(['all', 'enriched'] as const).map(f => (
             <button
               key={f}

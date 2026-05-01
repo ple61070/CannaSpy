@@ -62,8 +62,10 @@ export async function mapRoutes(fastify: FastifyInstance) {
         where += ` AND d.market_tier = $${paramIdx++}`
         params.push(tier)
       }
-      if (type) {
-        where += ` AND d.license_type = $${paramIdx++}`
+      // type filter: 'storefront' | 'delivery' | 'both'
+      // 'both' means show all — no filter clause needed
+      if (type && type !== 'both') {
+        where += ` AND d.business_type = $${paramIdx++}`
         params.push(type)
       }
       if (enriched === 'true') {
@@ -87,6 +89,7 @@ export async function mapRoutes(fastify: FastifyInstance) {
           d.city,
           d.county,
           d.license_type,
+          d.business_type,
           d.market_tier,
           d.enriched,
           d.threat_score,
@@ -122,6 +125,7 @@ export async function mapRoutes(fastify: FastifyInstance) {
               city: r.city,
               county: r.county,
               license_type: r.license_type,
+              business_type: r.business_type,
               market_tier: r.market_tier,
               enriched: r.enriched,
               threat_score: r.threat_score,

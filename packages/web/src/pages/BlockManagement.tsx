@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { OperatorTypeFilter, type OperatorType } from '../components/filters/OperatorTypeFilter'
 
 /* ── Static mock data ── */
 const SPARK_A = [8, 14, 20, 5, 5, 14, 18, 22, 14, 8, 5, 14, 20, 22]
@@ -142,6 +143,7 @@ export default function BlockManagement() {
   const [sortOpen, setSortOpen] = useState(false)
   const [locLabel, setLocLabel] = useState('All locations')
   const [sortLabel, setSortLabel] = useState('Longest active')
+  const [operatorType, setOperatorType] = useState<OperatorType>('both')
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2600) }
 
@@ -360,6 +362,7 @@ export default function BlockManagement() {
           </div>
         </div>
         <div style={s.fbRight}>
+          <OperatorTypeFilter value={operatorType} onChange={setOperatorType} />
           <div style={s.fbCount}>2 blocks · 18 slots</div>
         </div>
       </div>

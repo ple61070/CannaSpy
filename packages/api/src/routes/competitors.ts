@@ -11,6 +11,7 @@ const CreateCompetitorSchema = z.object({
   platform: z.enum(['dutchie', 'custom', 'unknown']).optional(),
   google_place_id: z.string().optional(),
   dcc_license: z.string().optional(),
+  business_type: z.enum(['storefront', 'delivery', 'both']).optional(),
 })
 
 export async function competitorsRoutes(fastify: FastifyInstance) {
@@ -18,7 +19,7 @@ export async function competitorsRoutes(fastify: FastifyInstance) {
   fastify.get('/:id', async (req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
     const result = await query(
       `SELECT id, name, address, lat, lng, website_url, platform, google_place_id,
-              dcc_license, robots_ok, last_scraped, created_at
+              dcc_license, business_type, robots_ok, last_scraped, created_at
        FROM competitors WHERE id = $1`,
       [req.params.id]
     )
@@ -41,13 +42,13 @@ export async function competitorsRoutes(fastify: FastifyInstance) {
       })
     }
 
-    const { name, address, lat, lng, website_url, platform, google_place_id, dcc_license } = parsed.data
+    const { name, address, lat, lng, website_url, platform, google_place_id, dcc_license, business_type } = parsed.data
 
     const result = await query<{ id: string }>(
-      `INSERT INTO competitors (name, address, lat, lng, website_url, platform, google_place_id, dcc_license)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO competitors (name, address, lat, lng, website_url, platform, google_place_id, dcc_license, business_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id`,
-      [name, address, lat ?? null, lng ?? null, website_url ?? null, platform ?? 'unknown', google_place_id ?? null, dcc_license ?? null]
+      [name, address, lat ?? null, lng ?? null, website_url ?? null, platform ?? 'unknown', google_place_id ?? null, dcc_license ?? null, business_type ?? 'storefront']
     )
 
     return reply.code(201).send({ id: result.rows[0].id })

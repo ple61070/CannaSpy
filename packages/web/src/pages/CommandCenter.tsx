@@ -6,6 +6,7 @@ import { useAlerts, type Alert } from '../hooks/useAlerts'
 import { useBlocks } from '../hooks/useBlocks'
 import { useAuthFetch } from '../lib/useAuthFetch'
 import { useStore } from '../store'
+import { OperatorTypeFilter, type OperatorType } from '../components/filters/OperatorTypeFilter'
 
 const API = import.meta.env.VITE_API_URL ?? ''
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
@@ -156,7 +157,12 @@ export default function CommandCenter() {
   const [locations, setLocations] = useState<{ id: string; name: string; lat?: number | null; lng?: number | null }[]>([])
   const [locationName, setLocationName] = useState('All locations')
 
-  const { alerts, loading, markReviewed } = useAlerts({ reviewed: statusFilter })
+  const [operatorType, setOperatorType] = useState<OperatorType>('both')
+
+  const { alerts, loading, markReviewed } = useAlerts({
+    reviewed: statusFilter,
+    type: operatorType === 'both' ? undefined : operatorType,
+  })
   const { blocks } = useBlocks()
 
   useEffect(() => {
@@ -300,6 +306,11 @@ export default function CommandCenter() {
             />
             <span style={{ fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--text-3)', background: 'var(--surface-3)', padding: '2px 5px', borderRadius: 4, border: '1px solid var(--border)', whiteSpace: 'nowrap' }}>⌘K</span>
           </div>
+        </div>
+
+        {/* Operator type filter */}
+        <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+          <OperatorTypeFilter value={operatorType} onChange={setOperatorType} />
         </div>
 
         {/* Filter bar — location + type + status */}

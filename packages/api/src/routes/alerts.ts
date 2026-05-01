@@ -8,6 +8,7 @@ export async function alertsRoutes(fastify: FastifyInstance) {
       location_id?: string
       competitor_id?: string
       alert_type?: string
+      type?: string        // 'storefront' | 'delivery' | 'both' — filter by competitor business_type
       reviewed?: string    // 'true' | 'false' (default false — show unreviewed)
       limit?: string
       offset?: string
@@ -35,6 +36,10 @@ export async function alertsRoutes(fastify: FastifyInstance) {
       conditions.push(`a.alert_type = $${idx++}`)
       params.push(req.query.alert_type)
     }
+    if (req.query.type && req.query.type !== 'both') {
+      conditions.push(`c.business_type = $${idx++}`)
+      params.push(req.query.type)
+    }
 
     // reviewed defaults to false (show only unreviewed)
     const reviewedParam = req.query.reviewed
@@ -52,6 +57,7 @@ export async function alertsRoutes(fastify: FastifyInstance) {
          a.id, a.alert_type, a.old_value, a.new_value, a.confidence,
          a.reviewed, a.reviewed_by, a.reviewed_at, a.created_at,
          c.name as competitor_name, c.address as competitor_address,
+         c.business_type,
          l.name as location_name
        FROM alerts a
        LEFT JOIN competitors c ON c.id = a.competitor_id

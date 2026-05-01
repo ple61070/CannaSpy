@@ -4,12 +4,12 @@ import { query } from '../db/client'
 export async function pricingRoutes(fastify: FastifyInstance) {
   // GET /api/v1/prices/matrix?location_id=&category=
   fastify.get('/matrix', async (req: FastifyRequest<{
-    Querystring: { location_id?: string; category?: string }
+    Querystring: { location_id?: string; category?: string; type?: string }
   }>, reply: FastifyReply) => {
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
-    const { location_id, category } = req.query
+    const { location_id, category, type } = req.query
 
     if (!location_id) {
       return reply.code(400).send({ error: 'location_id is required', code: 'MISSING_PARAM' })
@@ -32,6 +32,11 @@ export async function pricingRoutes(fastify: FastifyInstance) {
       params.push(category)
       categoryFilter = `AND mi.category = $${params.length}`
     }
+    let typeFilter = ''
+    if (type && type !== 'both') {
+      params.push(type)
+      typeFilter = `AND c.business_type = $${params.length}`
+    }
 
     const result = await query(
       `SELECT DISTINCT ON (mi.competitor_id, mi.name)
@@ -42,7 +47,8 @@ export async function pricingRoutes(fastify: FastifyInstance) {
          mi.discount_label,
          mi.category,
          mi.collected_at AS last_updated,
-         c.name          AS competitor_name
+         c.name          AS competitor_name,
+         c.business_type
        FROM menu_items mi
        JOIN competitors c ON c.id = mi.competitor_id
        WHERE mi.competitor_id IN (
@@ -53,6 +59,7 @@ export async function pricingRoutes(fastify: FastifyInstance) {
          AND mi.price IS NOT NULL
          AND mi.price > 0
          ${categoryFilter}
+         ${typeFilter}
        ORDER BY mi.competitor_id, mi.name, mi.collected_at DESC
        LIMIT 500`,
       params

@@ -42,7 +42,7 @@ Flag conflicts rather than silently choosing one over the other.
 | Layer | Technology | Notes |
 |---|---|---|
 | Scraper / pipeline | Python 3.11+ | `packages/scraper/` |
-| Job queue | BullMQ (Redis-backed) | Node-native, 4 workers |
+| Job queue | BullMQ (Redis-backed) | Node-native, 6 workers |
 | API layer | Node.js + Fastify + TypeScript | `packages/api/` |
 | Frontend | React 18 + Vite + TypeScript | `packages/web/` |
 | Styling | Tailwind CSS + CSS variables | Dark theme — see BRAND.md |
@@ -89,6 +89,7 @@ cannaspy/
 │   │   │   └── places_client.py     ← ✅ exists
 │   │   ├── compliance/
 │   │   │   └── robots_checker.py    ← ✅ exists
+│   │   ├── dcc_ingest.py            ← ✅ DCC dispensary ingest (1,787 CA records)
 │   │   ├── requirements.txt
 │   │   └── README.md
 │   │
@@ -96,7 +97,7 @@ cannaspy/
 │   │   └── src/
 │   │       ├── middleware/
 │   │       │   └── clerk.ts         ← ✅ Clerk auth middleware (all protected routes)
-│   │       ├── routes/              ← ✅ 10 routes wired
+│   │       ├── routes/              ← ✅ 11 routes wired
 │   │       │   ├── competitors.ts
 │   │       │   ├── blocks.ts
 │   │       │   ├── pricing.ts       ← ✅ wired to real menu_items data
@@ -106,6 +107,7 @@ cannaspy/
 │   │       │   ├── billing.ts
 │   │       │   ├── billing.webhook.ts ← ✅ idempotency gate + payment_succeeded handler
 │   │       │   ├── admin.ts         ← ✅ GET /api/v1/admin/crm-failures
+│   │       │   ├── map.ts           ← ✅ GET /api/v1/map/dispensaries (bbox GeoJSON)
 │   │       │   └── settings.ts
 │   │       ├── workers/             ← ✅ 6 BullMQ workers live in production
 │   │       │   ├── scrape.worker.ts
@@ -122,15 +124,15 @@ cannaspy/
 │   │       ├── db/
 │   │       │   ├── schema.sql       ← ✅ complete schema
 │   │       │   ├── redis.ts         ← ✅ shared IORedis cache singleton
-│   │       │   └── migrations/      ← ✅ 001–009 applied (Railway + Supabase prod)
+│   │       │   └── migrations/      ← ✅ 001–010 applied (Railway + Supabase prod)
 │   │       ├── scheduler.ts         ← ✅ exists
 │   │       └── index.ts             ← ✅ exists
 │   │
 │   └── web/                         ← React frontend (TypeScript)
 │       └── src/
-│           ├── pages/               ← ✅ 15 pages scaffolded
-│           ├── components/          ← ✅ 8 components scaffolded
-│           ├── hooks/               ← ✅ 3 hooks scaffolded
+│           ├── pages/               ← ✅ 35 pages built
+│           ├── components/          ← ✅ includes map/layers.ts, map/types.ts
+│           ├── hooks/               ← ✅ includes useDispensaryMap.ts
 │           └── store/               ← ✅ Zustand store
 │
 ├── cli/                             ← Internal tools (keep, they're good)
@@ -150,25 +152,28 @@ cannaspy/
 ## What Is Built vs. What Is Not
 
 ### ✅ Built and Live
-- All 10 API routes (competitors, blocks, pricing, alerts, locations, organizations, billing, billing.webhook, admin, settings)
+- All 11 API routes (competitors, blocks, pricing, alerts, locations, organizations, billing, billing.webhook, admin, map, settings)
 - All 6 BullMQ workers live in production (scrape, normalize, diff, alert, billing, crm)
 - All 4 services wired (blocking, pricing, alert, billing)
 - Clerk auth middleware (`middleware/clerk.ts`) — all protected routes
 - RLS policies applied (migration 006)
-- All React pages (15 screens)
+- All React pages (35 screens built)
+- MarketHeatMap — live Mapbox GL, 1,325 CA dispensary pins, 3-state coloring, bbox API
 - Fallback scraper (`dispensary_scraper.py` — rebranded, no CannaIntel references)
 - Primary pipeline (`collector.py` — live, 6,002 menu items from 4 competitors)
+- DCC ingest (`dcc_ingest.py` — 1,787 CA dispensary records, 1,325 with lat/lng)
 - IP rotation (`ip_pool.py`)
 - Off-peak scheduler (`scheduler.py`)
 - Diff engine (`diff_engine.py`)
 - Promo parser (`promo_parser.py`)
 - CLI tools (all 4 + test-block-cancel.py)
-- Database schema — all 9 migrations applied to Railway + Supabase prod
+- Database schema — all 10 migrations applied to Railway + Supabase prod
 - Parsers (Dutchie, HTML, normalizer)
 - Places client (slug discovery)
 - Robots checker
 - Webhook idempotency gate (`webhook_events` table, migration 008)
 - CRM failure tracking (`block_list.crm_notify_failed`, migration 009)
+- DCC dispensaries table (`dispensaries` + `org_dispensary_state`, migration 010)
 - Stripe Customer Portal redirect (CancellationFlow → `/api/v1/billing/portal`)
 - Railway production deployed and live (`https://cannaspy-production.up.railway.app`)
 
@@ -330,7 +335,8 @@ updating it first.
 Key tables: `organizations`, `locations`, `competitors`,
 `tracked_competitors`, `block_list`, `products`, `price_observations`,
 `promotions`, `alerts`, `annotations`, `audit_log`,
-`notification_preferences`, `scrape_jobs`.
+`notification_preferences`, `scrape_jobs`, `dispensaries`,
+`org_dispensary_state`.
 
 RLS is enabled on all org-scoped tables. RLS policies must be defined —
 schema.sql enables RLS but does NOT yet define the per-table policies.
@@ -494,6 +500,7 @@ Done:
 - [x] LocationDashboard wired (loads location + competitors)
 - [x] CancellationFlow wired to Stripe Customer Portal
 - [x] All pages using `authFetch` (Clerk token on all API calls)
+- [x] MarketHeatMap — live Mapbox GL, 1,325 DCC dispensary pins, 3-state coloring (amber=blocked, tier-color=enriched, grey=prospect), clusters at zoom <10, bbox API fetch on map move
 
 Still needed:
 - [ ] Block Management (`/blocks`) — verify wired to real data
@@ -507,7 +514,7 @@ Still needed:
 **Status: PARTIALLY COMPLETE — Railway live, billing config pending.**
 
 Done:
-- [x] Railway production deployed and live (deploy SHA `8bfc539`, 2026-04-28)
+- [x] Railway production deployed and live (latest deploy SHA `01a3501`, 2026-04-29)
 - [x] Dunning logic — 3-day grace period on `invoice.payment_failed`
 - [x] Webhook test-mode endpoint registered + verified
 

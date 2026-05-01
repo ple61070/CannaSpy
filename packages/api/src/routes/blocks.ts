@@ -9,10 +9,18 @@ const CreateBlockSchema = z.object({
 })
 
 export async function blocksRoutes(fastify: FastifyInstance) {
-  // GET /api/v1/blocks
-  fastify.get('/', async (req: FastifyRequest, reply: FastifyReply) => {
+  // GET /api/v1/blocks?type=storefront|delivery|both
+  fastify.get('/', async (req: FastifyRequest<{ Querystring: { type?: string } }>, reply: FastifyReply) => {
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
+
+    const { type } = req.query
+    const params: unknown[] = [orgDbId]
+    let typeFilter = ''
+    if (type && type !== 'both') {
+      params.push(type)
+      typeFilter = `AND c.business_type = $${params.length}`
+    }
 
     const result = await query(
       `SELECT
@@ -24,12 +32,14 @@ export async function blocksRoutes(fastify: FastifyInstance) {
          bl.crm_notified_at,
          c.id as competitor_id,
          c.name as competitor_name,
-         c.address as competitor_address
+         c.address as competitor_address,
+         c.business_type
        FROM block_list bl
        JOIN competitors c ON c.id = bl.competitor_id
        WHERE bl.org_id = $1 AND bl.active = TRUE
+         ${typeFilter}
        ORDER BY bl.blocked_at DESC`,
-      [orgDbId]
+      params
     )
 
     return { success: true, data: { blocks: result.rows, total: result.rowCount } }

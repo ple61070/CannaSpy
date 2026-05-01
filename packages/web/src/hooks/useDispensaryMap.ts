@@ -64,8 +64,12 @@ export function useDispensaryMap(
         })
         if (res.ok) {
           const json = await res.json()
-          setData(json)
-          setCount(json.features?.length ?? 0)
+          // API wraps in { success, data, count } — unwrap if needed
+          const fc: DispensaryFeatureCollection = json.data ?? json
+          if (fc?.type === 'FeatureCollection') {
+            setData(fc)
+            setCount(fc.features?.length ?? 0)
+          }
         }
       } catch (err: unknown) {
         if (err instanceof Error && err.name === 'AbortError') return

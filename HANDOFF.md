@@ -1,4 +1,176 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-01 (Session 7 — Live Maps on CommandCenter + CompetitorDiscovery)
+
+---
+
+## Session 7 — 2026-05-01
+
+**Commit:** `6b0bd6d` — `feat(web): CommandCenter real Mapbox map + CompetitorDiscovery auto-fly onLoad`
+**Deploy:** Vercel production live ✅ — https://web-rouge-one-15.vercel.app (HTTP 200 confirmed)
+**Railway:** `railway up --detach` triggered ✅ — backend deploying from same commit
+
+---
+
+### What Was Done
+
+#### 1. CommandCenter — CSS mock map replaced with real Mapbox GL
+
+**Problem:** The entire right panel of CommandCenter (`/command-center`) was a fake CSS map — 19 hardcoded city-block `<div>` elements, static road overlays, radial-gradient heat blobs, and percentage-positioned competitor pins with hardcoded names (STIIIZY, MedMen, etc.). ~250 lines of decorative layout with no real data.
+
+**What changed (`packages/web/src/pages/CommandCenter.tsx`):**
+- Added imports: `Map`, `Marker`, `NavigationControl`, `MapRef` from `react-map-gl`; `mapbox-gl/dist/mapbox-gl.css`; `useCallback`
+- Added `MAPBOX_TOKEN` constant and `LA_VIEWPORT` fallback (`-118.24, 34.05, zoom 11`)
+- Added `mapRef = useRef<MapRef | null>(null)`
+- Extended `locations` state type to include `lat` and `lng` fields
+- Added `firstLocation` derived value + `mapCenter` (uses real coords if available, falls back to LA)
+- Added `handleMapLoad` callback — flies to first location once map is initialized
+- **Removed** `PIN_POSITIONS` constant, `mapPins` array, `displayPins` fallback array (~50 lines)
+- **Removed** all CSS map content — city blocks, roads, heat overlay, distance rings, fake "YOUR LOCATION" pin, CSS competitor pins (~230 lines)
+- **Removed** fake zoom `+`/`−` buttons (replaced by Mapbox `NavigationControl`)
+- **Added** real `<Map>` component with `dark-v11` style, `onLoad={handleMapLoad}`, `NavigationControl` at bottom-right
+- **Added** `<Marker>` for "YOUR LOCATION" at `firstLocation.lat/lng` with teal pulsing dot + label chip
+- All existing overlay elements kept: location pill, stat pills (alerts/tracked/blocked), freshness pill, map legend, "Open Price Intelligence" CTA button
+
+**Net diff:** −227 lines / +71 lines
+
+#### 2. CompetitorDiscovery — auto-fly on map load
+
+**Problem:** When a user navigates to `/competitor-discovery`, the location is fetched async. By the time `selectedLocation` state is set and the `flyTo` `useEffect` fires, the Mapbox map may not yet be initialized — so the effect runs against a null `mapRef` and the map stays at the California overview zoom.
+
+**What changed (`packages/web/src/pages/CompetitorDiscovery.tsx`):**
+- Added `handleMapLoad` callback using `useCallback` — fires `flyTo` to `selectedLocation` coords if already set when the map finishes loading
+- Added `onLoad={handleMapLoad}` to the existing `<Map>` component
+- Existing `useEffect` on `selectedLocation` is still in place for subsequent location switches
+
+---
+
+### What Failed / Known Issues
+
+| Issue | Status | Notes |
+|---|---|---|
+| `pnpm build` in Linux sandbox | ❌ expected | Rollup native module is macOS-only. Always build via osascript. |
+| `vercel` not globally installed on Mac | ✅ fixed | Installed vercel 53.0.1 via `pnpm add -g vercel` with `PNPM_HOME` set |
+| `npm install -g vercel` permission denied | ❌ | `/usr/local/lib/node_modules` requires sudo — use pnpm global instead |
+| Competitor markers on CommandCenter map | ⬜ pending | `useBlocks()` returns no lat/lng for competitors — markers not shown. Need to join competitor coords from API or augment the blocks endpoint. |
+| `firstLocation` lat/lng availability | ⬜ depends | The `/api/v1/locations` response must return `lat`/`lng` fields. If they're null (location not geocoded), map falls back to LA viewport. Check DB for Corona location coords. |
+
+---
+
+### What Is Next (Immediate)
+
+1. **Verify CommandCenter map in browser** — confirm dark-v11 renders, "YOUR LOCATION" pin shows at correct coordinates for the Corona test location
+2. **Verify CompetitorDiscovery auto-fly** — navigate to `/competitor-discovery`, confirm map flies to location instead of staying at CA zoom
+3. **Add competitor lat/lng to blocks API** — augment `GET /api/v1/blocks` to JOIN `competitors` table and return `lat`/`lng` per block entry, then add `<Marker>` elements for each blocked/tracked competitor on the CommandCenter map
+
+---
+
+### What Is Still Left To Do (Backlog)
+
+**Frontend wiring:**
+- [ ] Block Management (`/blocks`) — verify wired to real data, not placeholder
+- [ ] Promotions (`/promotions`) — scaffold only, not wired to API
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state on dual API failure
+- [ ] Apply CannaSpy color palette across remaining screens — replace any remaining Tailwind defaults (`#22c55e`, `#f59e0b`, `#ef4444`) with CSS vars
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Data pipeline:**
+- [ ] Test `diff_engine.py` end-to-end with two real snapshots → generates first real `alerts` rows
+- [ ] Wire `alert.worker.ts` to Resend — currently only logs, no emails sent on alerts
+- [ ] Wire `scrape.worker.ts` to `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] Configure production IP proxy pool (currently single IP in dev)
+- [ ] Full DCC geocoding — 462 dispensaries missing lat/lng; run `dcc_ingest.py --all-counties` when `GOOGLE_PLACES_API_KEY` available
+
+**Infrastructure:**
+- [ ] Add git remote origin — pushes still fail, commits are local only
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently — launch blocker)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Live simulation:**
+- [ ] Wellgreens org — seed org, add locations, run scraper, wire all screens to real API data
+
+---
+
+## Session 6 — 2026-04-30
+
+**Task:** Committed updated frontend pages + cleaned git lock files.
+
+### What was done
+
+**Git maintenance**
+- Removed stale `HEAD.lock` and `index.lock` from `.git/` — were blocking commits.
+
+**Committed (829d557):** `feat(web): CommandCenter + AlertFeed + PriceIntelligence — match HTML prototypes`
+- `packages/web/src/pages/CommandCenter.tsx`
+- `packages/web/src/pages/AlertFeed.tsx`
+- `packages/web/src/pages/PriceIntelligence.tsx`
+- `packages/web/src/styles/globals.css`
+- 5 files changed, +3335 / -451
+
+**Push status:** FAILED — no remote origin configured on this repo. Commit is local only.
+- To push: `git remote add origin <url> && git push -u origin main`
+
+### Uncommitted changes (working directory)
+- `HANDOFF.md` — this file (M)
+- `packages/web/src/hooks/useDispensaryMap.ts` (M)
+- `MAP_PLAN.md` (untracked)
+- `packages/scraper/dcc_ingest.py` (untracked)
+- `packages/web/.env.development.local` (untracked — do not commit, contains secrets)
+
+### What's next (same as Session 5)
+1. **Add git remote** so pushes work — need the GitHub/Gitea repo URL
+2. **Full DCC geocoding** — 462 dispensaries missing lat/lng; run `dcc_ingest.py --all-counties` when `GOOGLE_PLACES_API_KEY` is available
+3. **Wellgreens live simulation** — seed org, add locations, run scraper, wire all screens to real API data
+4. **Apply CannaSpy color palette** — replace Tailwind defaults with CSS variables across remaining screens
+5. **Block Management (/blocks)** — verify wired to real data
+6. **Wire `alert.worker.ts` to Resend** — currently logs only, no emails sent
+7. **Test diff_engine end-to-end** with two real snapshots → generates first real alerts
+
+---
+
+## Session 5 — 2026-04-29
+
+**Task completed:** Task #9 — Refactor CannaSpyMap — unified component with 3-state pins + live API
+
+### What was built
+
+**DCC dispensary ingestion** (`packages/scraper/dcc_ingest.py`)
+- Downloads all CA dispensary records from Azure DCC API
+- 1,787 records ingested, 1,325 with lat/lng (--skip-geocoding flag used; Google Maps API blocked in sandbox)
+- Stored in `dispensaries` table (migration 010)
+
+**API bbox endpoint** (`packages/api/src/routes/map.ts`)
+- `GET /api/v1/map/dispensaries?bbox=west,south,east,north&limit=2000`
+- Returns GeoJSON FeatureCollection wrapped in `{ success, data, count }`
+- Supports filters: tier, type, enriched, q
+- Verified live: `curl .../api/v1/map/dispensaries?bbox=-118.5,33.9,-118.1,34.1` → 10 features ✅
+
+**Frontend** (`packages/web/src/`)
+- `hooks/useDispensaryMap.ts` — debounced bbox hook, AbortController, unwraps API wrapper
+- `components/map/layers.ts` — dispensaryClusterLayer, dispensaryClusterCountLayer, dispensaryPointLayer with 3-state colors
+- `components/map/types.ts` — DispensaryFeatureProps interface
+- `pages/MarketHeatMap.tsx` — full rewrite with dual-zoom system, live dispensary pins, filter pills, dynamic legend
+
+**Deploy:** `railway up` → deployment `12190fb9` → ACTIVE ✅
+- Commit `01a3501` is live in production
+- `Server listening at http://127.0.0.1:8080` confirmed in deploy logs
+
+### State of the map
+- 1,325 CA dispensary pins load from the live DCC database
+- Three-state coloring: amber (blocked), tier-matched colors (enriched), dim grey (prospect)
+- Clusters at zoom < 10, individual pins at zoom ≥ 9
+- Bbox API fetches on every map move (300ms debounce)
+
+### What's next
+- Full DCC geocoding: 462 records still missing lat/lng. Run `dcc_ingest.py --all-counties` (without --skip-geocoding) when GOOGLE_PLACES_API_KEY is available
+- Wellgreens live simulation: seed org, add locations, run scraper, wire all screens to real API data
+- Apply CannaSpy color palette + DM Sans/Space Mono typography across all remaining screens
+- Block Management (/blocks) — verify wired to real data
+
+---
+
+**Previous session:**
 **Date:** 2026-04-28 (Session 4 — Sprint 0 P0 Fixes)
 
 ---
