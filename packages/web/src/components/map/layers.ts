@@ -206,13 +206,40 @@ export const competitorPointLayer: LayerProps = {
 // ------------------------------------------------------------
 // Driven by track_state + enriched from /api/v1/map/dispensaries.
 //
-//  BLOCKED   → amber  #ba7517  opacity 1.0   radius 6px  (power action)
-//  ENRICHED  → teal   #1d9e75  opacity 1.0   radius 6px  (active intel)
-//  PROSPECT  → teal   #1d9e75  opacity 0.65  radius 5px  (opportunity)
+//  BLOCKED   → amber  #ba7517  fill 100%  ring 25%  radius 10px / ring 17px
+//  ENRICHED  → teal   #1d9e75  fill 100%  ring 25%  radius 10px / ring 17px
+//  PROSPECT  → teal   #1d9e75  fill  70%  ring 25%  radius  8px / ring 14px
 //
-// Prospect uses the same teal family as enriched — the map looks alive
-// on first load. Opacity + size distinguish the relationship hierarchy.
-// Hover activates via feature-state (requires promoteId="id" on Source).
+// Each pin has two layers: cs-dispensary-ring (beneath) + cs-dispensary-point (above).
+// Ring = same color at 25% opacity, larger radius — gives visual weight without clutter.
+// Hover adds +3px to both layers via feature-state (add promoteId="id" to Source to activate).
+
+// Outer ring — rendered BELOW the fill layer. Same source + filter as the fill.
+export const dispensaryRingLayer: LayerProps = {
+  id: 'cs-dispensary-ring',
+  type: 'circle',
+  source: SOURCE.DISPENSARIES,
+  filter: ['!', ['has', 'point_count']],
+  paint: {
+    'circle-color': [
+      'case',
+      ['==', ['get', 'track_state'], 'blocked'], PALETTE.accentBlock,
+      PALETTE.accentIntel,
+    ] as unknown as string,
+    // Ring radius: 14px prospect, 17px enriched/blocked, +3px on hover
+    'circle-radius': [
+      '+',
+      ['case',
+        ['==', ['get', 'track_state'], 'blocked'],  17,
+        ['boolean', ['get', 'enriched'], false],     17,
+        14,
+      ],
+      ['case', ['boolean', ['feature-state', 'hover'], false], 3, 0],
+    ] as unknown as number,
+    'circle-opacity': 0.25,
+    'circle-stroke-width': 0,
+  },
+}
 
 export const dispensaryClusterLayer: LayerProps = {
   id: 'cs-dispensary-cluster',
@@ -262,26 +289,25 @@ export const dispensaryPointLayer: LayerProps = {
       ['==', ['get', 'track_state'], 'blocked'], PALETTE.accentBlock,
       PALETTE.accentIntel,
     ] as unknown as string,
-    // Base radius: 6px for blocked/enriched, 5px for prospect.
-    // Adds 2px on hover via feature-state (activate by adding promoteId="id" to Source).
+    // Fill radius: 10px enriched/blocked, 8px prospect. +3px on hover.
     'circle-radius': [
       '+',
       ['case',
-        ['==', ['get', 'track_state'], 'blocked'],  6,
-        ['boolean', ['get', 'enriched'], false],     6,
-        5,
+        ['==', ['get', 'track_state'], 'blocked'],  10,
+        ['boolean', ['get', 'enriched'], false],     10,
+        8,
       ],
-      ['case', ['boolean', ['feature-state', 'hover'], false], 2, 0],
+      ['case', ['boolean', ['feature-state', 'hover'], false], 3, 0],
     ] as unknown as number,
     'circle-stroke-color': PALETTE.bgBase,
     'circle-stroke-width': 1.5,
-    // Prospect: 65% opacity — looks alive, not empty. Enriched/blocked: 100%. Hover: always 100%.
+    // Prospect: 70% opacity. Enriched/blocked: 100%. Hover: always 100%.
     'circle-opacity': [
       'case',
       ['boolean', ['feature-state', 'hover'], false],  1,
       ['==', ['get', 'track_state'], 'blocked'],        1,
       ['boolean', ['get', 'enriched'], false],           1,
-      0.65,
+      0.70,
     ] as unknown as number,
   },
 }

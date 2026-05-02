@@ -15,6 +15,7 @@ import type { DispensaryFeatureProps } from '../components/map/types'
 import { OperatorTypeFilter, type OperatorType } from '../components/filters/OperatorTypeFilter'
 import { MarketSubNav } from '../components/shared/MarketSubNav'
 import {
+  dispensaryRingLayer,
   dispensaryClusterLayer,
   dispensaryClusterCountLayer,
   dispensaryPointLayer,
@@ -343,8 +344,7 @@ export default function MarketHeatMap() {
               data={dispensaries as unknown as Parameters<typeof Source>[0]['data']}
               cluster clusterMaxZoom={13} clusterRadius={35}
             >
-              <Layer {...dispensaryClusterLayer} minzoom={9} />
-              <Layer {...dispensaryClusterCountLayer} minzoom={9} />
+              <Layer {...dispensaryRingLayer} minzoom={9} />
               <Layer
                 {...dispensaryPointLayer}
                 minzoom={9}
@@ -353,6 +353,8 @@ export default function MarketHeatMap() {
                   ? ({ ...dispensaryPointLayer.paint, 'circle-opacity': ['case', ['==', ['get', 'enriched'], true], 0.9, 0.06] } as any)
                   : dispensaryPointLayer.paint}
               />
+              <Layer {...dispensaryClusterLayer} minzoom={9} />
+              <Layer {...dispensaryClusterCountLayer} minzoom={9} />
             </Source>
 
             {/* Market hover popup */}
