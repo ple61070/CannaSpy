@@ -226,15 +226,15 @@ export const dispensaryRingLayer: LayerProps = {
       ['==', ['get', 'track_state'], 'blocked'], PALETTE.accentBlock,
       PALETTE.accentIntel,
     ] as unknown as string,
-    // Ring radius: 14px prospect, 17px enriched/blocked, +3px on hover
+    // Ring radius: 21px prospect, 26px enriched/blocked, +4px on hover
     'circle-radius': [
       '+',
       ['case',
-        ['==', ['get', 'track_state'], 'blocked'],  17,
-        ['boolean', ['get', 'enriched'], false],     17,
-        14,
+        ['==', ['get', 'track_state'], 'blocked'],  26,
+        ['boolean', ['get', 'enriched'], false],     26,
+        21,
       ],
-      ['case', ['boolean', ['feature-state', 'hover'], false], 3, 0],
+      ['case', ['boolean', ['feature-state', 'hover'], false], 4, 0],
     ] as unknown as number,
     'circle-opacity': 0.25,
     'circle-stroke-width': 0,
@@ -289,15 +289,15 @@ export const dispensaryPointLayer: LayerProps = {
       ['==', ['get', 'track_state'], 'blocked'], PALETTE.accentBlock,
       PALETTE.accentIntel,
     ] as unknown as string,
-    // Fill radius: 10px enriched/blocked, 8px prospect. +3px on hover.
+    // Fill radius: 15px enriched/blocked, 12px prospect. +4px on hover.
     'circle-radius': [
       '+',
       ['case',
-        ['==', ['get', 'track_state'], 'blocked'],  10,
-        ['boolean', ['get', 'enriched'], false],     10,
-        8,
+        ['==', ['get', 'track_state'], 'blocked'],  15,
+        ['boolean', ['get', 'enriched'], false],     15,
+        12,
       ],
-      ['case', ['boolean', ['feature-state', 'hover'], false], 3, 0],
+      ['case', ['boolean', ['feature-state', 'hover'], false], 4, 0],
     ] as unknown as number,
     'circle-stroke-color': PALETTE.bgBase,
     'circle-stroke-width': 1.5,
