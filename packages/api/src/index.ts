@@ -38,8 +38,20 @@ const fastify = Fastify({
 })
 
 async function bootstrap() {
+  const allowedOrigins = new Set([
+    process.env.WEB_URL,
+    'http://localhost:3000',
+    'http://localhost:5173',
+  ].filter(Boolean) as string[])
+
   await fastify.register(cors, {
-    origin: process.env.WEB_URL || 'http://localhost:3000',
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.has(origin) || /\.vercel\.app$/.test(origin)) {
+        cb(null, true)
+      } else {
+        cb(new Error('Not allowed by CORS'), false)
+      }
+    },
     credentials: true,
   })
 
