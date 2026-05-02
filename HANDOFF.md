@@ -1,4 +1,93 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-02 (Session 13 — Map container width fix + sidebar gap resolved)
+
+---
+
+## Session 13 — 2026-05-02
+
+**Commits:** `51a131d` fix(map): explicit width:100% + transition on map container
+**Deploy:** Vercel ✅ aliased to `web-rouge-one-15.vercel.app`
+
+---
+
+### 1. What Was Done
+
+#### Fixed: blank gap on right side of page when sidebar collapses
+
+When the sidebar collapsed from 240px (hover-expanded) back to 64px (resting), the map container was not expanding to fill the freed space — leaving a blank gap on the right side of the page.
+
+**Root cause:** MarketHeatMap's root div and map container had no explicit `width` property. They relied on implicit flex cross-axis stretch. When the sidebar animated its width change via CSS transition, the map container had no transition and no explicit width to track the layout change.
+
+**Fix (2 lines in `packages/web/src/pages/MarketHeatMap.tsx`):**
+1. Root div: added `width: '100%'` — makes horizontal fill explicit instead of relying on flex stretch
+2. Map container div: added `width: '100%'` and `transition: 'width 0.22s cubic-bezier(.2,.8,.2,1)'` — matches the sidebar's exact transition curve so the map resizes in lockstep
+
+No Mapbox logic changed. No layer styling changed. No pin colors changed.
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/web/src/pages/MarketHeatMap.tsx` | Root div: added `width: '100%'`. Map container: added `width: '100%'` and `transition: 'width 0.22s cubic-bezier(.2,.8,.2,1)'` |
+
+No schema migrations. No API changes. No new dependencies.
+
+---
+
+### 3. What Failed
+
+Nothing failed this session. TypeScript clean. Deploy successful. User confirmed fix worked.
+
+**Layout analysis performed (for future reference):**
+- Sidebar: hover-based expand/collapse via direct inline style mutation (`onMouseEnter`/`onMouseLeave`), NOT a Zustand state toggle or CSS class. Width transitions from `var(--rail-w)` (64px) to `var(--rail-expanded-w)` (240px).
+- `<main>` in Layout.tsx: `flex: 1, width: 0, minWidth: 0` — correctly fills sidebar-freed space via flex-grow. Does not need a width transition.
+- The gap was on the **content side** (map container not stretching), not the layout side.
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Add `promoteId="id"` to `<Source id="cs-dispensaries">` in `MarketHeatMap.tsx`** — activates hover (+4px radius, opacity→1). One prop on the Source element.
+2. **Verify pins in browser** — zoom into LA / Harbor City at zoom 10–12, confirm teal rings + fills visible with no blank areas.
+3. **Wire `scrape.worker.ts` enriched write-back** — after successful scrape, update `dispensaries.enriched = true` for matching DCC record.
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Map / Data Pipeline:**
+- [ ] `promoteId="id"` on dispensary Source → activates hover (1 prop, `MarketHeatMap.tsx`)
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
+- [ ] `diff_engine.py` — not yet tested end-to-end with two real snapshots
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] `scrape.worker.ts` → call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**Frontend:**
+- [ ] Block Management (`/blocks`) — verify wired to real data, not placeholder
+- [ ] Promotions (`/promotions`) — scaffold only, not wired to API
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state on API failure
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Investigate Railway auto-deploy — git push should trigger deploy without `railway up`
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Corona)
+```
+
+---
+
 **Date:** 2026-05-02 (Session 12 — Outer ring layer + 50% radius increase deployed)
 
 ---
