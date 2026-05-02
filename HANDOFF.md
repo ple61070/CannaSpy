@@ -1,5 +1,66 @@
 # CannaSpy Session Handoff
-**Date:** 2026-05-01 (Session 8 — Delivery operator type support across full stack)
+**Date:** 2026-05-01 (Session 9 — Heat map UI improvements + CORS fix + sub-nav fix)
+
+---
+
+## Session 9 — 2026-05-01
+
+**Commits:** `06c45f3` feat(map): streets/satellite toggle, city search, full-width map, fix light mode pills → `015c906` fix(market): shared MarketSubNav with correct routes, apply migration 011 to prod
+**Deploy:** Vercel ✅ — https://web-rouge-one-15.vercel.app (bundle index-DM5GXFy4.js) | Railway API ✅ — `d1423bf8`
+
+---
+
+### What Was Done
+
+#### 1. MarketHeatMap — full redesign
+- **Sidebar removed** — replaced with Mapbox Geocoding API search bar (220ms debounce, California bbox, autocomplete dropdown, `flyTo` on select)
+- **Map style toggle** — Streets (`streets-v12`) / Satellite Streets (`satellite-streets-v12`), floating button bottom-right
+- **Full-width map** — sidebar div removed entirely
+- **Dispensary count stat** — floating pill overlay top-center
+- Active state for market tab now uses `useLocation()` via shared `MarketSubNav`
+
+#### 2. OperatorTypeFilter — light mode fix
+- `color` for inactive buttons changed from `rgba(255,255,255,0.5)` (invisible on light bg) to `var(--text-2)`
+- Container border/bg changed to `var(--border-2)` / `var(--surface-2)` (theme-aware)
+
+#### 3. MarketSubNav — shared component (`packages/web/src/components/shared/MarketSubNav.tsx`)
+- All 5 market pages had their own `MARKET_TABS` arrays with **wrong routes** (`/market`, `/competitor-ranking`, `/benchmarks`, etc.)
+- Clicking any tab other than the current page's active one used `handleTabClick` which showed a toast instead of navigating
+- Fixed: created shared `MarketSubNav` using `useLocation()` for active detection and correct routes matching `App.tsx`
+- All 5 pages (`MarketHeatMap`, `CompetitorRanking`, `MyBenchmarks`, `SkuGapAnalysis`, `DealEffectiveness`) updated to import and use it
+
+#### 4. Migration 011 applied to Railway prod
+- Applied via `psql` directly — `business_type` columns already existed (columns were skipped), but the `UPDATE` ran and backfilled 1,787 dispensary rows
+
+#### 5. CORS fix (diagnosed by Claude Code, applied to Railway API)
+- **Root cause of missing map pins**: `packages/api/src/index.ts` had `origin: process.env.WEB_URL || 'http://localhost:3000'` — a single string
+- Requests from `https://web-rouge-one-15.vercel.app` received `Access-Control-Allow-Origin: http://localhost:3000`, which the browser rejected
+- `useDispensaryMap`'s catch block silently swallowed the `TypeError` → empty FeatureCollection → no pins rendered
+- **Fix**: CORS origin changed to a function allowing `WEB_URL`, `localhost:3000`, `localhost:5173`, and any `*.vercel.app` domain
+- Auth gate, data, layer minzoom, and bbox trigger were all verified clean
+
+---
+
+### What Failed / Was Ruled Out
+
+| Item | Result |
+|---|---|
+| Auth gate on map route | ✅ Clean — map route correctly outside Clerk scope |
+| Data in Railway Postgres | ✅ LA bbox returns 50 features |
+| Layer `minzoom={9}` | ✅ Correct on all 3 layers |
+| `onMoveEnd` bbox trigger | ✅ Fires correctly |
+| Railway auto-deploy from git push | ❌ Did not trigger — required manual `railway up`. Check Railway webhook config. |
+
+---
+
+### What Is Next
+
+1. **Verify pins in browser** — zoom into LA and confirm dispensary pins and clusters now render
+2. **Verify OperatorTypeFilter light mode** — confirm pills are readable in light theme
+3. **Verify market sub-nav** — all 5 tabs should navigate correctly and show correct active state
+4. **Wellgreens live simulation** — seed org, add locations, run scraper, wire all screens to real API data
+5. **Wire `alert.worker.ts` to Resend** — currently logs only, no emails sent
+6. **Railway auto-deploy** — investigate Railway webhook config so `git push` triggers deploy without manual `railway up`
 
 ---
 
