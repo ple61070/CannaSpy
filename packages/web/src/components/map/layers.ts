@@ -206,12 +206,13 @@ export const competitorPointLayer: LayerProps = {
 // ------------------------------------------------------------
 // Driven by track_state + enriched from /api/v1/map/dispensaries.
 //
-//  BLOCKED   → amber  #ba7517  (track_state === 'blocked')
-//  ENRICHED  → teal   #1d9e75  (enriched === true)
-//  PROSPECT  → grey   #6b7280  (default — DCC record, no intel yet)
+//  BLOCKED   → amber  #ba7517  opacity 1.0   radius 6px  (power action)
+//  ENRICHED  → teal   #1d9e75  opacity 1.0   radius 6px  (active intel)
+//  PROSPECT  → teal   #1d9e75  opacity 0.65  radius 5px  (opportunity)
 //
-// All pins are fully opaque with a #0d0f11 stroke so they read
-// clearly on the dark base map even at high density.
+// Prospect uses the same teal family as enriched — the map looks alive
+// on first load. Opacity + size distinguish the relationship hierarchy.
+// Hover activates via feature-state (requires promoteId="id" on Source).
 
 export const dispensaryClusterLayer: LayerProps = {
   id: 'cs-dispensary-cluster',
@@ -255,21 +256,33 @@ export const dispensaryPointLayer: LayerProps = {
   source: SOURCE.DISPENSARIES,
   filter: ['!', ['has', 'point_count']],
   paint: {
+    // Blocked is amber; prospect + enriched share teal — opacity tells them apart.
     'circle-color': [
       'case',
-      ['==', ['get', 'track_state'], 'blocked'],  PALETTE.accentBlock,
-      ['boolean', ['get', 'enriched'], false],     PALETTE.accentIntel,
-      '#6b7280',
+      ['==', ['get', 'track_state'], 'blocked'], PALETTE.accentBlock,
+      PALETTE.accentIntel,
     ] as unknown as string,
+    // Base radius: 6px for blocked/enriched, 5px for prospect.
+    // Adds 2px on hover via feature-state (activate by adding promoteId="id" to Source).
     'circle-radius': [
-      'interpolate', ['linear'], ['zoom'],
-      9, 5,
-      12, 7,
-      15, 9,
+      '+',
+      ['case',
+        ['==', ['get', 'track_state'], 'blocked'],  6,
+        ['boolean', ['get', 'enriched'], false],     6,
+        5,
+      ],
+      ['case', ['boolean', ['feature-state', 'hover'], false], 2, 0],
     ] as unknown as number,
     'circle-stroke-color': PALETTE.bgBase,
     'circle-stroke-width': 1.5,
-    'circle-opacity': 1,
+    // Prospect: 65% opacity — looks alive, not empty. Enriched/blocked: 100%. Hover: always 100%.
+    'circle-opacity': [
+      'case',
+      ['boolean', ['feature-state', 'hover'], false],  1,
+      ['==', ['get', 'track_state'], 'blocked'],        1,
+      ['boolean', ['get', 'enriched'], false],           1,
+      0.65,
+    ] as unknown as number,
   },
 }
 
