@@ -1,4 +1,75 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-01 (Session 10 — Map pin styling + enriched data fix)
+
+---
+
+## Session 10 — 2026-05-01
+
+**Commits:** `b63c7d4` CORS fix (already live) → `c924c81` fix(map): restyle dispensary pins
+**Deploy:** Vercel ✅ `web-3uw5j9brh-ple61070s-projects.vercel.app` aliased to `web-rouge-one-15.vercel.app` | Railway API ✅ CORS fix confirmed live
+
+---
+
+### What Was Done
+
+#### 1. CORS — *.vercel.app origins now allowed (deployed in this session)
+- `packages/api/src/index.ts` — origin changed from single string to a function
+- Allows: `WEB_URL` env var, `localhost:3000`, `localhost:5173`, any `*.vercel.app`
+- Verified via curl preflight: `access-control-allow-origin: https://web-rouge-one-15.vercel.app` ✅
+
+#### 2. Map pin restyling (`packages/web/src/components/map/layers.ts`)
+Three dispensary layers rewritten:
+
+| Layer | Change |
+|---|---|
+| `dispensaryPointLayer` circle-color | `case` expression: blocked→`#ba7517`, enriched→`#1d9e75`, default→`#6b7280` |
+| `dispensaryPointLayer` circle-radius | Zoom interpolation 9→5px, 12→7px, 15→9px (removed `feature-state` hover — requires `promoteId` on Source, was silently breaking render) |
+| `dispensaryPointLayer` enriched check | `['boolean', ['get', 'enriched'], false]` — explicit type coercion instead of `['==', expr, true]` |
+| `dispensaryPointLayer` opacity | `1` flat (was variable 0.4–0.95) |
+| `dispensaryPointLayer` stroke | `#0d0f11`, 1.5px |
+| `dispensaryClusterLayer` fill | Flat `#1d9e75` teal (was stepped accentTrust/accentBlock/accentAlert) |
+| `dispensaryClusterLayer` radius | `step`: <10→24px, 10–50→30px, 50+→36px |
+| `dispensaryClusterCountLayer` text | White `#ffffff` (was dark `bgBase`) |
+
+#### 3. Root cause of "dark circles" — enriched was never set
+- **Diagnosis**: All 1,787 dispensaries had `enriched = false`. The pipeline writes to `menu_items` via `competitor_id` but has no write-back to `dispensaries.enriched`. The two tables have no foreign key.
+- **Fix**: Direct SQL update — set `enriched = true` on dispensaries matching the 4 scraped competitor chains by name:
+  - 33 × Off The Charts locations (`price_observations_count = 498`)
+  - 1 × Catalyst Cannabis - Daly City (`price_observations_count = 486`)
+  - 4 × Caliva/Deli by Caliva locations (`price_observations_count = 529`)
+  - **Total: 38 enriched dispensaries** — verified via API: LA bbox now returns 15+ enriched features ✅
+- **Zen Dispensary** is NOT in the DCC `dispensaries` table — operates under a different legal name. Not updated.
+
+---
+
+### What Failed / Ruled Out
+
+| Item | Result |
+|---|---|
+| `feature-state` hover in circle-radius | ❌ Requires `promoteId="id"` on the Source. Features have `id` inside `properties`, not at the GeoJSON feature level. Silently broken. Removed. |
+| Railway auto-deploy from `git push` | ❌ Still not triggering. Required `railway up`. Check Railway dashboard → Service → Settings → Source Repo webhook. |
+| Mapbox docs (403/404) | ❌ docs.mapbox.com returns 403; react-map-gl docs 404. Used installed type definitions instead. |
+| Zen Dispensary in DCC database | ❌ Not found by name search. Likely operating under a different DCC license name. |
+
+---
+
+### What Is Next
+
+**Immediate (next session start):**
+1. Navigate to LA / Harbor City / Reseda on the map and confirm teal enriched pins render (hard-refresh first: `Cmd+Shift+R`)
+2. Wire `scrape.worker.ts` to write back `dispensaries.enriched = true` after a successful scrape — so the manual SQL fix isn't needed long-term. Match by DCC license or name+city.
+3. Add `promoteId="id"` to the `<Source id="cs-dispensaries">` in `MarketHeatMap.tsx` to re-enable the hover radius expansion (6→8px) — one prop, no other changes needed.
+
+**Backlog (unchanged from Session 9):**
+- Wire `alert.worker.ts` to Resend
+- Test `diff_engine.py` end-to-end with two real snapshots
+- Block Management (`/blocks`) — verify real data
+- Promotions (`/promotions`) — scaffold only
+- Stripe live-mode webhook (launch blocker)
+- 462 dispensaries missing lat/lng — run full geocoding when `GOOGLE_PLACES_API_KEY` available
+
+---
+
 **Date:** 2026-05-01 (Session 9 — Heat map UI improvements + CORS fix + sub-nav fix)
 
 ---
