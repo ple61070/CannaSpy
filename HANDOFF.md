@@ -1,4 +1,121 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-02 (Session 11 — Map pin full restyle + enriched data fix + CORS confirmed)
+
+---
+
+## Session 11 — 2026-05-02
+
+**Commits:** `c924c81` pin restyle v1 → `0e9f883` fix(map): prospect pins teal+65%
+**Deploy:** Vercel ✅ latest bundle aliased to `web-rouge-one-15.vercel.app` | Railway API ✅ CORS live
+
+---
+
+### 1. What Was Done
+
+#### CORS fix confirmed live
+- `packages/api/src/index.ts` — CORS origin changed from single-string to function allowing `WEB_URL`, `localhost:3000`, `localhost:5173`, `*.vercel.app`
+- Verified via `curl -H "Origin: https://web-rouge-one-15.vercel.app"` → `access-control-allow-origin: https://web-rouge-one-15.vercel.app` ✅
+- This was the root cause of zero pins ever rendering — browser silently dropped the response
+
+#### Map pin diagnosis: why "dark circles"
+- Investigated through multiple iterations
+- Root finding: ALL 1,787 dispensaries had `enriched = false` and `track_state = 'untracked'`
+- The pipeline writes menu data to `menu_items` via `competitor_id` but has **no write-back** to `dispensaries.enriched`
+- The two tables (`competitors` and `dispensaries`) have no foreign key — they're parallel records for the same physical locations but were never linked
+
+#### Data fix — 38 dispensaries marked enriched
+Direct SQL update on Railway Postgres:
+- 33 × Off The Charts locations → `enriched = true`, `price_observations_count = 498`
+- 1 × Catalyst Cannabis - Daly City → `enriched = true`, `price_observations_count = 486`
+- 4 × Caliva / Deli by Caliva → `enriched = true`, `price_observations_count = 529`
+- **Verified:** LA bbox API now returns 15+ enriched features ✅
+- **Not found:** Zen Dispensary is not in the DCC `dispensaries` table (different legal name)
+
+#### Pin visual restyle — final state (`packages/web/src/components/map/layers.ts`)
+
+| State | Color | Opacity | Radius |
+|---|---|---|---|
+| Prospect (untracked, default) | `#1d9e75` teal | **0.65** | 5px |
+| Enriched / tracked | `#1d9e75` teal | 1.0 | 6px |
+| Blocked | `#ba7517` amber | 1.0 | 6px |
+| Hover (any state) | unchanged | 1.0 | +2px |
+| Cluster | `#1d9e75` teal | 1.0 | 24 / 30 / 36px |
+| Cluster count label | `#ffffff` white | — | — |
+| Stroke (all pins) | `#0d0f11` | — | 1.5px |
+
+Key design decision: prospect pins use **the same teal family as enriched** — the map looks alive on first load for any new user. Opacity + size carry the hierarchy signal, not color.
+
+Color expression simplified: `blocked → #ba7517 | everything else → #1d9e75`. The `enriched` boolean only gates opacity and radius, not color.
+
+Hover implemented via `feature-state hover` using `['+', baseRadius, hoverBonus]` and opacity case. **Currently inert** — activates when `promoteId="id"` is added to the `<Source id="cs-dispensaries">` in `MarketHeatMap.tsx`.
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/api/src/index.ts` | CORS origin → function, allows `*.vercel.app` |
+| `packages/web/src/components/map/layers.ts` | `dispensaryPointLayer` — color, opacity, radius, comment block rewritten |
+| `dispensaries` table (Railway Postgres) | 38 rows: `enriched = true`, `price_observations_count` populated |
+
+No schema migrations. No new files. No changes to hook, types, or component interaction logic.
+
+---
+
+### 3. What Failed / Was Ruled Out
+
+| Item | Result |
+|---|---|
+| Mapbox docs (docs.mapbox.com) | ❌ Returns 403. Used installed `node_modules/mapbox-gl` type defs instead |
+| `feature-state hover` on radius/opacity | ⚠️ Wired in layer spec but **inert** — requires `promoteId="id"` on the Source. Features have `id` inside `properties`, not at the GeoJSON feature level. One prop fix needed. |
+| Railway auto-deploy from `git push` | ❌ Still not triggering. Required `railway up` manually each time. Root cause unknown — check Railway dashboard → Service → Settings → Source Repo |
+| Zen Dispensary in DCC database | ❌ Not found by name. Likely licensed under a different legal entity name |
+| `['==', ['get', 'enriched'], true]` | ⚠️ Replaced with `['boolean', ['get', 'enriched'], false]` — explicit type coercion is safer |
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Add `promoteId="id"` to `<Source id="cs-dispensaries">` in `MarketHeatMap.tsx`** — one prop, activates hover (+2px, opacity→1). No other changes needed.
+2. **Verify teal pins in browser** — navigate to LA / Harbor City / Reseda. Should see 15+ teal pins at varying opacity. Hard-refresh (`Cmd+Shift+R`) first.
+3. **Wire `scrape.worker.ts` enriched write-back** — after a successful scrape, the worker should update `dispensaries.enriched = true` for the matching DCC record. Match by DCC license number or name+city. Prevents the manual SQL fix from needing to be re-run after future scrapes.
+
+---
+
+### 5. What Is Still Left To Do (Backlog)
+
+**Map / Data Pipeline:**
+- [ ] `promoteId="id"` on dispensary Source → activates hover (1 line, `MarketHeatMap.tsx`)
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
+- [ ] `diff_engine.py` — not yet tested end-to-end with two real snapshots (needed to generate first `alerts` rows)
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] `scrape.worker.ts` → call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**Frontend:**
+- [ ] Block Management (`/blocks`) — verify wired to real data, not placeholder
+- [ ] Promotions (`/promotions`) — scaffold only, not wired to API
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state on API failure
+- [ ] Apply DM Sans + Space Mono typography system-wide (remaining screens still using system font)
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Investigate Railway auto-deploy — git push should trigger deploy without `railway up`
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Corona)
+```
+
+---
+
 **Date:** 2026-05-01 (Session 10 — Map pin styling + enriched data fix)
 
 ---
