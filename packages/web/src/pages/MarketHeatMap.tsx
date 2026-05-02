@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Map, {
   Source,
@@ -9,7 +9,7 @@ import Map, {
   type MapLayerMouseEvent,
 } from 'react-map-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
-import { MAPBOX_TOKEN, CANNASPY_STYLE_URL, isMapConfigured } from '../components/map/mapStyle'
+import { MAPBOX_TOKEN, isMapConfigured } from '../components/map/mapStyle'
 import { CALIFORNIA_VIEWPORT } from '../components/map/types'
 import type { DispensaryFeatureProps } from '../components/map/types'
 import { OperatorTypeFilter, type OperatorType } from '../components/filters/OperatorTypeFilter'
@@ -18,25 +18,26 @@ import {
   dispensaryClusterCountLayer,
   dispensaryPointLayer,
 } from '../components/map/layers'
-import { useDispensaryMap, type DispensaryFeatureCollection } from '../hooks/useDispensaryMap'
+import { useDispensaryMap } from '../hooks/useDispensaryMap'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type Tier = 'elite' | 'hot' | 'competitive' | 'standard'
+type MapStyleId = 'streets' | 'satellite'
 
 interface Market {
-  id: string
-  name: string
-  tier: Tier
-  rate: string
-  dispensaries: number
-  yours: number
-  rivals: number
-  lng: number
-  lat: number
+  id: string; name: string; tier: Tier; rate: string
+  dispensaries: number; yours: number; rivals: number; lng: number; lat: number
 }
 
-// ─── Static market overview data ────────────────────────────────────────────
+interface GeoResult {
+  id: string
+  place_name: string
+  center: [number, number]
+  place_type: string[]
+}
+
+// ─── Static data ─────────────────────────────────────────────────────────────
 
 const MARKETS: Market[] = [
   { id: 'weho',        name: 'West Hollywood', tier: 'elite',       rate: '$250', dispensaries: 38, yours: 1, rivals: 5, lng: -118.3611, lat: 34.0900 },
@@ -54,17 +55,15 @@ const MARKETS: Market[] = [
 ]
 
 const TIER_COLORS: Record<Tier, string> = {
-  elite:       '#e05a6a',
-  hot:         '#d4900a',
-  competitive: '#09A1A1',
-  standard:    '#5484A4',
+  elite: '#e05a6a', hot: '#d4900a', competitive: '#09A1A1', standard: '#5484A4',
+}
+const TIER_LABELS: Record<Tier, string> = {
+  elite: 'Elite', hot: 'Hot', competitive: 'Competitive', standard: 'Standard',
 }
 
-const TIER_LABELS: Record<Tier, string> = {
-  elite:       'Elite',
-  hot:         'Hot',
-  competitive: 'Competitive',
-  standard:    'Standard',
+const MAP_STYLES: Record<MapStyleId, string> = {
+  streets:   'mapbox://styles/mapbox/streets-v12',
+  satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
 }
 
 const MARKET_TABS = [
@@ -75,7 +74,7 @@ const MARKET_TABS = [
   { label: 'Deal Patterns', route: '/market/deals' },
 ]
 
-// ─── GeoJSON ────────────────────────────────────────────────────────────────
+// ─── GeoJSON / layers ────────────────────────────────────────────────────────
 
 function buildMarketGeoJSON(markets: Market[]) {
   return {
@@ -83,53 +82,30 @@ function buildMarketGeoJSON(markets: Market[]) {
     features: markets.map(m => ({
       type: 'Feature' as const,
       geometry: { type: 'Point' as const, coordinates: [m.lng, m.lat] },
-      properties: {
-        id: m.id, name: m.name, tier: m.tier, rate: m.rate,
-        dispensaries: m.dispensaries, yours: m.yours, rivals: m.rivals,
-        color: TIER_COLORS[m.tier],
-      },
+      properties: { id: m.id, name: m.name, tier: m.tier, rate: m.rate, dispensaries: m.dispensaries, color: TIER_COLORS[m.tier] },
     })),
   }
 }
 const MARKET_GEOJSON = buildMarketGeoJSON(MARKETS)
 
-// ─── Layer specs (market overview bubbles) ───────────────────────────────────
-
 const marketCircleLayer = {
-  id: 'markets-circle',
-  type: 'circle' as const,
-  maxzoom: 10,
+  id: 'markets-circle', type: 'circle' as const, maxzoom: 10,
   paint: {
-    'circle-radius': [
-      'interpolate', ['linear'], ['get', 'dispensaries'],
-      7, 18, 45, 40,
-    ] as unknown as number,
-    'circle-color': ['match', ['get', 'tier'],
-      'elite', '#e05a6a', 'hot', '#d4900a', 'competitive', '#09A1A1', '#5484A4',
-    ] as unknown as string,
+    'circle-radius': ['interpolate', ['linear'], ['get', 'dispensaries'], 7, 18, 45, 40] as unknown as number,
+    'circle-color': ['match', ['get', 'tier'], 'elite', '#e05a6a', 'hot', '#d4900a', 'competitive', '#09A1A1', '#5484A4'] as unknown as string,
     'circle-opacity': 0.75,
     'circle-stroke-width': 2,
-    'circle-stroke-color': ['match', ['get', 'tier'],
-      'elite', '#e05a6a', 'hot', '#d4900a', 'competitive', '#09A1A1', '#5484A4',
-    ] as unknown as string,
+    'circle-stroke-color': ['match', ['get', 'tier'], 'elite', '#e05a6a', 'hot', '#d4900a', 'competitive', '#09A1A1', '#5484A4'] as unknown as string,
     'circle-stroke-opacity': 1,
   },
 }
-
 const marketLabelLayer = {
-  id: 'markets-label',
-  type: 'symbol' as const,
-  maxzoom: 10,
-  layout: {
-    'text-field': ['get', 'dispensaries'] as unknown as string,
-    'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-    'text-size': 11,
-    'text-allow-overlap': true,
-  },
+  id: 'markets-label', type: 'symbol' as const, maxzoom: 10,
+  layout: { 'text-field': ['get', 'dispensaries'] as unknown as string, 'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'], 'text-size': 11, 'text-allow-overlap': true },
   paint: { 'text-color': '#ffffff' },
 }
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function tierBadgeStyle(tier: Tier): React.CSSProperties {
   if (tier === 'elite')       return { background: 'rgba(224,90,106,0.12)',  color: '#e05a6a' }
@@ -138,39 +114,71 @@ function tierBadgeStyle(tier: Tier): React.CSSProperties {
   return                             { background: 'rgba(84,132,164,0.12)',  color: '#5484A4' }
 }
 
-function trackStateColor(ts: string) {
-  if (ts === 'tracked') return '#09A1A1'
-  if (ts === 'blocked') return '#d4900a'
-  return 'var(--text-3)'
-}
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function MarketHeatMap() {
   const navigate = useNavigate()
-  const mapRef = useRef<MapRef | null>(null)
+  const mapRef   = useRef<MapRef | null>(null)
 
-  const [selectedId, setSelectedId]         = useState<string | null>(null)
-  const [marketPopup, setMarketPopup]       = useState<{ lng: number; lat: number; market: Market } | null>(null)
-  const [dispPopup, setDispPopup]           = useState<{ lng: number; lat: number; props: DispensaryFeatureProps } | null>(null)
-  const [cursor, setCursor]                 = useState<string>('default')
-  const [bbox, setBbox]                     = useState<string | null>(null)
-  const [zoom, setZoom]                     = useState<number>(CALIFORNIA_VIEWPORT.zoom)
-
+  const [mapStyleId, setMapStyleId]   = useState<MapStyleId>('streets')
+  const [cursor, setCursor]           = useState<string>('default')
+  const [bbox, setBbox]               = useState<string | null>(null)
+  const [zoom, setZoom]               = useState<number>(CALIFORNIA_VIEWPORT.zoom)
+  const [filter, setFilter]           = useState<'all' | 'enriched'>('all')
   const [operatorType, setOperatorType] = useState<OperatorType>('both')
+  const [marketPopup, setMarketPopup] = useState<{ lng: number; lat: number; market: Market } | null>(null)
+  const [dispPopup, setDispPopup]     = useState<{ lng: number; lat: number; props: DispensaryFeatureProps } | null>(null)
+
+  // ─── Search ───────────────────────────────────────────────────────────────
+  const [searchQuery, setSearchQuery]     = useState('')
+  const [searchResults, setSearchResults] = useState<GeoResult[]>([])
+  const [searchOpen, setSearchOpen]       = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.length < 2) {
+      setSearchResults([])
+      setSearchOpen(false)
+      return
+    }
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const q = encodeURIComponent(searchQuery)
+        // California bbox: west,south,east,north
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${q}.json?country=US&bbox=-124.48,32.53,-114.13,42.01&types=place,postcode,neighborhood,locality,address&limit=6&autocomplete=true&access_token=${MAPBOX_TOKEN}`
+        const res = await fetch(url)
+        const data = await res.json()
+        setSearchResults(data.features ?? [])
+        setSearchOpen(true)
+      } catch { /* ignore */ }
+    }, 220)
+  }, [searchQuery])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const handleSelectResult = (r: GeoResult) => {
+    setSearchQuery(r.place_name.split(',')[0])
+    setSearchOpen(false)
+    mapRef.current?.flyTo({ center: r.center, zoom: 12, duration: 900 })
+  }
+
+  // ─── Dispensary data ──────────────────────────────────────────────────────
   const { data: dispensaries, loading: dispensariesLoading, count: dispCount } = useDispensaryMap(bbox, {
     type: operatorType === 'both' ? undefined : operatorType,
   })
 
-  const sorted = [...MARKETS].sort((a, b) => {
-    const order: Record<Tier, number> = { elite: 0, hot: 1, competitive: 2, standard: 3 }
-    return order[a.tier] - order[b.tier] || b.dispensaries - a.dispensaries
-  })
-
-  const selectedMarket = selectedId ? MARKETS.find(m => m.id === selectedId) ?? null : null
-
-  // ─── Bbox helpers ──────────────────────────────────────────────────────────
-
+  // ─── Bbox / zoom ──────────────────────────────────────────────────────────
   const updateBbox = useCallback(() => {
     const map = mapRef.current?.getMap()
     if (!map) return
@@ -180,62 +188,41 @@ export default function MarketHeatMap() {
     setZoom(map.getZoom())
   }, [])
 
-  const onLoad = useCallback(() => {
-    updateBbox()
-  }, [updateBbox])
+  const onLoad    = useCallback(() => { updateBbox() }, [updateBbox])
+  const onMoveEnd = useCallback(() => { updateBbox() }, [updateBbox])
 
-  const onMoveEnd = useCallback(() => {
-    updateBbox()
-  }, [updateBbox])
-
-  // ─── Interaction ───────────────────────────────────────────────────────────
-
+  // ─── Interaction ──────────────────────────────────────────────────────────
   const interactiveLayers = zoom < 10
     ? ['markets-circle']
     : ['cs-dispensary-point', 'cs-dispensary-cluster']
 
   const onMouseMove = useCallback((e: MapLayerMouseEvent) => {
-    const features = e.features
-    if (!features?.length) {
-      setCursor('default')
-      setMarketPopup(null)
-      return
-    }
-    const f = features[0]
+    const f = e.features?.[0]
+    if (!f) { setCursor('default'); setMarketPopup(null); return }
     setCursor('pointer')
-
     if (f.layer?.id === 'markets-circle') {
       const props = f.properties as { id: string }
       const market = MARKETS.find(m => m.id === props.id)
       if (market) setMarketPopup({ lng: market.lng, lat: market.lat, market })
       setDispPopup(null)
-      return
+    } else {
+      setMarketPopup(null)
     }
-    setMarketPopup(null)
   }, [])
 
-  const onMouseLeave = useCallback(() => {
-    setCursor('default')
-    setMarketPopup(null)
-  }, [])
+  const onMouseLeave = useCallback(() => { setCursor('default'); setMarketPopup(null) }, [])
 
   const onClick = useCallback((e: MapLayerMouseEvent) => {
-    const features = e.features
-    if (!features?.length) {
-      setSelectedId(null)
-      setDispPopup(null)
-      return
-    }
-    const f = features[0]
+    const f = e.features?.[0]
+    if (!f) { setDispPopup(null); return }
 
     if (f.layer?.id === 'markets-circle') {
       const props = f.properties as { id: string }
-      setSelectedId(prev => prev === props.id ? null : props.id)
+      const market = MARKETS.find(m => m.id === props.id)
+      if (market) mapRef.current?.flyTo({ center: [market.lng, market.lat], zoom: Math.max(zoom, 11), duration: 700 })
       setDispPopup(null)
       return
     }
-
-    // Cluster: expand
     if (f.layer?.id === 'cs-dispensary-cluster') {
       const map = mapRef.current?.getMap()
       if (!map) return
@@ -249,306 +236,225 @@ export default function MarketHeatMap() {
       })
       return
     }
-
-    // Individual dispensary pin
     if (f.layer?.id === 'cs-dispensary-point') {
       const props = f.properties as DispensaryFeatureProps
       const coords = (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
       setDispPopup({ lng: coords[0], lat: coords[1], props })
-      setSelectedId(null)
       return
     }
   }, [zoom])
 
-  // ─── Active filter pills ────────────────────────────────────────────────────
-  const [filter, setFilter] = useState<'all' | 'enriched' | 'tracked' | 'blocked'>('all')
-
-  const activeFilters = {
-    type:     operatorType === 'both' ? undefined : operatorType,
-    enriched: filter === 'enriched' ? true : undefined,
-  }
-
-  // ─── Render ────────────────────────────────────────────────────────────────
+  // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg)', fontFamily: 'var(--sans)', color: 'var(--text-1)', fontSize: 14, overflow: 'hidden' }}>
 
       {/* TOPBAR */}
-      <div style={{ padding: '10px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, background: 'var(--surface)' }}>
-        <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.02em' }}>Market Intelligence</span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)' }}>
-          CALIFORNIA ·{' '}
-          {dispensariesLoading
-            ? 'LOADING...'
-            : dispCount > 0
-              ? `${dispCount.toLocaleString()} DISPENSARIES IN VIEW`
-              : '12 MARKETS TRACKED'}
-        </span>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Operator type toggle */}
+      <div style={{ padding: '8px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, background: 'var(--surface)' }}>
+        <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', flexShrink: 0 }}>Market Intelligence</span>
+
+        {/* SEARCH BAR */}
+        <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: 380 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--surface-3)', transition: 'border-color 0.15s' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="2.5" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onFocus={() => searchResults.length > 0 && setSearchOpen(true)}
+              onKeyDown={e => { if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery('') } if (e.key === 'Enter' && searchResults[0]) handleSelectResult(searchResults[0]) }}
+              placeholder="Search city, zip, or neighborhood..."
+              style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: 12, color: 'var(--text-1)', fontFamily: 'var(--sans)' }}
+            />
+            {searchQuery && (
+              <button onClick={() => { setSearchQuery(''); setSearchResults([]); setSearchOpen(false) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', lineHeight: 1, padding: 0, fontSize: 14 }}>×</button>
+            )}
+          </div>
+
+          {/* AUTOCOMPLETE DROPDOWN */}
+          {searchOpen && searchResults.length > 0 && (
+            <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 100, overflow: 'hidden' }}>
+              {searchResults.map(r => (
+                <div
+                  key={r.id}
+                  onMouseDown={() => handleSelectResult(r)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: 12, color: 'var(--text-1)' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="2" style={{ flexShrink: 0 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.place_name}</span>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)', textTransform: 'uppercase', flexShrink: 0 }}>
+                    {r.place_type[0] === 'postcode' ? 'zip' : r.place_type[0]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT CONTROLS */}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           <OperatorTypeFilter value={operatorType} onChange={setOperatorType} />
-          {/* Enrichment filter pills */}
           {(['all', 'enriched'] as const).map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              style={{
-                padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600,
-                cursor: 'pointer', fontFamily: 'var(--sans)',
-                border: `1.5px solid ${filter === f ? 'var(--accent)' : 'var(--border)'}`,
-                background: filter === f ? 'rgba(9,161,161,0.12)' : 'var(--surface-3)',
-                color: filter === f ? 'var(--accent)' : 'var(--text-2)',
-              }}
-            >
+            <button key={f} onClick={() => setFilter(f)} style={{ padding: '4px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)', border: `1.5px solid ${filter === f ? 'var(--accent)' : 'var(--border)'}`, background: filter === f ? 'rgba(9,161,161,0.12)' : 'var(--surface-3)', color: filter === f ? 'var(--accent)' : 'var(--text-2)' }}>
               {f === 'all' ? 'All Dispensaries' : 'Intel Available'}
             </button>
           ))}
-          <button
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 'var(--r-sm)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)', border: '1.5px solid var(--border)', background: 'var(--surface-3)', color: 'var(--text-1)' }}
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+          <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 11px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)', border: '1.5px solid var(--border)', background: 'var(--surface-3)', color: 'var(--text-1)' }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export
           </button>
         </div>
       </div>
 
-      {/* SUB-NAV TABS */}
+      {/* SUB-NAV */}
       <div style={{ display: 'flex', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)', padding: '0 24px', flexShrink: 0, overflowX: 'auto' }}>
         {MARKET_TABS.map(tab => {
           const active = tab.route === '/market/heat-map'
           return (
-            <div
-              key={tab.route}
-              onClick={() => navigate(tab.route)}
-              style={{ padding: '10px 16px', fontSize: 12, fontWeight: 600, color: active ? 'var(--accent)' : 'var(--text-3)', cursor: 'pointer', borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent', whiteSpace: 'nowrap', flexShrink: 0 }}
-            >
+            <div key={tab.route} onClick={() => navigate(tab.route)} style={{ padding: '10px 16px', fontSize: 12, fontWeight: 600, color: active ? 'var(--accent)' : 'var(--text-3)', cursor: 'pointer', borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent', whiteSpace: 'nowrap', flexShrink: 0 }}>
               {tab.label}
             </div>
           )
         })}
       </div>
 
-      {/* BODY */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+      {/* MAP — full width */}
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0 }}>
+        {isMapConfigured() ? (
+          <Map
+            ref={mapRef}
+            mapboxAccessToken={MAPBOX_TOKEN}
+            mapStyle={MAP_STYLES[mapStyleId]}
+            initialViewState={{ longitude: CALIFORNIA_VIEWPORT.longitude, latitude: CALIFORNIA_VIEWPORT.latitude, zoom: CALIFORNIA_VIEWPORT.zoom }}
+            style={{ width: '100%', height: '100%' }}
+            cursor={cursor}
+            interactiveLayerIds={interactiveLayers}
+            onMouseMove={onMouseMove}
+            onMouseLeave={onMouseLeave}
+            onClick={onClick}
+            onLoad={onLoad}
+            onMoveEnd={onMoveEnd}
+          >
+            <NavigationControl position="top-right" showCompass={false} showZoom />
 
-        {/* MAP PANEL */}
-        <div style={{ flex: 1, position: 'relative', height: '100%' }}>
-          {isMapConfigured() ? (
-            <Map
-              ref={mapRef}
-              mapboxAccessToken={MAPBOX_TOKEN}
-              mapStyle={CANNASPY_STYLE_URL}
-              initialViewState={{
-                longitude: CALIFORNIA_VIEWPORT.longitude,
-                latitude: CALIFORNIA_VIEWPORT.latitude,
-                zoom: CALIFORNIA_VIEWPORT.zoom,
-              }}
-              style={{ width: '100%', height: '100%' }}
-              cursor={cursor}
-              interactiveLayerIds={interactiveLayers}
-              onMouseMove={onMouseMove}
-              onMouseLeave={onMouseLeave}
-              onClick={onClick}
-              onLoad={onLoad}
-              onMoveEnd={onMoveEnd}
+            {/* Market overview bubbles (zoom < 10) */}
+            <Source id="markets" type="geojson" data={MARKET_GEOJSON}>
+              <Layer {...marketCircleLayer} />
+              <Layer {...marketLabelLayer} />
+            </Source>
+
+            {/* Live dispensary pins (zoom ≥ 9) */}
+            <Source
+              id="cs-dispensaries"
+              type="geojson"
+              data={dispensaries as unknown as Parameters<typeof Source>[0]['data']}
+              cluster clusterMaxZoom={13} clusterRadius={35}
             >
-              <NavigationControl position="top-right" showCompass={false} showZoom />
+              <Layer {...dispensaryClusterLayer} minzoom={9} />
+              <Layer {...dispensaryClusterCountLayer} minzoom={9} />
+              <Layer
+                {...dispensaryPointLayer}
+                minzoom={9}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                paint={filter === 'enriched'
+                  ? ({ ...dispensaryPointLayer.paint, 'circle-opacity': ['case', ['==', ['get', 'enriched'], true], 0.9, 0.06] } as any)
+                  : dispensaryPointLayer.paint}
+              />
+            </Source>
 
-              {/* Market overview bubbles (zoom < 10) */}
-              <Source id="markets" type="geojson" data={MARKET_GEOJSON}>
-                <Layer {...marketCircleLayer} />
-                <Layer {...marketLabelLayer} />
-              </Source>
+            {/* Market hover popup */}
+            {marketPopup && (
+              <Popup longitude={marketPopup.lng} latitude={marketPopup.lat} closeButton={false} closeOnClick={false} anchor="bottom" offset={[0, -14] as [number, number]}>
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 14px', minWidth: 180, pointerEvents: 'none', fontFamily: 'var(--sans)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>{marketPopup.market.name}</div>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, display: 'inline-block', marginBottom: 6, ...tierBadgeStyle(marketPopup.market.tier) }}>
+                    {TIER_LABELS[marketPopup.market.tier]} · {marketPopup.market.rate}/slot
+                  </span>
+                  {([['Dispensaries', marketPopup.market.dispensaries], ['Your locations', marketPopup.market.yours || 'None'], ['Rivals tracked', marketPopup.market.rivals]] as [string, string | number][]).map(([k, v]) => (
+                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-2)', marginBottom: 2 }}>
+                      <span>{k}</span>
+                      <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, color: 'var(--text-1)', marginLeft: 12 }}>{String(v)}</span>
+                    </div>
+                  ))}
+                </div>
+              </Popup>
+            )}
 
-              {/* Live dispensary pins (zoom ≥ 9 — Mapbox cluster handles density) */}
-              <Source
-                id="cs-dispensaries"
-                type="geojson"
-                // react-map-gl accepts any object — our typed FeatureCollection is valid
-                data={dispensaries as unknown as Parameters<typeof Source>[0]['data']}
-                cluster
-                clusterMaxZoom={13}
-                clusterRadius={35}
-              >
-                <Layer {...dispensaryClusterLayer} minzoom={9} />
-                <Layer {...dispensaryClusterCountLayer} minzoom={9} />
-                <Layer
-                  {...dispensaryPointLayer}
-                  minzoom={9}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  paint={filter === 'enriched'
-                    ? ({
-                        ...dispensaryPointLayer.paint,
-                        'circle-opacity': ['case', ['==', ['get', 'enriched'], true], 0.9, 0.06],
-                      } as any)
-                    : dispensaryPointLayer.paint}
-                />
-              </Source>
-
-              {/* Market bubble hover popup */}
-              {marketPopup && (
-                <Popup
-                  longitude={marketPopup.lng}
-                  latitude={marketPopup.lat}
-                  closeButton={false}
-                  closeOnClick={false}
-                  anchor="bottom"
-                  offset={[0, -14] as [number, number]}
-                >
-                  <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 14px', minWidth: 180, pointerEvents: 'none', fontFamily: 'var(--sans)' }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>{marketPopup.market.name}</div>
-                    <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, display: 'inline-block', marginBottom: 6, ...tierBadgeStyle(marketPopup.market.tier) }}>
-                      {TIER_LABELS[marketPopup.market.tier]} · {marketPopup.market.rate}/slot
-                    </span>
-                    {([
-                      ['Dispensaries', marketPopup.market.dispensaries],
-                      ['Your locations', marketPopup.market.yours || 'None'],
-                      ['Rivals tracked', marketPopup.market.rivals],
-                    ] as [string, string | number][]).map(([k, v]) => (
-                      <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-2)', marginBottom: 2 }}>
-                        <span>{k}</span>
-                        <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, color: 'var(--text-1)', marginLeft: 12 }}>{String(v)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Popup>
-              )}
-
-              {/* Dispensary pin click popup */}
-              {dispPopup && (
-                <Popup
-                  longitude={dispPopup.lng}
-                  latitude={dispPopup.lat}
-                  closeButton
-                  closeOnClick={false}
-                  onClose={() => setDispPopup(null)}
-                  anchor="bottom"
-                  offset={[0, -10] as [number, number]}
-                >
-                  <DispensaryPopup props={dispPopup.props} />
-                </Popup>
-              )}
-            </Map>
-          ) : (
-            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-2)', gap: 12 }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Map unavailable</div>
-              <div style={{ fontSize: 13, color: 'var(--text-2)', textAlign: 'center', maxWidth: 320, lineHeight: 1.6 }}>
-                Set <code style={{ fontFamily: 'var(--mono)', fontSize: 11, background: 'var(--surface-3)', padding: '1px 5px', borderRadius: 3 }}>VITE_MAPBOX_TOKEN</code> in your environment.
-              </div>
+            {/* Dispensary pin popup */}
+            {dispPopup && (
+              <Popup longitude={dispPopup.lng} latitude={dispPopup.lat} closeButton closeOnClick={false} onClose={() => setDispPopup(null)} anchor="bottom" offset={[0, -10] as [number, number]}>
+                <DispensaryPopup props={dispPopup.props} />
+              </Popup>
+            )}
+          </Map>
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-2)', gap: 12 }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Map unavailable</div>
+            <div style={{ fontSize: 13, color: 'var(--text-2)', textAlign: 'center', maxWidth: 320, lineHeight: 1.6 }}>
+              Set <code style={{ fontFamily: 'var(--mono)', fontSize: 11, background: 'var(--surface-3)', padding: '1px 5px', borderRadius: 3 }}>VITE_MAPBOX_TOKEN</code> in your environment.
             </div>
-          )}
-
-          {/* LEGEND */}
-          <div style={{ position: 'absolute', bottom: 16, left: 16, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.2)', zIndex: 10 }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.10em', color: 'var(--text-3)', marginBottom: 7 }}>
-              {zoom < 9 ? 'Market tier · slot rate' : 'Pin status'}
-            </div>
-            {zoom < 9
-              ? [
-                  { color: '#e05a6a', label: 'Elite — $250/slot' },
-                  { color: '#d4900a', label: 'Hot — $200/slot' },
-                  { color: '#09A1A1', label: 'Competitive — $150/slot' },
-                  { color: '#5484A4', label: 'Standard — $100/slot' },
-                ].map((leg, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: i < 3 ? 4 : 0, fontSize: 11, color: 'var(--text-2)' }}>
-                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: leg.color, flexShrink: 0 }} />
-                    {leg.label}
-                  </div>
-                ))
-              : [
-                  { color: '#e05a6a', label: 'Elite — intel available' },
-                  { color: '#09A1A1', label: 'Competitive — intel available' },
-                  { color: '#d4900a', label: 'Blocked rival' },
-                  { color: 'rgba(160,155,148,0.5)', label: 'Prospect — no intel yet' },
-                ].map((leg, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: i < 3 ? 4 : 0, fontSize: 11, color: 'var(--text-2)' }}>
-                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: leg.color, border: '1px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
-                    {leg.label}
-                  </div>
-                ))
-            }
           </div>
+        )}
 
-          {/* Loading indicator */}
-          {dispensariesLoading && zoom >= 9 && (
-            <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '5px 14px', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)', letterSpacing: '0.06em' }}>
-              LOADING DISPENSARIES...
+        {/* LEGEND */}
+        <div style={{ position: 'absolute', bottom: 16, left: 16, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.2)', zIndex: 10 }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.10em', color: 'var(--text-3)', marginBottom: 7 }}>
+            {zoom < 9 ? 'Market tier · slot rate' : 'Pin status'}
+          </div>
+          {(zoom < 9
+            ? [{ color: '#e05a6a', label: 'Elite — $250/slot' }, { color: '#d4900a', label: 'Hot — $200/slot' }, { color: '#09A1A1', label: 'Competitive — $150/slot' }, { color: '#5484A4', label: 'Standard — $100/slot' }]
+            : [{ color: '#e05a6a', label: 'Elite — intel available' }, { color: '#09A1A1', label: 'Competitive — intel available' }, { color: '#d4900a', label: 'Blocked rival' }, { color: 'rgba(140,135,128,0.5)', label: 'Prospect — no intel yet' }]
+          ).map((leg, i, arr) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: i < arr.length - 1 ? 4 : 0, fontSize: 11, color: 'var(--text-2)' }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: leg.color, border: '1px solid rgba(128,128,128,0.2)', flexShrink: 0 }} />
+              {leg.label}
             </div>
-          )}
+          ))}
         </div>
 
-        {/* SIDEBAR */}
-        <div style={{ width: 280, flexShrink: 0, background: 'var(--surface)', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', background: 'var(--surface-2)' }}>
-            <div style={{ fontSize: 13, fontWeight: 700 }}>California Markets</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)', marginTop: 2 }}>
-              {zoom >= 9 ? 'Zoom out to see market tiers' : 'Zoom in to see individual dispensaries'}
-            </div>
-          </div>
-
-          <div style={{ flex: 1, overflowY: 'auto', padding: '8px 10px' }}>
-            {sorted.map(m => {
-              const isSelected = m.id === selectedId
-              const col = TIER_COLORS[m.tier]
-              return (
-                <div
-                  key={m.id}
-                  onClick={() => {
-                    setSelectedId(prev => prev === m.id ? null : m.id)
-                    mapRef.current?.flyTo({ center: [m.lng, m.lat], zoom: Math.max(zoom, 11), duration: 800 })
-                  }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '9px 10px', marginBottom: 4, cursor: 'pointer', borderRadius: 5,
-                    background: isSelected ? 'var(--surface-3)' : 'var(--surface-2)',
-                    border: `1px solid ${isSelected ? col : 'var(--border)'}`,
-                    borderLeft: `3px solid ${isSelected ? col : 'transparent'}`,
-                  }}
-                >
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: col, flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</div>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)', marginTop: 1 }}>{m.rate}/slot</div>
-                  </div>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700, color: 'var(--text-2)', flexShrink: 0 }}>{m.dispensaries}</div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* DETAIL CARD */}
-          {selectedMarket && (
-            <div style={{ borderTop: '1px solid var(--border)', padding: 14, background: 'var(--surface-2)', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{selectedMarket.name}</div>
-                </div>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, padding: '3px 7px', borderRadius: 3, ...tierBadgeStyle(selectedMarket.tier) }}>
-                  {TIER_LABELS[selectedMarket.tier]}
-                </span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                {([
-                  { val: selectedMarket.rate,        label: 'Slot rate' },
-                  { val: selectedMarket.dispensaries, label: 'Dispensaries' },
-                  { val: selectedMarket.yours || 0,   label: 'Your locations' },
-                  { val: selectedMarket.rivals,       label: 'Rivals tracked' },
-                ] as { val: string | number; label: string }[]).map(s => (
-                  <div key={s.label} style={{ background: 'var(--surface)', borderRadius: 4, padding: '6px 8px' }}>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: 'var(--text-1)' }}>{String(s.val)}</div>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 2 }}>{s.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        {/* MAP STYLE TOGGLE */}
+        <div style={{ position: 'absolute', bottom: 16, right: 16, zIndex: 10, display: 'flex', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+          {(['streets', 'satellite'] as MapStyleId[]).map((id) => (
+            <button
+              key={id}
+              onClick={() => setMapStyleId(id)}
+              style={{
+                padding: '5px 11px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
+                border: 'none', borderRight: id === 'streets' ? '1px solid var(--border)' : 'none',
+                background: mapStyleId === id ? 'var(--accent-intel)' : 'transparent',
+                color: mapStyleId === id ? '#fff' : 'var(--text-2)',
+                transition: 'background 0.12s, color 0.12s',
+              }}
+            >
+              {id === 'streets' ? '🗺 Streets' : '🛰 Satellite'}
+            </button>
+          ))}
         </div>
+
+        {/* Stat pill — top center */}
+        <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '4px 14px', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
+            {dispensariesLoading
+              ? 'LOADING...'
+              : dispCount > 0
+                ? `${dispCount.toLocaleString()} DISPENSARIES IN VIEW`
+                : 'CALIFORNIA · 12 MARKETS TRACKED'}
+          </div>
+        </div>
+
+        {/* Loading indicator */}
+        {dispensariesLoading && zoom >= 9 && (
+          <div style={{ position: 'absolute', top: 36, left: '50%', transform: 'translateX(-50%)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '4px 14px', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)', letterSpacing: '0.06em' }}>
+            PULLING DISPENSARIES...
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-// ─── Dispensary popup body ────────────────────────────────────────────────────
+// ─── Dispensary popup ─────────────────────────────────────────────────────────
 
 function DispensaryPopup({ props: p }: { props: DispensaryFeatureProps }) {
   const tierColor = (t: string | null) => {
@@ -557,29 +463,19 @@ function DispensaryPopup({ props: p }: { props: DispensaryFeatureProps }) {
     if (t === 'competitive') return '#09A1A1'
     return '#5484A4'
   }
-
   return (
     <div style={{ minWidth: 220, fontFamily: 'var(--sans)', fontSize: 12, color: 'var(--text-1)', background: 'var(--surface)', padding: '10px 12px' }}>
       <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 3 }}>{p.name}</div>
       <div style={{ color: 'var(--text-3)', fontSize: 11, marginBottom: 8 }}>{p.city}{p.county ? `, ${p.county} Co.` : ''}</div>
-
-      {/* State badges */}
       <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 8 }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: 'var(--surface-3)', color: 'var(--text-2)', textTransform: 'uppercase' }}>
-          {p.license_type}
-        </span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: 'var(--surface-3)', color: 'var(--text-2)', textTransform: 'uppercase' }}>{p.license_type}</span>
         {p.market_tier && (
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: `${tierColor(p.market_tier)}1a`, color: tierColor(p.market_tier), textTransform: 'uppercase' }}>
-            {p.market_tier}
-          </span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: `${tierColor(p.market_tier)}1a`, color: tierColor(p.market_tier), textTransform: 'uppercase' }}>{p.market_tier}</span>
         )}
         {p.track_state !== 'untracked' && (
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: p.track_state === 'blocked' ? 'rgba(212,144,10,0.15)' : 'rgba(9,161,161,0.15)', color: p.track_state === 'blocked' ? '#d4900a' : '#09A1A1', textTransform: 'uppercase' }}>
-            {p.track_state}
-          </span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: p.track_state === 'blocked' ? 'rgba(212,144,10,0.15)' : 'rgba(9,161,161,0.15)', color: p.track_state === 'blocked' ? '#d4900a' : '#09A1A1', textTransform: 'uppercase' }}>{p.track_state}</span>
         )}
       </div>
-
       {p.enriched ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {p.threat_score != null && (
@@ -596,14 +492,9 @@ function DispensaryPopup({ props: p }: { props: DispensaryFeatureProps }) {
           )}
         </div>
       ) : (
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)', letterSpacing: '0.04em' }}>
-          Intel not yet available for this location.
-        </div>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)', letterSpacing: '0.04em' }}>Intel not yet available for this location.</div>
       )}
-
-      <div style={{ marginTop: 10, fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)', letterSpacing: '0.04em' }}>
-        DCC {p.dcc_license}
-      </div>
+      <div style={{ marginTop: 10, fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)', letterSpacing: '0.04em' }}>DCC {p.dcc_license}</div>
     </div>
   )
 }

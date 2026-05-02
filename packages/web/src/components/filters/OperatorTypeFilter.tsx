@@ -34,8 +34,8 @@ export function OperatorTypeFilter({ value, onChange, className = '' }: Operator
         gap: 2,
         padding: 3,
         borderRadius: 8,
-        border: '1px solid rgba(255,255,255,0.1)',
-        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid var(--border-2)',
+        background: 'var(--surface-2)',
       }}
     >
       {OPTIONS.map((opt) => {
@@ -58,7 +58,7 @@ export function OperatorTypeFilter({ value, onChange, className = '' }: Operator
               cursor: 'pointer',
               transition: 'background 0.12s, color 0.12s',
               background: active ? '#1d9e75' : 'transparent',
-              color: active ? '#ffffff' : 'rgba(255,255,255,0.5)',
+              color: active ? '#ffffff' : 'var(--text-2)',
               whiteSpace: 'nowrap',
             }}
           >
