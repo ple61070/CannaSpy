@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MarketSubNav } from '../components/shared/MarketSubNav';
 
 // ─── Data ───────────────────────────────────────────────────────────────────
 
@@ -141,16 +142,7 @@ export default function CompetitorRanking() {
       </div>
 
       {/* MARKET NAV TABS */}
-      <div style={{ display: 'flex', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)', padding: '0 24px', flexShrink: 0, overflowX: 'auto' }}>
-        {MARKET_TABS.map(tab => {
-          const active = tab.route === '/competitor-ranking';
-          return (
-            <div key={tab.route} onClick={() => handleTabClick(tab.route, tab.label)} style={{ padding: '10px 16px', fontSize: 12, fontWeight: 600, color: active ? 'var(--accent)' : 'var(--text-3)', cursor: 'pointer', borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent', whiteSpace: 'nowrap', flexShrink: 0 }}>
-              {tab.label}
-            </div>
-          );
-        })}
-      </div>
+      <MarketSubNav />
 
       {/* FILTER BAR */}
       <div onClick={e => e.stopPropagation()} style={{ padding: '8px 28px', borderBottom: '1px solid var(--border)', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>

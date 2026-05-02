@@ -13,6 +13,7 @@ import { MAPBOX_TOKEN, isMapConfigured } from '../components/map/mapStyle'
 import { CALIFORNIA_VIEWPORT } from '../components/map/types'
 import type { DispensaryFeatureProps } from '../components/map/types'
 import { OperatorTypeFilter, type OperatorType } from '../components/filters/OperatorTypeFilter'
+import { MarketSubNav } from '../components/shared/MarketSubNav'
 import {
   dispensaryClusterLayer,
   dispensaryClusterCountLayer,
@@ -308,16 +309,7 @@ export default function MarketHeatMap() {
       </div>
 
       {/* SUB-NAV */}
-      <div style={{ display: 'flex', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)', padding: '0 24px', flexShrink: 0, overflowX: 'auto' }}>
-        {MARKET_TABS.map(tab => {
-          const active = tab.route === '/market/heat-map'
-          return (
-            <div key={tab.route} onClick={() => navigate(tab.route)} style={{ padding: '10px 16px', fontSize: 12, fontWeight: 600, color: active ? 'var(--accent)' : 'var(--text-3)', cursor: 'pointer', borderBottom: active ? '2px solid var(--accent)' : '2px solid transparent', whiteSpace: 'nowrap', flexShrink: 0 }}>
-              {tab.label}
-            </div>
-          )
-        })}
-      </div>
+      <MarketSubNav />
 
       {/* MAP — full width */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0 }}>

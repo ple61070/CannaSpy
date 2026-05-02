@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MarketSubNav } from '../components/shared/MarketSubNav';
 
 interface GapRow {
   name: string;
@@ -109,24 +110,7 @@ export default function SkuGapAnalysis() {
       </div>
 
       {/* Market sub-nav */}
-      <div style={{ display: 'flex', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)', padding: '0 24px', flexShrink: 0, overflowX: 'auto' }}>
-        {MARKET_TABS.map(tab => (
-          <div
-            key={tab}
-            style={{
-              padding: '10px 16px',
-              fontSize: 12,
-              fontWeight: 600,
-              color: tab === 'SKU Gap Analysis' ? 'var(--accent)' : 'var(--text-3)',
-              cursor: 'pointer',
-              borderBottom: tab === 'SKU Gap Analysis' ? '2px solid var(--accent)' : '2px solid transparent',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-            }}>
-            {tab}
-          </div>
-        ))}
-      </div>
+      <MarketSubNav />
 
       {/* Filter bar */}
       <div style={{ padding: '8px 28px', borderBottom: '1px solid var(--border)', background: 'var(--surface-2)', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
