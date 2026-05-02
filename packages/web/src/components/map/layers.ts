@@ -206,13 +206,12 @@ export const competitorPointLayer: LayerProps = {
 // ------------------------------------------------------------
 // Driven by track_state + enriched from /api/v1/map/dispensaries.
 //
-//  BLOCKED   → amber   (track_state === 'blocked')
-//  ENRICHED  → tier-matched color (enriched === true)
-//  PROSPECT  → dim grey (default — DCC record, no intel yet)
+//  BLOCKED   → amber  #ba7517  (track_state === 'blocked')
+//  ENRICHED  → teal   #1d9e75  (enriched === true)
+//  PROSPECT  → grey   #6b7280  (default — DCC record, no intel yet)
 //
-// Opacity also varies: enriched pins are solid, prospects are dim.
-// This lets the user see the full universe of CA dispensaries while
-// clearly identifying which ones have CannaSpy coverage.
+// All pins are fully opaque with a #0d0f11 stroke so they read
+// clearly on the dark base map even at high density.
 
 export const dispensaryClusterLayer: LayerProps = {
   id: 'cs-dispensary-cluster',
@@ -220,23 +219,17 @@ export const dispensaryClusterLayer: LayerProps = {
   source: SOURCE.DISPENSARIES,
   filter: ['has', 'point_count'],
   paint: {
-    'circle-color': [
-      'step',
-      ['get', 'point_count'],
-      PALETTE.accentTrust, 20,
-      PALETTE.accentBlock, 100,
-      PALETTE.accentAlert,
-    ],
+    'circle-color': PALETTE.accentIntel,
     'circle-radius': [
       'step',
       ['get', 'point_count'],
-      12, 20,
-      18, 100,
-      24,
-    ],
+      24, 10,
+      30, 50,
+      36,
+    ] as unknown as number,
     'circle-stroke-color': PALETTE.bgBase,
     'circle-stroke-width': 1.5,
-    'circle-opacity': 0.88,
+    'circle-opacity': 1,
   },
 }
 
@@ -247,11 +240,12 @@ export const dispensaryClusterCountLayer: LayerProps = {
   filter: ['has', 'point_count'],
   layout: {
     'text-field': ['get', 'point_count_abbreviated'],
+    // Space Mono is not a Mapbox glyph font — use closest available
     'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-    'text-size': 10,
+    'text-size': 12,
   },
   paint: {
-    'text-color': PALETTE.bgBase,
+    'text-color': '#ffffff',
   },
 }
 
@@ -263,34 +257,19 @@ export const dispensaryPointLayer: LayerProps = {
   paint: {
     'circle-color': [
       'case',
-      // Blocked → amber, always highest priority
-      ['==', ['get', 'track_state'], 'blocked'], '#d4900a',
-      // Enriched → tier-matched color
-      ['==', ['get', 'enriched'], true],
-        ['match', ['get', 'market_tier'],
-          'elite',       '#e05a6a',
-          'hot',         '#d4900a',
-          'competitive', '#09A1A1',
-          'standard',    '#5484A4',
-          /* default */  '#5484A4',
-        ],
-      // Prospect → dim grey
-      'rgba(160,155,148,0.5)',
+      ['==', ['get', 'track_state'], 'blocked'],  PALETTE.accentBlock,
+      ['boolean', ['get', 'enriched'], false],     PALETTE.accentIntel,
+      '#6b7280',
     ] as unknown as string,
     'circle-radius': [
       'interpolate', ['linear'], ['zoom'],
-      9, 3,
-      13, 6,
-      16, 9,
-    ],
-    'circle-stroke-color': PALETTE.bgBase,
-    'circle-stroke-width': 1,
-    'circle-opacity': [
-      'case',
-      ['==', ['get', 'enriched'], true], 0.9,
-      ['==', ['get', 'track_state'], 'blocked'], 0.95,
-      0.4,
+      9, 5,
+      12, 7,
+      15, 9,
     ] as unknown as number,
+    'circle-stroke-color': PALETTE.bgBase,
+    'circle-stroke-width': 1.5,
+    'circle-opacity': 1,
   },
 }
 
