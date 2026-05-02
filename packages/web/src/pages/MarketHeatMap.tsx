@@ -249,7 +249,7 @@ export default function MarketHeatMap() {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg)', fontFamily: 'var(--sans)', color: 'var(--text-1)', fontSize: 14, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: 'var(--bg)', fontFamily: 'var(--sans)', color: 'var(--text-1)', fontSize: 14, overflow: 'hidden' }}>
 
       {/* TOPBAR */}
       <div style={{ padding: '8px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, background: 'var(--surface)' }}>
@@ -313,7 +313,7 @@ export default function MarketHeatMap() {
       <MarketSubNav />
 
       {/* MAP — full width */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0 }}>
+      <div style={{ flex: 1, width: '100%', position: 'relative', overflow: 'hidden', minHeight: 0, transition: 'width 0.22s cubic-bezier(.2,.8,.2,1)' }}>
         {isMapConfigured() ? (
           <Map
             ref={mapRef}
