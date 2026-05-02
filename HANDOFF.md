@@ -1,4 +1,112 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-02 (Session 12 — Outer ring layer + 50% radius increase deployed)
+
+---
+
+## Session 12 — 2026-05-02
+
+**Commits:** `ed582d7` outer ring + layer reorder → `22809e9` radius +50%, hover delta +4px
+**Deploy:** Vercel ✅ both commits aliased to `web-rouge-one-15.vercel.app`
+
+---
+
+### 1. What Was Done
+
+#### Completed outer ring layer (left pending from Session 11)
+- `packages/web/src/pages/MarketHeatMap.tsx` — imported `dispensaryRingLayer`, reordered `<Layer>` components inside `<Source id="cs-dispensaries">` to the correct render stack: ring → fill → cluster → cluster count
+- Previously the order was wrong (cluster → cluster count → fill), which meant fill rendered on top of cluster labels
+
+#### Increased all pin and ring radii by 50%
+Per explicit spec. No other properties changed — colors, opacity, stroke, cluster styling, and layer order unchanged.
+
+| Layer | Property | Before | After |
+|---|---|---|---|
+| Ring | prospect radius | 14px | 21px |
+| Ring | enriched/blocked radius | 17px | 26px |
+| Ring | hover delta | +3px | +4px |
+| Fill | prospect radius | 8px | 12px |
+| Fill | enriched/blocked radius | 10px | 15px |
+| Fill | hover delta | +3px | +4px |
+
+#### Created project skills
+- `/Users/patricksimac/.claude/skills/cannaspy-deploy/` — Vercel deploy sequence skill
+- `/Users/patricksimac/.claude/skills/cannaspy-handoff/` — Session handoff generation skill
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/web/src/components/map/layers.ts` | Ring radii: 14→21px (prospect), 17→26px (enriched/blocked); fill radii: 8→12px (prospect), 10→15px (enriched/blocked); hover delta: 3→4px on both layers |
+| `packages/web/src/pages/MarketHeatMap.tsx` | Imported `dispensaryRingLayer`; reordered `<Layer>` stack to: ring → fill → cluster → cluster count |
+
+No schema migrations. No API changes. No new dependencies.
+
+---
+
+#### Cowork design session — led to these changes
+Before any code ran, a Cowork session was used to think through the pin redesign:
+- **Problem identified:** prospect pins were grey — terrible first impression for new users who see nothing but grey dots
+- **Design principle established:** prospects are opportunity, not emptiness. They need to look like live intelligence data. Grey is only for dead/inactive states, which CannaSpy doesn't have.
+- **Three design options evaluated:** teardrop pins (SVG sprites), larger circles + ring glow, square/diamond markers
+- **Decision:** Option 2 (ring glow) chosen — fast to implement, stays native Mapbox, gives visual weight. Teardrop deferred to polish pass.
+- **Dark basemap recommended but not yet actioned** — switching from `streets-v12` to `dark-v11` will make teal/amber pins pop significantly more on the `#0d0f11` branded background
+
+---
+
+### 3. What Failed
+
+Nothing failed this session. TypeScript clean (`tsc --noEmit`) on both commits. Both Vercel deploys completed successfully.
+
+Known standing issues (not touched this session):
+- `feature-state hover` still inert — requires `promoteId="id"` on `<Source id="cs-dispensaries">` to activate. Layers are wired correctly; one prop away.
+- Railway auto-deploy from `git push` still not triggering — requires `railway up` each time.
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Switch basemap to dark** — in `MarketHeatMap.tsx`, change `mapStyle` from `mapbox://styles/mapbox/streets-v12` to `mapbox://styles/mapbox/dark-v11`. One prop change. Biggest remaining visual impact.
+2. **Add `promoteId="id"` to `<Source id="cs-dispensaries">` in `MarketHeatMap.tsx`** — activates hover (+4px radius, opacity→1). One prop, no layer changes needed.
+3. **Verify pins in browser** — navigate to LA / Harbor City area at zoom 10–12. Should see 15+ teal rings + fills at varying sizes. Hard-refresh (`Cmd+Shift+R`) first.
+4. **Wire `scrape.worker.ts` enriched write-back** — after successful scrape, update `dispensaries.enriched = true` for matching DCC record (match by name+city or DCC license number).
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Map / Data Pipeline:**
+- [ ] `promoteId="id"` on dispensary Source → activates hover (1 line, `MarketHeatMap.tsx`)
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
+- [ ] `diff_engine.py` — not yet tested end-to-end with two real snapshots (needed to generate first `alerts` rows)
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] `scrape.worker.ts` → call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**Frontend:**
+- [ ] Block Management (`/blocks`) — verify wired to real data, not placeholder
+- [ ] Promotions (`/promotions`) — scaffold only, not wired to API
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state on API failure
+- [ ] Apply DM Sans + Space Mono typography system-wide (remaining screens still using system font)
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Investigate Railway auto-deploy — git push should trigger deploy without `railway up`
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Corona)
+```
+
+---
+
 **Date:** 2026-05-02 (Session 11 — Map pin full restyle + enriched data fix + CORS confirmed)
 
 ---
