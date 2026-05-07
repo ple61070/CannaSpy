@@ -361,7 +361,6 @@ export default function MarketHeatMap() {
               type="geojson"
               data={dispensaries as unknown as Parameters<typeof Source>[0]['data']}
               cluster clusterMaxZoom={13} clusterRadius={35}
-              promoteId="id"
             >
               <Layer {...dispensaryRingLayer} minzoom={9} />
               <Layer
