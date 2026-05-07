@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_x22pQCZtonZn8iXSZz67xXEya7E8",
+  "orgId": "team_gLKxTYB9A0RfmhibNDcRMm2v",
+  "projectName": "web",
+  "settings": {
+    "createdAt": 1776039600826,
+    "framework": "vite",
+    "devCommand": null,
+    "installCommand": "pnpm install --frozen-lockfile",
+    "buildCommand": "pnpm --filter web build",
+    "outputDirectory": "packages/web/dist",
+    "rootDirectory": "",
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}
