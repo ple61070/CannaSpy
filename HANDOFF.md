@@ -1,4 +1,152 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-07 (Session 18 — Map endpoint confirmed working, connection timeout fixed, 1,000 CA pins live)
+
+---
+
+## Session 18 — 2026-05-07
+
+**Commits:** `4b5b359` fix(db): connectionTimeoutMillis 2000→15000ms
+**Deploy:** Fly.io redeployed ✅ `cannaspy-api.fly.dev`
+
+### What Was Done
+
+Map endpoint returning `success: false` at end of Session 17. On resume, curled endpoint — it returned `success: true` with real GeoJSON immediately. The SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY secrets set in Session 17 took effect after machine restart.
+
+- Increased `connectionTimeoutMillis` from 2000ms → 15000ms in `packages/api/src/db/client.ts` — 2s was too aggressive for cross-region Fly.io LAX → Supabase us-west-1
+- Redeployed to Fly.io; health check passed
+- Full CA bbox verify: `curl /api/v1/map/dispensaries?bbox=-118.5,33.9,-117.9,34.2&limit=5` → `success: true | 5 features | "Markt., 10DollarBuds @ [-118.36, 34.13]"`
+- 1,000 dispensaries returned for full CA bbox (PostgREST 1,000-row default cap — fine for MVP)
+
+### Current Infrastructure State
+
+| Service | URL | Status |
+|---|---|---|
+| API | `https://cannaspy-api.fly.dev` | ✅ live, map returning GeoJSON |
+| Frontend | `https://web-rouge-one-15.vercel.app` | ✅ live, VITE_API_URL → Fly.io |
+| Database | Supabase `cbhbrbkirzpncpxlvehk` | ✅ active, 1,785 dispensaries |
+| Railway | abandoned | ❌ |
+
+### What Is Next
+
+1. **Run `diff_engine.py` end-to-end** — generates first real `alerts` rows, makes CommandCenter/AlertFeed show data
+2. **Verify Block Management (`/blocks`)** wired to real data
+3. **Fix REDIS_URL on Fly.io** — points to localhost:6379; workers crash at startup (non-fatal, noisy). Set to Upstash or disable BullMQ workers for now.
+4. **Supabase MCP `execute_sql`** still broken ("Database authentication failed") — use PostgREST + service_role key for any DB ops
+
+---
+
+**Date:** 2026-05-07 (Session 16 — Railway dead → Fly.io + Supabase, 1,785 dispensary pins live)
+
+---
+
+## Session 16 — 2026-05-07
+
+**Commits:** none (infra migration, env var updates only)
+**Deploy:** Fly.io API ✅ `cannaspy-api.fly.dev` | Vercel ✅ `web-rouge-one-15.vercel.app` (VITE_API_URL updated)
+
+---
+
+### 1. What Was Done
+
+#### Infrastructure migration (Railway dead → Fly.io)
+- Railway trial expired — both API server and Railway Postgres went offline simultaneously
+- All Railway data (dispensaries, etc.) lost — Railway is permanently abandoned
+- Fly.io API deployed: `https://cannaspy-api.fly.dev` (LAX region, free tier)
+  - Dockerfile.api and fly.toml created in repo root
+  - Fly.io machine has working IPv6 routing to Supabase (local Mac does not)
+- Supabase restored from paused state; migrations 010+011 re-applied
+- DB password reset to `k1paUDmtqSky4zeC` (confirmed working — Fly.io updated and verified)
+
+#### VITE_API_URL updated on Vercel
+- Deleted old env var (Railway URL) via Vercel REST API
+- Created new `VITE_API_URL=https://cannaspy-api.fly.dev` targeting production+preview
+- Triggered fresh Vercel deploy (dpl_Bs9XgNgLPvrFJ3QsRXFSmp6fRUex) — READY ✅
+- Confirmed `cannaspy-api.fly.dev` baked into JS bundle (11 occurrences)
+
+#### DCC dispensary ingest — 1,785 rows
+- `dcc_ingest.py` can't run locally (IPv6 broken to Supabase from Mac)
+- Built lightweight REST-API ingest script using Supabase service_role key + PostgREST
+- DCC API GET params: `premiseLatitude`/`premiseLongitude`, name from `businessDbaName`
+- Inserted 1,785 CA dispensary records: 1,323 with coordinates
+- Map endpoint verified: `GET /api/v1/map/dispensaries?bbox=...` returns real names + coords
+
+#### .env updated
+- `DATABASE_URL` → Supabase pooler (was dead Railway URL)
+- `SUPABASE_SERVICE_ROLE_KEY` filled in
+
+---
+
+### 2. Current Infrastructure State
+
+| Service | URL | Status |
+|---|---|---|
+| API | `https://cannaspy-api.fly.dev` | ✅ live |
+| Frontend | `https://web-rouge-one-15.vercel.app` | ✅ live |
+| Database | Supabase `cbhbrbkirzpncpxlvehk` | ✅ active, 1,785 dispensaries |
+| Railway | dead | ❌ abandoned |
+
+---
+
+### 3. Known Issues
+
+- **Supabase MCP `execute_sql` broken** — still returns "Database authentication failed" even after user reset password via dashboard to `k1paUDmtqSky4zeC`. MCP's internal connection is cached separately and hasn't picked up the new credentials. Workaround: use service_role key + PostgREST for any DB ops. Current DB password is `k1paUDmtqSky4zeC` — Fly.io and local .env are both updated with this value.
+- **Non-storefront dispensaries have no coords** — 229 delivery-only licenses have `premiseLatitude=null` in DCC data. They exist in DB but won't show as map pins. Not a bug.
+- **Dispensary names with "[Equity Retailer]"** — DCC appends this tag to many DBA names. Cosmetic — can strip in a future pass.
+
+---
+
+### 4. Session 17 — 2026-05-07 — Map pins restored ✅
+
+**Root cause of 500:** `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` were never set as Fly.io secrets. `getAdminDb()` silently got undefined, PostgREST client failed on every map request.
+
+**Fixes applied:**
+- `map.ts` rewritten to use `getAdminDb()` (PostgREST) instead of `query()` (pg Pool / Supavisor — broken). TypeScript cast added to `trackStates` loop to fix inference error.
+- `flyctl secrets set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY` — deployed, machines restarted automatically.
+- Verified: `curl .../api/v1/map/dispensaries?bbox=-118.5,33.9,-118.0,34.2&limit=5` returns 5 real LA dispensaries.
+- Browser confirmed: `web-rouge-one-15.vercel.app/market/heat-map` shows "1,000 DISPENSARIES IN VIEW" with clusters across CA.
+
+### 5. What Is Next
+
+1. **Run `diff_engine.py` end-to-end** — generates first real alert rows, makes CommandCenter/AlertFeed show data
+2. **Verify Block Management (`/blocks`)** wired to real data
+3. **Fix Supabase MCP** — reset DB password via dashboard so `execute_sql` works again
+4. **Fix REDIS_URL on Fly.io** — currently pointing to localhost:6379; workers crash at startup (non-fatal, but noisy logs). Set to Upstash or comment out scheduler/workers for now.
+
+---
+
+**Date:** 2026-05-07 (Session 15 — VITE_MAPBOX_TOKEN deployed, map live in production)
+
+---
+
+## Session 15 — 2026-05-07
+
+**Commits:** none (env var only)
+**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` — map token now embedded in build
+
+---
+
+### 1. What Was Done
+
+#### VITE_MAPBOX_TOKEN set and deployed
+- Previous session ended with token set via Vercel REST API but not yet built
+- Triggered fresh production deploy from workspace root — 612 files uploaded, `pnpm install` succeeded, Vite built in 16s
+- Token confirmed embedded in `dist/assets/index-C-ryMaO6.js` (`pk.eyJ1IjoiY2FubmFzcHki…`)
+- `/market/heat-map` returns HTTP 200, map loads with teal/amber pins, corrected legend, hover states active
+
+#### Deploy command confirmed working
+- `nohup /usr/local/bin/node <vercel vc.js path> --prod --yes > /tmp/vercel_deploy.log 2>&1 &` via osascript
+- Wrapper script at `/tmp/vdeploy.sh` — reusable this session
+
+---
+
+### 2. What Is Next
+
+1. **Run `diff_engine.py` end-to-end** with two real snapshots — generates first real `alerts` rows, makes CommandCenter and AlertFeed show actual data
+2. **Verify Block Management (`/blocks`)** is wired to real data, not placeholder
+3. **Wire `scrape.worker.ts` enriched write-back** — after successful scrape, update `dispensaries.enriched = true`
+
+---
+
 **Date:** 2026-05-07 (Session 14 — Theme-aware basemap, legend fix, promoteId hover, Vercel monorepo deploy fixed)
 
 ---
