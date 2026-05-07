@@ -26,6 +26,7 @@ import { useDispensaryMap } from '../hooks/useDispensaryMap'
 
 type Tier = 'elite' | 'hot' | 'competitive' | 'standard'
 type MapStyleId = 'streets' | 'satellite'
+type AppTheme = 'light' | 'dark'
 
 interface Market {
   id: string; name: string; tier: Tier; rate: string
@@ -63,9 +64,25 @@ const TIER_LABELS: Record<Tier, string> = {
   elite: 'Elite', hot: 'Hot', competitive: 'Competitive', standard: 'Standard',
 }
 
-const MAP_STYLES: Record<MapStyleId, string> = {
-  streets:   'mapbox://styles/mapbox/streets-v12',
-  satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
+const MAP_STYLES: Record<MapStyleId, Record<AppTheme, string>> = {
+  streets:   { light: 'mapbox://styles/mapbox/streets-v12', dark: 'mapbox://styles/mapbox/dark-v11' },
+  satellite: { light: 'mapbox://styles/mapbox/satellite-streets-v12', dark: 'mapbox://styles/mapbox/satellite-streets-v12' },
+}
+
+// Reads app theme from localStorage (same key Layout.tsx writes)
+function useAppTheme(): AppTheme {
+  const [theme, setTheme] = useState<AppTheme>(
+    () => (localStorage.getItem('cs-theme') as AppTheme) || 'light'
+  )
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const t = document.documentElement.getAttribute('data-theme') as AppTheme | null
+      if (t) setTheme(t)
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
+  }, [])
+  return theme
 }
 
 const MARKET_TABS = [
@@ -121,6 +138,7 @@ function tierBadgeStyle(tier: Tier): React.CSSProperties {
 export default function MarketHeatMap() {
   const navigate = useNavigate()
   const mapRef   = useRef<MapRef | null>(null)
+  const appTheme = useAppTheme()
 
   const [mapStyleId, setMapStyleId]   = useState<MapStyleId>('streets')
   const [cursor, setCursor]           = useState<string>('default')
@@ -318,7 +336,7 @@ export default function MarketHeatMap() {
           <Map
             ref={mapRef}
             mapboxAccessToken={MAPBOX_TOKEN}
-            mapStyle={MAP_STYLES[mapStyleId]}
+            mapStyle={MAP_STYLES[mapStyleId][appTheme]}
             initialViewState={{ longitude: CALIFORNIA_VIEWPORT.longitude, latitude: CALIFORNIA_VIEWPORT.latitude, zoom: CALIFORNIA_VIEWPORT.zoom }}
             style={{ width: '100%', height: '100%' }}
             cursor={cursor}
@@ -343,6 +361,7 @@ export default function MarketHeatMap() {
               type="geojson"
               data={dispensaries as unknown as Parameters<typeof Source>[0]['data']}
               cluster clusterMaxZoom={13} clusterRadius={35}
+              promoteId="id"
             >
               <Layer {...dispensaryRingLayer} minzoom={9} />
               <Layer
@@ -398,7 +417,7 @@ export default function MarketHeatMap() {
           </div>
           {(zoom < 9
             ? [{ color: '#e05a6a', label: 'Elite — $250/slot' }, { color: '#d4900a', label: 'Hot — $200/slot' }, { color: '#09A1A1', label: 'Competitive — $150/slot' }, { color: '#5484A4', label: 'Standard — $100/slot' }]
-            : [{ color: '#e05a6a', label: 'Elite — intel available' }, { color: '#09A1A1', label: 'Competitive — intel available' }, { color: '#d4900a', label: 'Blocked rival' }, { color: 'rgba(140,135,128,0.5)', label: 'Prospect — no intel yet' }]
+            : [{ color: '#1d9e75', label: 'Rival — intel available' }, { color: '#ba7517', label: 'Blocked rival' }, { color: 'rgba(29,158,117,0.7)', label: 'Prospect — no intel yet' }]
           ).map((leg, i, arr) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: i < arr.length - 1 ? 4 : 0, fontSize: 11, color: 'var(--text-2)' }}>
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: leg.color, border: '1px solid rgba(128,128,128,0.2)', flexShrink: 0 }} />
