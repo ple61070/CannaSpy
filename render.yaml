@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: cannaspy-api
+    runtime: node
+    plan: free
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter api build
+    startCommand: node --dns-result-order=ipv4first packages/api/dist/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_ID
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GOOGLE_PLACES_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: SALES_ALERT_EMAIL
+        sync: false
+      - key: CANNASPY_PRIMARY_API_HOST
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: WEB_URL
+        value: https://web-rouge-one-15.vercel.app
+      - key: API_URL
+        sync: false
