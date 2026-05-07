@@ -1,4 +1,95 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-07 (Session 14 — Theme-aware basemap, legend fix, promoteId hover, Vercel monorepo deploy fixed)
+
+---
+
+## Session 14 — 2026-05-07
+
+**Commits:** `9954127` fix(map): theme-aware basemap, legend, promoteId → `6a37b39` vercel.json at workspace root → `1bda2ae` SPA rewrite rule
+**Deploy:** Vercel ✅ aliased to `web-rouge-one-15.vercel.app` (HTTP 200 on all routes confirmed)
+
+---
+
+### 1. What Was Done
+
+#### Theme-aware basemap (`MarketHeatMap.tsx`)
+- Added `useAppTheme()` hook — watches `data-theme` attribute on `<html>` via `MutationObserver`, reads initial value from `localStorage('cs-theme')`
+- `MAP_STYLES` now maps `streets` and `satellite` → `{ light, dark }` variants
+- Light mode: `streets-v12` (unchanged). Dark mode: `dark-v11` (matches CannaSpy's `#0d0f11` theme)
+- Map switches instantly when the user toggles theme in the sidebar — no page reload
+
+#### Legend bug fixed (`MarketHeatMap.tsx`)
+- Prospect legend entry was showing `rgba(140,135,128,0.5)` (grey) — wrong since Session 11 changed prospect pins to teal 70%
+- Fixed to `rgba(29,158,117,0.7)` (teal at 70%) matching actual pin appearance
+- Legend entries consolidated to 3: Rival intel (teal), Blocked rival (amber), Prospect (teal 70%)
+
+#### Hover activated (`MarketHeatMap.tsx`)
+- Added `promoteId="id"` to `<Source id="cs-dispensaries">` — pending since Session 11
+- Activates `feature-state hover` in both ring and fill layers: +4px radius, opacity→1 on hover
+
+#### Vercel monorepo deploy fixed
+- **Root cause:** Vercel was deploying from `packages/web/` (73 files) — `pnpm-lock.yaml` lives at workspace root and was never uploaded, so `pnpm install --frozen-lockfile` failed once build cache expired
+- **Fix:** Moved `.vercel/project.json` to workspace root; created `vercel.json` at root with `installCommand`, `buildCommand` (`pnpm --filter web build`), and `outputDirectory` (`packages/web/dist`)
+- Added SPA rewrite rule (`"/(.*)" → "/index.html"`) so React Router deep routes return 200
+- **Going forward:** `cd /Users/patricksimac/CannaSpy && ~/Library/pnpm/vercel --prod --yes` — always run from workspace root
+
+#### CLAUDE.md synced
+- Updated migration count (10→11), pin color description (grey→teal 70%), deploy SHA/date, Vercel URL, ring layer, backlog items
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/web/src/pages/MarketHeatMap.tsx` | `useAppTheme()` hook, theme-aware `MAP_STYLES`, `promoteId="id"` on dispensary Source, legend colors fixed |
+| `vercel.json` (new, workspace root) | `installCommand`, `buildCommand`, `outputDirectory`, SPA rewrite |
+| `.vercel/project.json` (new, workspace root) | Vercel project link moved from `packages/web/` to workspace root |
+| `CLAUDE.md` | Synced to sessions 8–14 state |
+
+---
+
+### 3. What Is Next
+
+1. **Run `diff_engine.py` end-to-end** with two real snapshots — generates first real `alerts` rows, makes CommandCenter and AlertFeed show actual data
+2. **Verify Block Management (`/blocks`)** is wired to real data, not placeholder
+3. **Wire `scrape.worker.ts` enriched write-back** — after successful scrape, update `dispensaries.enriched = true`
+
+---
+
+### 4. What Is Still Left To Do (Full Backlog)
+
+**Map / Data Pipeline:**
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
+- [ ] `diff_engine.py` — not yet tested end-to-end (needed to generate first `alerts` rows)
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] `scrape.worker.ts` → call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**Frontend:**
+- [ ] Block Management (`/blocks`) — verify wired to real data, not placeholder
+- [ ] Promotions (`/promotions`) — scaffold only, not wired to API
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state on API failure
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Fix Railway auto-deploy — `git push` does not trigger deploy; requires manual `railway up`
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Corona)
+Vercel deploy:    cd /Users/patricksimac/CannaSpy && ~/Library/pnpm/vercel --prod --yes
+```
+
+---
+
 **Date:** 2026-05-02 (Session 13 — Map container width fix + sidebar gap resolved)
 
 ---
@@ -36,6 +127,16 @@ No schema migrations. No API changes. No new dependencies.
 
 ---
 
+#### Cowork design session context (led to the layout fix prompt)
+- User shared screenshot showing blank gap on right side of map when sidebar collapsed
+- Prompt written specifying: use `width: 100%` within flex/grid context, not `100vw`, add matching CSS transition, don't touch Mapbox logic
+- Claude Code identified exact root cause: map container relying on implicit flex stretch with no explicit width or transition to track sidebar animation
+
+**Also recommended this session (not yet actioned):**
+- Switch basemap from `streets-v12` → `mapbox://styles/mapbox/dark-v11` — teal/amber pins will be dramatically more legible on dark background matching CannaSpy's `#0d0f11` theme
+
+---
+
 ### 3. What Failed
 
 Nothing failed this session. TypeScript clean. Deploy successful. User confirmed fix worked.
@@ -49,9 +150,10 @@ Nothing failed this session. TypeScript clean. Deploy successful. User confirmed
 
 ### 4. What Is Next (First Things in Next Session)
 
-1. **Add `promoteId="id"` to `<Source id="cs-dispensaries">` in `MarketHeatMap.tsx`** — activates hover (+4px radius, opacity→1). One prop on the Source element.
-2. **Verify pins in browser** — zoom into LA / Harbor City at zoom 10–12, confirm teal rings + fills visible with no blank areas.
-3. **Wire `scrape.worker.ts` enriched write-back** — after successful scrape, update `dispensaries.enriched = true` for matching DCC record.
+1. **Switch basemap to dark** — `MarketHeatMap.tsx`, change `mapStyle` to `mapbox://styles/mapbox/dark-v11`. One prop. Biggest remaining visual impact.
+2. **Add `promoteId="id"` to `<Source id="cs-dispensaries">` in `MarketHeatMap.tsx`** — activates hover (+4px radius, opacity→1). One prop on the Source element.
+3. **Verify full map in browser** — collapse sidebar, zoom into LA / Harbor City at zoom 10–12, confirm: no blank areas, teal pins with glow visible, no grey anywhere, clusters rendering correctly.
+4. **Wire `scrape.worker.ts` enriched write-back** — after successful scrape, update `dispensaries.enriched = true` for matching DCC record.
 
 ---
 
