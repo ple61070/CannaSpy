@@ -1,4 +1,246 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-08 (Session 22 — Skill installation: cannaspy-infra + cannaspy-deploy updated)
+
+---
+
+## Session 22 — 2026-05-08
+
+**Commits:** none (skill install only — no code changes)
+**Deploy:** none
+
+---
+
+### 1. What Was Done
+
+#### Skill installation from docs/skills/
+
+Installed two updated skills from the repo's `docs/skills/` directory into `~/.claude/skills/`:
+
+- `cannaspy-infra` — new skill, copied from `docs/skills/cannaspy-infra/SKILL.md`. Covers Railway deploy, Vercel deploy, env var management, health verification.
+- `cannaspy-deploy` — updated in place at `~/.claude/skills/cannaspy-deploy/SKILL.md`. Now includes Railway deploy sequence alongside existing Vercel steps.
+
+Both skills confirmed active in Claude Code skill list post-install.
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `~/.claude/skills/cannaspy-infra/SKILL.md` | New file — created from `docs/skills/cannaspy-infra/SKILL.md` |
+| `~/.claude/skills/cannaspy-deploy/SKILL.md` | Updated from `docs/skills/cannaspy-deploy/SKILL.md` |
+
+No schema migrations, no new dependencies, no env var additions.
+
+---
+
+### 3. What Failed
+
+Nothing failed this session.
+
+Known standing issues (not touched this session):
+- Supabase MCP `execute_sql` still broken — "Database authentication failed" on every call
+- `alert.worker.ts` logs only — not yet wired to Resend
+- `PriceHistory.tsx` still on hardcoded mock data
+- Fly.io app not yet destroyed (waiting on Railway stability confirmation)
+
+---
+
+### 4. What Is Next (Priority Order)
+
+1. **Wire `PriceHistory.tsx` to real API** — `GET /api/v1/pricing/history` aggregating `price_observations` by day; currently 100% mock data.
+2. **Run `diff_engine.py` end-to-end** — generates first real `alerts` rows; makes CommandCenter + AlertFeed show actual data.
+3. **Verify Block Management (`/blocks`)** — confirm wired to real data, not placeholder.
+4. **Delete Fly.io app** — 24h Railway stability window has passed; run `fly apps destroy cannaspy-api`.
+5. **Verify BullMQ workers** — check Railway logs; REDIS_URL now internal Redis, all 6 workers should boot clean.
+
+---
+
+### 5. Full Backlog (What Is Still Left To Do)
+
+**Data pipeline:**
+- [ ] Wire `scrape.worker.ts` → `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] Test `diff_engine.py` end-to-end with two real snapshots
+- [ ] Configure production proxy IP pool (currently single IP in dev)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**API / backend:**
+- [ ] `billing.ts` — full Stripe subscription quantity sync on slot add/remove
+- [ ] `alerts.ts` — verify read/mark-reviewed wired end-to-end
+- [ ] `alert.worker.ts` → wire to Resend (currently logs only, no emails sent)
+- [ ] Register Stripe live-mode webhook (launch blocker)
+- [ ] `billing.service.ts` — usage sync cron
+
+**Frontend:**
+- [ ] Wire `PriceHistory.tsx` to real `price_observations` / `products` API data
+- [ ] Wire Block Management (`/blocks`) to real data
+- [ ] Scaffold → wire Promotions screen
+- [ ] Apply DM Sans + Space Mono typography across all screens
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+
+**Infrastructure:**
+- [ ] Delete Fly.io app (`fly apps destroy cannaspy-api`) — Railway has been stable
+- [ ] Fix Supabase MCP `execute_sql` — "Database authentication failed" (PostgREST workaround active)
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Launch blockers:**
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Register Stripe live-mode webhook endpoint
+- [ ] `billing.service.ts` — usage sync cron
+
+---
+
+### Key Credentials
+
+```
+API (Railway):     https://cannaspy-production.up.railway.app
+API health:        https://cannaspy-production.up.railway.app/health
+Frontend:          https://web-rouge-one-15.vercel.app
+Railway project:   https://railway.com/project/9829ee26-dff3-4db2-850c-2cb87207cdaa
+Database:          Supabase cbhbrbkirzpncpxlvehk
+Location ID:       ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Corona)
+Vercel deploy:     cd /Users/patricksimac/CannaSpy && ~/Library/pnpm/vercel --prod --yes
+Railway deploy:    cd /Users/patricksimac/CannaSpy && railway up --detach
+```
+
+---
+
+**Date:** 2026-05-08 (Session 21 — Cowork file audit + CLAUDE.md corrections + Railway migration orchestration)
+
+---
+
+## Session 21 — 2026-05-08
+
+**Commits:** none (Cowork session — orchestration + docs only)
+**Deploy:** none directly — CC Session 20 handled Railway deploy
+
+---
+
+### 1. What Was Done
+
+#### Full project file audit (Cowork)
+Read HANDOFF.md, CLAUDE.md, and all referenced docs in full. Cross-referenced every claim in CLAUDE.md against the actual session history in HANDOFF.md.
+
+#### CLAUDE.md — 9 contradictions found and fixed
+
+| # | What was wrong | Fix |
+|---|---|---|
+| 1 | Tech stack row: "Railway dev → Supabase prod" | Updated to "Supabase prod — project cbhbrbkirzpncpxlvehk" |
+| 2 | Infrastructure row: "Railway (MVP) → AWS ECS" | Updated to "Fly.io API (LAX) + Vercel frontend" (then Railway again after Session 20) |
+| 3 | Migrations: "applied to Railway prod" (3 places) | Updated to "Supabase prod" |
+| 4 | MarketHeatMap: "1,325 pins", no mention of theme-aware basemap or hover | Updated: 1,785 pins, dark-v11, promoteId hover, legend fix all marked done |
+| 5 | Dark-v11 basemap listed as still needed | Removed from pending — completed Session 14 |
+| 6 | promoteId="id" listed as still needed | Removed from pending — completed Session 14 |
+| 7 | DCC count: "1,787 records, 1,325 with lat/lng" | Corrected to 1,785 / 1,323 (Supabase re-ingest numbers) |
+| 8 | "Built and Live": Railway API URL, no PriceHistory or data-analyst skill | Added Fly.io → Railway note, PriceHistory brand fixes, cannaspy-data-analyst skill |
+| 9 | "Remaining": no mention of REDIS_URL issue, broken Supabase MCP, PriceHistory mock data | Added all three |
+| 10 | Human approval gate #6: "Railway production deployment" | Updated to "Fly.io production deployment" (then Railway again after Session 20) |
+| 11 | Phase 3 done list: missing Sessions 14 and 19 work | Added theme-aware basemap, promoteId, legend, PriceHistory brand fixes |
+| 12 | Phase 4: "Railway live" with old SHA | Updated to Fly.io + Supabase entries |
+
+#### Infrastructure migration decision
+Received Fly.io email: "You've used 50% of your free trial machine usage." Evaluated options (Fly.io paid, Render free tier, Railway Hobby). Decision: Railway Hobby $5/month — same cost as Fly.io paid, already configured in repo, simpler dashboard.
+
+#### CC Session 20 orchestrated (Railway migration)
+Wrote and issued full migration prompt to Claude Code. CC executed:
+- Upgraded Railway account to Hobby plan (after trial-expired blocker)
+- Set 5 env vars (DATABASE_URL → Supabase, CANNASPY_PRIMARY_API_HOST, SUPABASE_URL/ANON_KEY/SERVICE_ROLE_KEY)
+- Fixed nixpacks.toml: NODE_ENV=development during install (tsc: not found bug)
+- Deployed via `railway up --detach` — `/health` returned 200
+- Updated VITE_API_URL on Vercel → Railway URL
+- Redeployed Vercel — Railway URL baked into bundle
+- Updated CLAUDE.md and HANDOFF.md (Session 20 entry)
+
+#### Skills created/updated (this session)
+- Created `cannaspy-infra` skill — covers Railway deploy, Vercel deploy, env var management, health verification
+- Updated `cannaspy-deploy` skill — added Railway deploy sequence alongside existing Vercel steps
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `CLAUDE.md` | 12 contradictions corrected (infra, counts, completed items, remaining items) |
+| `HANDOFF.md` | Session 21 prepended (this entry) |
+| `nixpacks.toml` | `NODE_ENV=development` added to install phase (CC Session 20) |
+| Railway env vars | DATABASE_URL + 4 new vars set (CC Session 20) |
+| Vercel env vars | VITE_API_URL updated to Railway URL (CC Session 20) |
+
+---
+
+### 3. What Failed
+
+#### Railway trial-expired blocker
+CC hit "Your trial has expired" immediately on first Railway command. Could not set vars or deploy until manual upgrade. Expected — Railway trial ended weeks ago. Required Patrick to go to railway.app/account/billing and select Hobby plan before CC could continue.
+
+#### Fly.io PRIMARY_API_HOST exposure
+CC's terminal output showed the value of `CANNASPY_PRIMARY_API_HOST` in plain text in the session log. This is an opsec violation per CLAUDE.md. The value is correct in Railway env vars (right place); the exposure was in CC's output text. Flagged to Patrick.
+
+**Rule going forward:** When CC sets env vars that contain the primary API host, it should not echo the value in its output. Reference it as `$CANNASPY_PRIMARY_API_HOST` only.
+
+---
+
+### 4. What Is Next (Priority Order)
+
+1. **Delete Fly.io app** — wait 24h to confirm Railway is stable, then: `fly apps destroy cannaspy-api`. Stops machine-hour bleed.
+2. **Verify BullMQ workers** — check Railway logs a few minutes after deploy. REDIS_URL now points to Railway internal Redis — all 6 workers should boot without the localhost:6379 crash that plagued Fly.io.
+3. **Wire `PriceHistory.tsx` to real API** — currently 100% hardcoded mock data. Needs: `GET /api/v1/pricing/history?location_id=&competitor_id=&days=90` aggregating `price_observations` by day.
+4. **Run `diff_engine.py` end-to-end** — generates first real `alerts` rows; makes CommandCenter and AlertFeed show actual data instead of empty states.
+5. **Verify Block Management (`/blocks`)** — confirm wired to real data, not placeholder.
+
+---
+
+### 5. Full Backlog (What Is Still Left To Do)
+
+**Data pipeline:**
+- [ ] Wire `scrape.worker.ts` → `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] Test `diff_engine.py` end-to-end with two real snapshots
+- [ ] Configure production proxy IP pool (currently single IP in dev)
+
+**API / backend:**
+- [ ] `billing.ts` — full Stripe subscription quantity sync on slot add/remove
+- [ ] `alerts.ts` — verify read/mark-reviewed wired end-to-end
+- [ ] `alert.worker.ts` → wire to Resend (currently logs only, no emails sent)
+- [ ] Register Stripe live-mode webhook (launch blocker)
+- [ ] `billing.service.ts` — usage sync cron
+
+**Frontend:**
+- [ ] Wire `PriceHistory.tsx` to real `price_observations` / `products` API data
+- [ ] Wire Block Management (`/blocks`) to real data
+- [ ] Scaffold → wire Promotions screen
+- [ ] Apply DM Sans + Space Mono typography across all screens
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+
+**Infrastructure:**
+- [ ] Delete Fly.io app (`fly apps destroy cannaspy-api`) — after 24h Railway stability check
+- [ ] Fix Supabase MCP `execute_sql` — "Database authentication failed" on every call (PostgREST workaround active)
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Launch blockers:**
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Register Stripe live-mode webhook endpoint
+- [ ] `billing.service.ts` — usage sync cron
+
+---
+
+### Key Credentials
+
+```
+API (Railway):     https://cannaspy-production.up.railway.app
+API health:        https://cannaspy-production.up.railway.app/health
+Frontend:          https://web-rouge-one-15.vercel.app
+Railway project:   https://railway.com/project/9829ee26-dff3-4db2-850c-2cb87207cdaa
+Database:          Supabase cbhbrbkirzpncpxlvehk
+Location ID:       ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Corona)
+Vercel deploy:     cd /Users/patricksimac/CannaSpy && ~/Library/pnpm/vercel --prod --yes
+Railway deploy:    cd /Users/patricksimac/CannaSpy && railway up --detach
+```
+
+---
+
 **Date:** 2026-05-08 (Session 20 — API migrated from Fly.io → Railway Hobby)
 
 ---
