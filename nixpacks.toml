@@ -15,7 +15,7 @@
 nixPkgs = ["nodejs_20", "pnpm-9_x", "python311"]
 
 [phases.install]
-cmds = ["pnpm install --frozen-lockfile"]
+cmds = ["NODE_ENV=development pnpm install --frozen-lockfile"]
 
 [phases.build]
 cmds = [

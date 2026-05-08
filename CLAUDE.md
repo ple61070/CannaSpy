@@ -46,11 +46,11 @@ Flag conflicts rather than silently choosing one over the other.
 | API layer | Node.js + Fastify + TypeScript | `packages/api/` |
 | Frontend | React 18 + Vite + TypeScript | `packages/web/` |
 | Styling | Tailwind CSS + CSS variables | Dark theme — see BRAND.md |
-| Database | PostgreSQL 15 (Railway dev → Supabase prod) | |
+| Database | PostgreSQL 15 (Supabase prod — project `cbhbrbkirzpncpxlvehk`) | |
 | Cache / queue backend | Redis 7 | BullMQ + session cache |
 | Auth | Clerk | Multi-tenant MSO orgs, role-based |
 | Billing | Stripe | Metered per-slot, volume discounts |
-| Infrastructure | Railway (MVP) → AWS ECS (scale) | railway.toml exists |
+| Infrastructure | Railway API (us-west2) + Vercel frontend | Fly.io abandoned Session 20 (machine-hour limits); Railway Hobby $5/mo |
 | AI / normalization | Anthropic claude-sonnet-4-6 | Product name normalization |
 | Email / alerts | Resend | Transactional + weekly digest |
 | Monitoring | Sentry + Uptime Robot | Error tracking, scrape health |
@@ -124,7 +124,7 @@ cannaspy/
 │   │       ├── db/
 │   │       │   ├── schema.sql       ← ✅ complete schema
 │   │       │   ├── redis.ts         ← ✅ shared IORedis cache singleton
-│   │       │   └── migrations/      ← ✅ 001–011 applied (Railway prod)
+│   │       │   └── migrations/      ← ✅ 001–011 applied (Supabase prod)
 │   │       ├── scheduler.ts         ← ✅ exists
 │   │       └── index.ts             ← ✅ exists
 │   │
@@ -158,17 +158,17 @@ cannaspy/
 - Clerk auth middleware (`middleware/clerk.ts`) — all protected routes
 - RLS policies applied (migration 006)
 - All React pages (35 screens built)
-- MarketHeatMap — live Mapbox GL, 1,325 CA dispensary pins, two-layer pin system (ring + fill), bbox API. Pin states: amber=blocked, teal 100%=enriched, teal 70%=prospect (no grey pins). Clusters at zoom <10.
+- MarketHeatMap — live Mapbox GL, 1,785 CA dispensary pins, two-layer pin system (ring + fill), bbox API. Pin states: amber=blocked, teal 100%=enriched, teal 70%=prospect (no grey pins). Clusters at zoom <10. Theme-aware basemap (dark-v11 / streets-v12), hover state active (`promoteId="id"`), legend corrected.
 - `business_type` column on `competitors` + `dispensaries` (migration 011); `OperatorTypeFilter` wired to 6 screens
 - Fallback scraper (`dispensary_scraper.py` — rebranded, no CannaIntel references)
 - Primary pipeline (`collector.py` — live, 6,002 menu items from 4 competitors)
-- DCC ingest (`dcc_ingest.py` — 1,787 CA dispensary records, 1,325 with lat/lng)
+- DCC ingest (`dcc_ingest.py` — 1,785 CA dispensary records, 1,323 with lat/lng, in Supabase)
 - IP rotation (`ip_pool.py`)
 - Off-peak scheduler (`scheduler.py`)
 - Diff engine (`diff_engine.py`)
 - Promo parser (`promo_parser.py`)
 - CLI tools (all 4 + test-block-cancel.py)
-- Database schema — all 11 migrations applied to Railway prod
+- Database schema — all 11 migrations applied to Supabase prod
 - Parsers (Dutchie, HTML, normalizer)
 - Places client (slug discovery)
 - Robots checker
@@ -176,8 +176,10 @@ cannaspy/
 - CRM failure tracking (`block_list.crm_notify_failed`, migration 009)
 - DCC dispensaries table (`dispensaries` + `org_dispensary_state`, migration 010)
 - Stripe Customer Portal redirect (CancellationFlow → `/api/v1/billing/portal`)
-- Railway production API live (`https://cannaspy-production.up.railway.app`)
-- Frontend deployed to Vercel (`https://web-rouge-one-15.vercel.app`)
+- Railway API live: `https://cannaspy-production.up.railway.app` — Fly.io abandoned Session 20 (machine-hour limits)
+- Frontend deployed to Vercel (`https://web-rouge-one-15.vercel.app`) — deployed from workspace root
+- `PriceHistory.tsx` — brand-compliant (Space Mono font, amber rival line, corrected delta colors) — deployed Session 19
+- `cannaspy-data-analyst` skill — installed at `/var/folders/.../skills/cannaspy-data-analyst/`; use for all data questions
 
 ### ⬜ Remaining / Needs Verification
 - `alert.worker.ts` — logs only, not yet wired to Resend (no emails sent on alerts)
@@ -185,6 +187,9 @@ cannaspy/
 - `IP_POOL` — single local IP in dev; no proxy pool configured for production
 - Webhook live-mode endpoint — test mode only; live-mode registration is a launch-checklist item
 - `scrape.worker.ts` wiring to `collector.py` — fallback to `dispensary_scraper.py` still active
+- `REDIS_URL` on Railway points to Railway internal Redis — workers should start cleanly (verify after deploy)
+- `PriceHistory.tsx` — still on hardcoded mock data; needs `GET /api/v1/pricing/history` endpoint
+- Supabase MCP `execute_sql` broken — "Database authentication failed"; use PostgREST workaround
 
 ---
 
@@ -460,7 +465,7 @@ WEB_PORT=3000
 **Status: COMPLETE ✅ — Pipeline live in production since 2026-04-28.**
 
 Done:
-- [x] Schema applied — 11 migrations on Railway prod
+- [x] Schema applied — 11 migrations on Supabase prod
 - [x] `dispensary_scraper.py` rebranded (no CannaIntel references)
 - [x] `collector.py` built and run — 6,002 menu items collected from 4 competitors
 - [x] `ip_pool.py` built
@@ -502,12 +507,14 @@ Done:
 - [x] LocationDashboard wired (loads location + competitors)
 - [x] CancellationFlow wired to Stripe Customer Portal
 - [x] All pages using `authFetch` (Clerk token on all API calls)
-- [x] MarketHeatMap — live Mapbox GL, 1,325 DCC dispensary pins, two-layer pin system (ring + fill), clusters at zoom <10, bbox API fetch on map move. Pin colors: amber=blocked, teal 100%=enriched, teal 70%=prospect.
+- [x] MarketHeatMap — live Mapbox GL, 1,785 DCC dispensary pins, two-layer pin system (ring + fill), clusters at zoom <10, bbox API fetch on map move. Pin colors: amber=blocked, teal 100%=enriched, teal 70%=prospect.
 - [x] Map sidebar gap fix — explicit `width:100%` + matching CSS transition on map container (Session 13)
+- [x] Theme-aware basemap (`dark-v11` in dark mode, `streets-v12` in light) — Session 14
+- [x] `promoteId="id"` on dispensary Source — hover state active (Session 14)
+- [x] Map legend corrected to teal 70% prospect (Session 14)
+- [x] `PriceHistory.tsx` brand fixes — Space Mono font, amber rival line, corrected delta colors (Session 19)
 
 Still needed:
-- [ ] Switch MarketHeatMap basemap to `dark-v11` (currently `streets-v12`) — one prop in `MarketHeatMap.tsx`
-- [ ] Add `promoteId="id"` to `<Source id="cs-dispensaries">` in `MarketHeatMap.tsx` — activates hover states
 - [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
 - [ ] Block Management (`/blocks`) — verify wired to real data
 - [ ] Promotions — scaffold only, not wired
@@ -519,8 +526,9 @@ Still needed:
 **Status: PARTIALLY COMPLETE — Railway live, billing config pending.**
 
 Done:
-- [x] Railway production API deployed and live (latest SHA `51a131d`, 2026-05-02)
-- [x] Frontend deployed to Vercel (`web-rouge-one-15.vercel.app`, latest SHA `51a131d`, 2026-05-02)
+- [x] Railway API deployed and live: `https://cannaspy-production.up.railway.app` (us-west2) — Session 20 (migrated from Fly.io)
+- [x] Supabase DB active — 1,785 CA dispensaries, all 11 migrations applied
+- [x] Frontend deployed to Vercel (`web-rouge-one-15.vercel.app`) — monorepo deploy from workspace root
 - [x] Dunning logic — 3-day grace period on `invoice.payment_failed`
 - [x] Webhook test-mode endpoint registered + verified
 
@@ -530,7 +538,7 @@ Still needed:
 - [ ] Register Stripe live-mode webhook endpoint (launch blocker)
 - [ ] Sentry error tracking integration
 - [ ] Uptime Robot scrape health monitoring
-- [ ] Fix Railway auto-deploy — `git push` does not trigger deploy; requires manual `railway up` each time
+- [ ] Fix `REDIS_URL` on Fly.io — currently `localhost:6379`; set to Upstash Redis or disable BullMQ workers (non-fatal, noisy startup crashes)
 - [ ] `cannaspy_brand.html` — review and integrate or archive
 
 ---
@@ -544,7 +552,7 @@ Stop and wait for explicit confirmation on:
 3. **Any outbound communication to customers** — review before sending
 4. **Changes to the blocking mechanic logic** — core product, get confirmation
 5. **Any code that names the primary data source platform explicitly**
-6. **Railway production deployment** — costs money, confirm before deploying
+6. **Railway production deployment** (`railway up`) — costs money, confirm before deploying
 
 For everything else: proceed, report what was done.
 

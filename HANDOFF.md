@@ -1,4 +1,186 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-08 (Session 20 — API migrated from Fly.io → Railway Hobby)
+
+---
+
+## Session 20 — 2026-05-08
+
+**Commits:** nixpacks.toml fix (NODE_ENV=development during install)
+**Deploy:** Railway ✅ `cannaspy-production.up.railway.app` — `/health` 200  
+Vercel ✅ `web-rouge-one-15.vercel.app` — VITE_API_URL baked to Railway URL
+
+---
+
+### 1. What Was Done
+
+#### API Migration — Fly.io → Railway Hobby ($5/mo)
+- **Reason:** Fly.io machine-hour limits burning through free allowance
+- Railway project `cannaspy` already existed (old trial expired), upgraded to Hobby plan
+- Set 5 missing/corrected env vars via Railway GraphQL API:
+  - `DATABASE_URL` → Supabase pooler URL (was pointing to Railway Postgres)
+  - `CANNASPY_PRIMARY_API_HOST` → `api-g.weedmaps.com`
+  - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- **Bug fixed:** `nixpacks.toml` `install` phase had `pnpm install --frozen-lockfile` but `NODE_ENV=production` was set as Railway var → pnpm skipped devDependencies → `tsc: not found`. Fixed by: `NODE_ENV=development pnpm install --frozen-lockfile`
+- Deployed via `railway up --detach`; build passed on second attempt
+- `REDIS_URL` on Railway already points to Railway internal Redis (not localhost) — BullMQ workers should start cleanly
+
+#### Vercel frontend update
+- Updated `VITE_API_URL` to `https://cannaspy-production.up.railway.app` via Vercel REST API
+- Triggered `vercel --prod` redeploy; Railway URL confirmed baked into Vite JS bundle
+
+#### CLAUDE.md updated
+- Infrastructure row: Fly.io → Railway Hobby
+- Phase 4 status: updated to Railway URL
+- REDIS_URL note: updated (no longer localhost issue)
+- Approval gate #6: updated to `railway up`
+
+---
+
+### 2. What's Pending
+
+- Fly.io app (`cannaspy-api`) — NOT deleted yet. Delete once Railway is confirmed stable for 24h.
+- Verify BullMQ workers are starting cleanly on Railway (REDIS_URL now points to Railway Redis)
+- All other items from Session 19 still pending (billing config, Sentry, Uptime Robot, etc.)
+
+---
+
+### Key URLs
+
+```
+API (Railway):   https://cannaspy-production.up.railway.app
+API health:      https://cannaspy-production.up.railway.app/health
+Frontend:        https://web-rouge-one-15.vercel.app
+Railway project: https://railway.com/project/9829ee26-dff3-4db2-850c-2cb87207cdaa
+```
+
+---
+
+**Date:** 2026-05-08 (Session 19 — Data plugin + cannaspy-data-analyst skill + PriceHistory brand fixes deployed)
+
+---
+
+## Session 19 — 2026-05-08
+
+**Commits:** none (frontend edits only — deployed via `vercel build --prod` + `vercel deploy --prebuilt --prod`)
+**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` — PriceHistory brand fixes live
+
+---
+
+### 1. What Was Done
+
+#### Cowork Data Plugin — explored and customized for CannaSpy
+- Reviewed the newly installed Data plugin skill suite: `/analyze`, `/build-dashboard`, `/create-viz`, `/data-context-extractor`, `/explore-data`, `/sql-queries`, `/statistical-analysis`, `/validate-data`, `/write-query`
+- Ran `/data-context-extractor` in Bootstrap Mode: read `packages/api/src/db/schema.sql` in full (all 15 tables), answered Q&A about business terminology, key metrics, and query patterns
+- Generated a complete `cannaspy-data-analyst` custom skill with 6 domain reference files
+
+#### cannaspy-data-analyst skill — built and installed
+Built and installed a reusable company-specific data analysis skill to `/var/folders/.../skills/cannaspy-data-analyst/`:
+
+| File | Contents |
+|---|---|
+| `SKILL.md` | PostgreSQL 15 dialect, entity disambiguation, standard filters, 5 query patterns, common mistakes |
+| `references/entities.md` | Full join chain from `org_id` → price data; customer-side vs market-side disambiguation |
+| `references/metrics.md` | MRR, block cancellation rate, CRM failure rate, daily observation volume — all with SQL |
+| `references/pricing.md` | `price_observations` usage, `products` global scope, `promotions` join patterns |
+| `references/blocking.md` | Block lifecycle, `tracked_competitors` vs `block_list` distinction, CRM failure queries |
+| `references/scraping.md` | `scrape_jobs` table, pipeline architecture, staleness checks |
+| `references/billing.md` | MRR queries, pricing tier table, churn analysis, gotchas |
+
+Critical entity disambiguation baked in:
+- `locations` = customer's stores (org-scoped)
+- `competitors` = rival dispensaries (global — NO `org_id`)
+- `dispensaries` = DCC registry (NOT the same as competitors)
+- Scope `competitors`/`products` via join through `tracked_competitors` → `locations` → `org_id`
+
+Saved to project memory (`project_cannaspy_data_skill.md`) and indexed in `MEMORY.md`.
+
+**Source zip**: `/Users/patricksimac/Documents/Claude/Projects/CannaSpy/cannaspy-data-analyst.zip`
+
+#### PriceHistory.tsx — brand compliance fixes (6 changes)
+Navigated to `https://web-rouge-one-15.vercel.app/prices/history`, identified 6 brand violations:
+
+| # | Issue | Fix |
+|---|---|---|
+| 1 | Rival High stat shown in danger/red color | Changed `valColor: 'var(--danger)'` → `'var(--text-2)'` |
+| 2 | Days w/ Promo delta was hardcoded string | Changed to `` `${data.promoDays} of 90 days` `` |
+| 3 | Font: `JetBrains Mono` used instead of `Space Mono` | Replaced all 2 instances → `Space Mono,monospace` |
+| 4 | Delta colors inverted — rival price drop shown green (good) | Corrected: `isDown` (rival drops) = danger/coral (threat); rival raises = accent/teal (opportunity) |
+| 5 | STIIIZY rival line color `#D396A6` (pink) — not brand | Changed to `#ba7517` (amber — blocking color per BRAND.md) |
+| 6 | "blocked" badge using pink/rose colors | Changed both badge instances to amber `rgba(186,117,23,0.15)` + `#ba7517` |
+
+Deployed with `vercel build --prod` → `vercel deploy --prebuilt --prod`. All 6 fixes confirmed live.
+
+---
+
+### 2. What Failed / Tricky
+
+#### Vercel stale artifacts trap
+First deploy attempt uploaded only 142.6KB — it used the old `.vercel/output` from a previous session's build. Changes were already in `dist/` (confirmed via grep for `ba7517`, `Space Mono`, `of 90 days`) but the `.vercel/output` bundle hadn't been regenerated.
+
+**Fix**: Always run `npx vercel build --prod` FIRST to regenerate `.vercel/output` from the current dist, THEN `npx vercel deploy --prebuilt --prod`. Second deploy uploaded 8.9MB (full output) and all changes appeared live.
+
+**Rule going forward**: Two-step Vercel deploy sequence is mandatory — `vercel build` then `vercel deploy --prebuilt`. Never skip the build step.
+
+#### Memory write path typo
+First attempt to save memory file used wrong UUID segment in path. Fixed on second attempt with correct full path.
+
+---
+
+### 3. Current State
+
+| Layer | Status |
+|---|---|
+| cannaspy-data-analyst skill | ✅ installed, ready to use for all data questions |
+| PriceHistory.tsx | ✅ brand-compliant, deployed live |
+| `PriceHistory.tsx` → real API | ❌ still hardcoded mock `HISTORY` object — not wired |
+| API (Fly.io) | ✅ live `cannaspy-api.fly.dev` |
+| Frontend (Vercel) | ✅ live `web-rouge-one-15.vercel.app` |
+| Database (Supabase) | ✅ active |
+
+---
+
+### 4. What Is Next (Priority Order)
+
+1. **Wire `PriceHistory.tsx` to real API** — currently runs 100% on hardcoded mock data. Needs endpoint: `GET /api/v1/pricing/history?location_id=&competitor_id=&days=90` returning `price_observations` aggregated by day
+2. **Run `diff_engine.py` end-to-end** — generates first real `alerts` rows, makes CommandCenter/AlertFeed show data
+3. **Verify Block Management (`/blocks`)** — confirm wired to real data, not placeholder
+4. **Fix REDIS_URL on Fly.io** — currently `localhost:6379`; workers crash at startup (non-fatal, noisy). Set to Upstash Redis or disable scheduler/workers
+5. **Apply DM Sans + Space Mono** typography system-wide — PriceHistory fixed this session; remaining screens need audit
+
+---
+
+### 5. Full Backlog (What Is Still Left To Do)
+
+**Data pipeline:**
+- [ ] Wire `scrape.worker.ts` → `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] Test `diff_engine.py` end-to-end with two real snapshots
+- [ ] Configure production proxy IP pool (currently single IP in dev)
+
+**API / backend:**
+- [ ] `billing.ts` — full Stripe subscription quantity sync on slot add/remove
+- [ ] `alerts.ts` — verify read/mark-reviewed wired end-to-end
+- [ ] `alert.worker.ts` → wire to Resend (currently logs only, no emails sent)
+- [ ] Register Stripe live-mode webhook (launch blocker)
+- [ ] `billing.service.ts` — usage sync cron
+
+**Frontend:**
+- [ ] Wire `PriceHistory.tsx` to real `price_observations` / `products` API data
+- [ ] Wire Block Management (`/blocks`) to real data
+- [ ] Scaffold → wire Promotions screen
+- [ ] Apply DM Sans + Space Mono typography across all screens
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+- [ ] Switch MarketHeatMap basemap to `dark-v11` (currently `streets-v12`)
+- [ ] Add `promoteId="id"` to `<Source id="cs-dispensaries">` for hover states
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
+
+**Infrastructure:**
+- [ ] Fix Supabase MCP `execute_sql` — "Database authentication failed" on every call (use PostgREST workaround in the meantime)
+- [ ] Fix Railway auto-deploy (abandoned — Railway is dead, using Fly.io now)
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+---
+
 **Date:** 2026-05-07 (Session 18 — Map endpoint confirmed working, connection timeout fixed, 1,000 CA pins live)
 
 ---
