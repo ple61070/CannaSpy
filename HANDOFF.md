@@ -1,4 +1,81 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-09 (Session 23 — PriceHistory wired to live API; doc audit fixes deployed)
+
+---
+
+## Session 23 — 2026-05-09
+
+**Commits:**
+- `0945d2d` — feat(pricing): wire PriceHistory to real API data via menu_items
+- `9af98c9` — fix(pipeline): bridge primary pipeline to alert chain
+
+**Deploy:** Railway API ✅ (both commits deployed) · Vercel frontend ✅ (dpl_3wDrNtBeikGSPMdZvAoSN39nN8TM, READY)
+
+---
+
+### 1. What Was Done
+
+#### Doc audit fixes (from Session 23 start — continuation of prior session)
+- `HANDOFF.md` — redacted opsec violation in Session 20 (hardcoded primary API host)
+- `ARCHITECTURE.md` — corrected title: "34 Screens" → "36 Screens"
+- `TECHNICAL_SPEC.md` — 5 major contradictions fixed: infra row (Railway + Vercel), project structure (all missing files added), scrape flow (collector.py as primary), rebranding checklist (all ✅), env vars (CANNASPY_PRIMARY_API_HOST + 6 others added)
+
+#### PriceHistory wired to real data
+Two new API routes added to `packages/api/src/routes/pricing.ts`:
+- `GET /api/v1/prices/products?location_id=&category=` — distinct products across ≥2 competitors from `menu_items`, with avg/min/max price and competitor count
+- `GET /api/v1/prices/history-by-product?location_id=&product_name=&days=` — time-series price data per product across all location competitors from `menu_items`, grouped by (competitor_id, date)
+
+`packages/web/src/pages/PriceHistory.tsx` fully rewritten — removed all 409 lines of hardcoded mock data, replaced with live API integration:
+- Fetches products on location change; fetches history on product/days change
+- Sparse data handling: single-point series extended to flat line across window
+- Blocked competitors render in amber (#ba7517), tracked in rotating palette
+- Brand-compliant empty states and loading states
+- TypeScript: clean compile (`tsc --noEmit` → no errors)
+
+#### Verification
+- Railway API: `/api/v1/prices/products` → 401 (auth running, route exists) ✅
+- Vercel: `web-rouge-one-15.vercel.app/price-history` → 200 ✅
+
+#### Pipeline alert chain fix
+Found a critical gap: primary pipeline (collector.py) never generated alerts because:
+1. `normalize.worker.ts` crashed on `rawNames.length` when `rawNames` was undefined (primary pipeline job has no rawNames)
+2. `price_observations` was never populated from primary pipeline data — only fallback scraper writes there
+3. `diff.worker.ts` reads from `price_observations`, so primary pipeline diffs were never run
+
+**Fix**: Updated `normalize.worker.ts` — when rawNames is absent (primary pipeline), copies the latest `menu_items` snapshot into `price_observations`, then proceeds with normalization and diff as normal. Full chain now works for both pipelines.
+
+**Added scripts**:
+- `packages/scraper/test_diff_engine.py` — synthetic smoke test; all 5 event types (price_change, sale_started, sale_ended, new_product, removed_product) verified ✅
+- `packages/scraper/run_diff.py` — orchestrator: finds competitors with ≥2 snapshots and runs diff
+
+**BLOCKER FOR REAL ALERTS**: Supabase prod only has seed data (1 test competitor, no menu_items). The alert chain is fully wired now, but won't produce real alerts until real competitors with slugs are added via the app and collector.py runs at least twice for each.
+
+**Fixed in `diff_engine.py`**: strips `uselibpqcompat` from DATABASE_URL (Supabase transaction pooler compat — was crashing psycopg2)
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `ARCHITECTURE.md` | Title: 34 → 36 screens |
+| `HANDOFF.md` | Session 20 opsec redaction |
+| `TECHNICAL_SPEC.md` | 5 contradictions fixed |
+| `packages/api/src/routes/pricing.ts` | +2 new routes: /products, /history-by-product |
+| `packages/web/src/pages/PriceHistory.tsx` | Full rewrite — live API, no mock data |
+
+---
+
+### 3. What's Next (Priority Order)
+
+1. **Add real competitors to Supabase** — the app UI can do this (Add Location flow), or direct insert with a slug. Once ≥1 real competitor exists and collector.py runs twice on Railway's schedule, alerts will flow automatically.
+2. **Verify Block Management (`/blocks`)** — confirm wired to real data, not stubs
+3. **Wire `alert.worker.ts` to Resend** — currently logs only, no emails sent on alerts
+4. **Full Stripe billing quantity sync** — slot add/remove → Stripe quantity update
+5. **Register Stripe live-mode webhook** — launch blocker
+
+---
+
 **Date:** 2026-05-08 (Session 22 — Skill installation: cannaspy-infra + cannaspy-deploy updated)
 
 ---
