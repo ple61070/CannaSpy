@@ -80,9 +80,43 @@ ${rawNames.map((n, i) => `${i + 1}. ${n}`).join('\n')}`
 export const normalizeWorker = new Worker<NormalizeJobData>(
   'normalize-queue',
   async (job: Job<NormalizeJobData>) => {
-    const { competitorId, rawNames } = job.data
+    const { competitorId } = job.data
+    let rawNames: string[] = job.data.rawNames ?? []
 
-    // Process in batches of BATCH_SIZE
+    // Primary pipeline bridge: when rawNames is absent, collector.py already wrote to
+    // menu_items but price_observations is empty for this competitor. Copy the latest
+    // collection run from menu_items → price_observations so diff.worker.ts can compare.
+    if (rawNames.length === 0) {
+      const items = await query<{ name: string; price: number; on_sale: boolean; discount_label: string | null }>(
+        `SELECT DISTINCT ON (name)
+           name, price, on_sale, discount_label
+         FROM menu_items
+         WHERE competitor_id = $1
+           AND collected_at >= (
+             SELECT MAX(collected_at) - INTERVAL '10 minutes'
+             FROM menu_items WHERE competitor_id = $1
+           )
+           AND price IS NOT NULL
+           AND price > 0
+         ORDER BY name, collected_at DESC
+         LIMIT 500`,
+        [competitorId]
+      )
+
+      if (items.rows.length > 0) {
+        // Bridge: write latest menu_items snapshot into price_observations
+        for (const item of items.rows) {
+          await query(
+            `INSERT INTO price_observations (competitor_id, raw_name, price, in_stock, on_promo, promo_text)
+             VALUES ($1, $2, $3, TRUE, $4, $5)`,
+            [competitorId, item.name, item.price, item.on_sale, item.discount_label ?? null]
+          )
+        }
+        rawNames = items.rows.map((r) => r.name)
+      }
+    }
+
+    // Normalize product names via Claude in batches
     for (let i = 0; i < rawNames.length; i += BATCH_SIZE) {
       const batch = rawNames.slice(i, i + BATCH_SIZE)
       const normalized = await normalizeWithClaude(batch)
@@ -112,7 +146,7 @@ export const normalizeWorker = new Worker<NormalizeJobData>(
       }
     }
 
-    // Enqueue diff job
+    // Enqueue diff job (works for both pipelines — diff.worker reads price_observations)
     await diffQueue.add('diff', { competitorId, detectedAt: new Date().toISOString() }, {
       removeOnComplete: 100,
     })
