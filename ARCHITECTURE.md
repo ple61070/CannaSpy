@@ -1,5 +1,5 @@
 # CannaSpy — Product Architecture
-## 34 Screens Across 8 Sections
+## 36 Screens Across 8 Sections
 **Version 2.0 | March 2026**
 
 Each screen entry includes: purpose, key data displayed, key interactions,

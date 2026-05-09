@@ -21,7 +21,7 @@ without flagging them explicitly.
 | Cache / queue backend | Redis 7 | BullMQ, session cache, rate limiting |
 | Auth | Clerk | Multi-tenant MSO orgs, role-based access |
 | Billing | Stripe | Metered per-slot billing, volume discounts |
-| Infrastructure | Railway (MVP) → AWS ECS (scale) | Railway for speed, AWS for scale |
+| Infrastructure | Railway (us-west2) + Vercel frontend | Railway Hobby $5/mo; Fly.io abandoned Session 20 (machine-hour limits) |
 | AI / normalization | Anthropic Claude API (claude-sonnet-4-6) | Product name normalization |
 | Email / alerts | Resend | Transactional email, weekly digest |
 | File storage | AWS S3 | Menu screenshots for evidence view |
@@ -40,40 +40,57 @@ cannaspy/
 │
 ├── packages/
 │   ├── scraper/                 ← Python data pipeline
-│   │   ├── dispensary_scraper.py    ← REBRAND from CannaIntel
+│   │   ├── dispensary_scraper.py    ← ✅ FALLBACK scraper (rebranded, no CannaIntel refs)
+│   │   ├── collector.py             ← ✅ PRIMARY pipeline (6,002 items collected)
+│   │   ├── diff_engine.py           ← ✅ built (not yet tested end-to-end)
+│   │   ├── ip_pool.py               ← ✅ built
+│   │   ├── scheduler.py             ← ✅ built
+│   │   ├── promo_parser.py          ← ✅ built
+│   │   ├── dcc_ingest.py            ← ✅ DCC dispensary ingest (1,785 CA records)
 │   │   ├── parsers/
-│   │   │   ├── dutchie_parser.py    ← Dutchie GraphQL handler
-│   │   │   ├── html_parser.py       ← Generic HTML fallback
-│   │   │   └── normalizer.py        ← Claude API normalization
+│   │   │   ├── dutchie_parser.py    ← ✅ Dutchie GraphQL handler
+│   │   │   ├── html_parser.py       ← ✅ Generic HTML fallback
+│   │   │   └── normalizer.py        ← ✅ Claude API normalization
 │   │   ├── discovery/
-│   │   │   └── places_client.py     ← Google Places API
+│   │   │   └── places_client.py     ← ✅ Google Places API
 │   │   ├── compliance/
-│   │   │   └── robots_checker.py    ← robots.txt validation
+│   │   │   └── robots_checker.py    ← ✅ robots.txt validation
 │   │   ├── requirements.txt
 │   │   └── README.md
 │   │
-│   ├── api/                     ← Node.js / Fastify API
+│   ├── api/                     ← Node.js / Fastify API (TypeScript)
 │   │   ├── src/
-│   │   │   ├── routes/
+│   │   │   ├── middleware/
+│   │   │   │   └── clerk.ts         ← ✅ Clerk auth middleware
+│   │   │   ├── routes/              ← ✅ 11 routes wired
 │   │   │   │   ├── competitors.ts
 │   │   │   │   ├── blocks.ts
 │   │   │   │   ├── pricing.ts
 │   │   │   │   ├── alerts.ts
 │   │   │   │   ├── locations.ts
 │   │   │   │   ├── organizations.ts
-│   │   │   │   └── billing.ts
-│   │   │   ├── workers/         ← BullMQ job processors
+│   │   │   │   ├── billing.ts
+│   │   │   │   ├── billing.webhook.ts ← ✅ idempotency gate + payment handler
+│   │   │   │   ├── admin.ts         ← ✅ GET /api/v1/admin/crm-failures
+│   │   │   │   ├── map.ts           ← ✅ GET /api/v1/map/dispensaries (bbox GeoJSON)
+│   │   │   │   └── settings.ts
+│   │   │   ├── workers/             ← ✅ 6 BullMQ workers live in production
 │   │   │   │   ├── scrape.worker.ts
 │   │   │   │   ├── normalize.worker.ts
 │   │   │   │   ├── diff.worker.ts
-│   │   │   │   └── alert.worker.ts
+│   │   │   │   ├── alert.worker.ts
+│   │   │   │   ├── billing.worker.ts
+│   │   │   │   └── crm.worker.ts    ← ✅ 3 retries, exponential backoff, Sentry
 │   │   │   ├── db/
 │   │   │   │   ├── schema.sql
-│   │   │   │   └── migrations/
-│   │   │   ├── services/
+│   │   │   │   ├── redis.ts         ← ✅ shared IORedis cache singleton
+│   │   │   │   └── migrations/      ← ✅ 001–011 applied (Supabase prod)
+│   │   │   ├── services/            ← ✅ 4 services
 │   │   │   │   ├── blocking.service.ts
 │   │   │   │   ├── pricing.service.ts
-│   │   │   │   └── alert.service.ts
+│   │   │   │   ├── alert.service.ts
+│   │   │   │   └── billing.service.ts
+│   │   │   ├── scheduler.ts
 │   │   │   └── index.ts
 │   │   ├── package.json
 │   │   └── README.md
@@ -277,16 +294,17 @@ CREATE INDEX idx_block_list_active    ON block_list(active) WHERE active = TRUE;
 ### Scrape Job Flow
 
 ```
-Scheduler (cron)
+Scheduler (cron — 2:30 AM Pacific daily)
     ↓
 BullMQ: scrape-queue
     ↓
 ScrapeWorker (Node.js) → dispatches to Python scraper
     ↓
-dispensary_scraper.py
-    ├── robots_checker.py → skip if disallowed
-    ├── dutchie_parser.py (if Dutchie platform detected)
-    └── html_parser.py (fallback)
+collector.py (PRIMARY — public unauthenticated JSON API)
+    [fallback: dispensary_scraper.py via Playwright/BS4]
+    ├── ip_pool.py → IP rotation (Rule 1)
+    ├── timing jitter 0.5–2.5s (Rule 2)
+    └── robots_checker.py / dutchie_parser.py / html_parser.py (fallback path)
     ↓
 Raw price data → PostgreSQL (price_observations)
     ↓
@@ -476,31 +494,34 @@ python cli/data-qa.py normalize --name "Blue Dream 1g flower"
 
 ## Rebranding Checklist (CannaIntel → CannaSpy)
 
-Before extending either existing file, complete this checklist:
-
-- [ ] `dispensary_scraper.py` — find/replace all "CannaIntel" string references
-- [ ] `dashboard.jsx` — find/replace all "CannaIntel" string references
-- [ ] Update any hardcoded API endpoint references
-- [ ] Update any hardcoded color values to match CannaSpy palette
-- [ ] Rename files if they contain "cannaIntel" in the filename
-- [ ] Update README files
+- [x] `dispensary_scraper.py` — rebranded, no CannaIntel references ✅
+- [x] `dashboard.jsx` — rebranded; extended into full React app under `packages/web/` ✅
+- [x] Hardcoded API endpoint references removed — `CANNASPY_PRIMARY_API_HOST` env var ✅
+- [x] Color values updated to CannaSpy palette (BRAND.md) ✅
+- [x] No cannaIntel filenames in codebase ✅
+- [x] README files updated ✅
 
 ---
 
 ## Environment Variables Required
 
 ```bash
-# Database
-DATABASE_URL=postgresql://...
-REDIS_URL=redis://...
+# Primary data pipeline — OPERATIONAL SECURITY
+CANNASPY_PRIMARY_API_HOST=        # platform API host — never hardcode inline
 
-# Auth
+# Database
+DATABASE_URL=                     # PostgreSQL connection string (Supabase pooler)
+REDIS_URL=                        # Redis connection string (Railway internal)
+
+# Auth (Clerk)
 CLERK_SECRET_KEY=
 CLERK_PUBLISHABLE_KEY=
+VITE_CLERK_PUBLISHABLE_KEY=       # frontend
 
-# Billing
+# Billing (Stripe)
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
+STRIPE_PRICE_ID=                  # metered slot price ID
 
 # AI
 ANTHROPIC_API_KEY=
@@ -516,10 +537,16 @@ AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_S3_BUCKET=
 
+# Supabase
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
 # App
 NODE_ENV=development
 API_PORT=3001
 WEB_PORT=3000
+VITE_API_URL=                     # frontend API base URL
 ```
 
 ---

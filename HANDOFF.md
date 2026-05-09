@@ -155,6 +155,8 @@ Wrote and issued full migration prompt to Claude Code. CC executed:
 #### Skills created/updated (this session)
 - Created `cannaspy-infra` skill — covers Railway deploy, Vercel deploy, env var management, health verification
 - Updated `cannaspy-deploy` skill — added Railway deploy sequence alongside existing Vercel steps
+- Both installed to `~/.claude/skills/` and active as `/cannaspy-infra` and `/cannaspy-deploy`
+- Source files committed to `docs/skills/` for version control
 
 ---
 
@@ -260,7 +262,7 @@ Vercel ✅ `web-rouge-one-15.vercel.app` — VITE_API_URL baked to Railway URL
 - Railway project `cannaspy` already existed (old trial expired), upgraded to Hobby plan
 - Set 5 missing/corrected env vars via Railway GraphQL API:
   - `DATABASE_URL` → Supabase pooler URL (was pointing to Railway Postgres)
-  - `CANNASPY_PRIMARY_API_HOST` → `api-g.weedmaps.com`
+  - `CANNASPY_PRIMARY_API_HOST` → [redacted — opsec, see .env]
   - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 - **Bug fixed:** `nixpacks.toml` `install` phase had `pnpm install --frozen-lockfile` but `NODE_ENV=production` was set as Railway var → pnpm skipped devDependencies → `tsc: not found`. Fixed by: `NODE_ENV=development pnpm install --frozen-lockfile`
 - Deployed via `railway up --detach`; build passed on second attempt
