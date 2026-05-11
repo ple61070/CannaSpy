@@ -24,6 +24,7 @@ import logging
 import math
 import os
 import random
+import re
 import sys
 import time
 from datetime import datetime
@@ -175,6 +176,7 @@ def _get_conn() -> psycopg2.extensions.connection:
     url = os.environ.get("DATABASE_URL")
     if not url:
         raise EnvironmentError("DATABASE_URL is not set.")
+    url = re.sub(r'[?&]uselibpqcompat=[^&]*', '', url).rstrip('?')
     return psycopg2.connect(url)
 
 

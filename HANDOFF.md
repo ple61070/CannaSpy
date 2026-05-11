@@ -1,5 +1,96 @@
 # CannaSpy Session Handoff
-**Date:** 2026-05-11 (Session 24 — First real Supabase competitor inserted; pipeline verified end-to-end)
+**Date:** 2026-05-11 (Session 25 — collector.py fix + second snapshot + first real change_events via PostgREST diff)
+
+---
+
+## Session 25 — 2026-05-11
+
+**Commits:** `feat(pipeline): second snapshot + diff via PostgREST; add pipeline and deploy skill docs`
+**Deploy:** Vercel — no change · Railway API — no change
+
+---
+
+### 1. What Was Done
+
+#### Fixed collector.py `_get_conn()` — strip uselibpqcompat
+Added `import re` (was missing) and the same 2-line fix already present in `diff_engine.py`:
+```python
+url = re.sub(r'[?&]uselibpqcompat=[^&]*', '', url).rstrip('?')
+```
+Applied at `packages/scraper/collector.py:174`. Unblocks psycopg2 on Railway.
+
+#### Created second snapshot for cannabis-house-4 via PostgREST
+Script: `packages/scraper/make_second_snapshot.py`
+- Reads all 1,993 items from snapshot `e5a43c17` via paginated GET `/rest/v1/menu_items`
+- Mutates ~5% of prices (±$5.00), marks ~3% as `on_sale=True` with `discount_label='Daily Deal'`
+- Creates new `menu_snapshots` row: `id=cf921eef-3ba2-4039-a202-b2eb738346e1`, `collected_at=2026-05-11T17:09:11Z`
+- Inserts 1,993 items in batches of 100
+- Updates `competitors.last_scraped`
+- Result: 103 price changes, 61 on_sale marks applied
+
+#### Created run_diff_rest.py — PostgREST diff orchestrator
+Script: `packages/scraper/run_diff_rest.py`
+- Fetches all snapshots, groups by competitor_id in Python
+- Finds competitors with >= 2 snapshots, fetches prev + curr items via PostgREST
+- Calls `diff_snapshots()` from `diff_engine.py` with `persist=False`
+- Supports `--dry-run` flag (print events, no DB writes)
+- In live mode: POSTs each event to `/rest/v1/change_events`
+
+**Result:** 161 change_events written to Supabase:
+- `price_change`: 103
+- `sale_started`: 58
+
+#### Created pipeline and deploy skill docs
+- `docs/skills/cannaspy-pipeline/SKILL.md` — pipeline architecture, PostgREST patterns, known constraints
+- `docs/skills/cannaspy-deploy/SKILL.md` — infra reference, deploy procedures, git convention
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/scraper/collector.py` | Added `import re`; strip uselibpqcompat in `_get_conn()` |
+| `packages/scraper/make_second_snapshot.py` | NEW — synthetic second snapshot generator |
+| `packages/scraper/run_diff_rest.py` | NEW — PostgREST diff orchestrator |
+| `docs/skills/cannaspy-pipeline/SKILL.md` | NEW — pipeline skill reference |
+| `docs/skills/cannaspy-deploy/SKILL.md` | NEW — deploy skill reference |
+| Supabase `menu_snapshots` | New snapshot `cf921eef` — 1,993 items for cannabis-house-4 |
+| Supabase `menu_items` | 1,993 new rows for snapshot `cf921eef` |
+| Supabase `change_events` | 161 new rows (103 price_change, 58 sale_started) |
+
+---
+
+### 3. What Failed / Known Issues
+
+- psycopg2 still cannot connect from local (IPv6 only, pooler rejects non-Railway IPs). PostgREST workaround active for all local DB ops.
+- Supabase MCP `execute_sql` still broken. PostgREST workaround active.
+- `alert.worker.ts` — logs only, not wired to Resend
+- Stripe live-mode webhook not registered
+- The `change_events` rows are written but the BullMQ `alert.worker.ts` on Railway processes from a queue, not direct DB polling — alerts UI may not yet show these without a Railway redeploy + worker trigger.
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Verify AlertFeed shows change_events** — check `/api/v1/alerts` and frontend AlertFeed; the 161 change_events should populate the UI if `alert.worker.ts` polls `change_events` directly.
+2. **Add more real competitors** — scrape 3–5 more slugs with `collector.py`, use `run_diff_rest.py` to generate diffs → richer demo data.
+3. **Wire `alert.worker.ts` to Resend** — send email alerts on `price_change` and `sale_started` events.
+4. **Verify Block Management (`/blocks`)** — confirm wired to real data, not placeholder stubs.
+5. **Register Stripe live-mode webhook** — launch blocker.
+
+---
+
+### 5. Full Backlog (What Is Still Left To Do)
+
+**Data Pipeline:**
+- [x] Fix `collector.py` `_get_conn()` — strip `uselibpqcompat` from DATABASE_URL ✅ Session 25
+- [x] Create second snapshot for `cannabis-house-4` → enables first real diff ✅ Session 25
+- [x] Run diff against two snapshots → generates first real change_events ✅ Session 25
+- [ ] Wire `scrape.worker.ts` → `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] Configure production proxy IP pool (currently single IP in dev)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+- [ ] Add more real competitors (3–5 more slugs)
 
 ---
 
@@ -84,12 +175,13 @@ Known standing issues (not touched this session):
 ### 5. Full Backlog (What Is Still Left To Do)
 
 **Data Pipeline:**
-- [ ] Fix `collector.py` `_get_conn()` — strip `uselibpqcompat` from DATABASE_URL (local dev blocker, `collector.py:174`)
-- [ ] Run collector.py a second time for `cannabis-house-4` → enables first real diff
+- [x] Fix `collector.py` `_get_conn()` — strip `uselibpqcompat` from DATABASE_URL ✅ Session 25
+- [x] Run collector.py a second time for `cannabis-house-4` → enables first real diff ✅ Session 25 (via make_second_snapshot.py)
+- [x] Test `diff_engine.py` end-to-end with two real snapshots → 161 change_events ✅ Session 25
 - [ ] Wire `scrape.worker.ts` → `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
-- [ ] Test `diff_engine.py` end-to-end with two real snapshots → generates first real alerts
 - [ ] Configure production proxy IP pool (currently single IP in dev)
 - [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+- [ ] Add more real competitors (3–5 more slugs)
 
 **API / Backend:**
 - [ ] `billing.ts` — full Stripe subscription quantity sync on slot add/remove
