@@ -546,7 +546,7 @@ export default function PriceIntelligence() {
         if (locs.length > 0 && !selectedLocation) setSelectedLocation(locs[0].id)
       })
       .catch(() => {})
-  }, [])
+  }, [authFetch])
 
   // ── Build data structures ──────────────────────────────────────────────────
   const productMap = new Map<string, Map<string, CellData>>()
