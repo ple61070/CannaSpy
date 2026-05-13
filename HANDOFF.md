@@ -1,4 +1,133 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-12 (Session 26 — Vercel CSS/auth fixes; production app fully styled and operational)
+
+---
+
+## Session 26 — 2026-05-12
+
+**Commits:**
+- `815bcf5` — fix(web): commit .env.production so Vercel build gets VITE_API_URL
+- `82f0daa` — fix(web): add data-theme="dark" to html element — CSS variables undefined before Layout mounts
+- `841b8e9` — fix(auth): wait for Clerk isLoaded before API calls; fix useEffect deps in PriceIntelligence
+- `0fe8aca` — chore: trigger vercel rebuild
+
+**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` fully styled, VITE_API_URL live in JS bundle · Railway API — no change
+
+---
+
+### 1. What Was Done
+
+#### Competitor + pipeline end-to-end (no-commit work)
+Inserted `Cannabis House 4` (slug: `cannabis-house-4`, `id=19f0699b-436a-4144-b1a4-35a0180b28a7`) into Supabase via PostgREST. Linked to seed location `b0000000-0000-0000-0000-000000000001`. Verified primary pipeline reachable: 1,993 items across 20 pages. First snapshot written (`e5a43c17`, 1,993 `menu_items`) via PostgREST workaround.
+
+#### Fixed Vercel build — VITE_API_URL not reaching bundle
+
+`packages/web/.env.production` was gitignored, so Vercel never received `VITE_API_URL` — the JS bundle was making relative `/api` calls instead of `https://cannaspy-production.up.railway.app`. Fix:
+- Removed `.env.production` from `.gitignore` (kept `.env` and `.env.local` ignored)
+- Committed `packages/web/.env.production` with `VITE_API_URL` + `VITE_CLERK_PUBLISHABLE_KEY`
+- Stripped `VITE_MAPBOX_TOKEN` from the committed file (GitHub push protection blocked it; token already set as Vercel env var)
+- Verified: `curl .../assets/index-*.js | grep cannaspy-production` returns 3 hits
+
+#### Fixed production CSS — completely unstyled white page
+
+Root cause: `globals.css` defines every design system token (`--bg`, `--text-1`, `--surface`, etc.) inside `[data-theme="light"]` and `[data-theme="dark"]` attribute selectors. The `<html>` element had no `data-theme` attribute, so all CSS variables resolved to empty — body had no background and no text color. The flash lasted until `Layout.tsx` mounted and called `document.documentElement.setAttribute('data-theme', theme)`. Public routes (`/sign-up`, `/sign-in`) were permanently unstyled because they never mount `Layout`.
+
+Fix: added `data-theme="dark"` to `<html>` in `packages/web/index.html`. Dark is the BRAND.md default. `Layout.tsx` overrides on hydration based on localStorage.
+
+Verified: production alias now serves `<html lang="en" data-theme="dark">` and `<link rel="stylesheet" ...>`.
+
+#### Fixed auth race — Clerk isLoaded guard
+
+`useAuthFetch.ts` was calling `getToken()` before Clerk had initialized, causing API calls to fire with no auth token. Fix: added `isLoaded` guard from `useAuth()` hook — `useAuthFetch` returns a no-op until Clerk is ready.
+
+`PriceIntelligence.tsx` had a stale `useEffect` dependency array causing a re-fetch loop. Fixed.
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `.gitignore` | Removed `.env.production` line (`.env` and `.env.local` still ignored) |
+| `packages/web/.env.production` | Committed — `VITE_API_URL` + `VITE_CLERK_PUBLISHABLE_KEY` (no Mapbox token) |
+| `packages/web/index.html` | Added `data-theme="dark"` to `<html>` element |
+| `packages/web/src/lib/useAuthFetch.ts` | Added `isLoaded` guard; returns no-op until Clerk ready |
+| `packages/web/src/pages/PriceIntelligence.tsx` | Fixed stale useEffect dependency array |
+| `docs/skills/cannaspy-frontend/SKILL.md` | NEW — frontend gotcha reference |
+| `docs/skills/cannaspy-deploy/SKILL.md` | Updated — .env.production + data-theme + GitHub push protection notes |
+
+No schema migrations. No new npm dependencies.
+
+---
+
+### 3. What Failed / Known Issues
+
+- psycopg2 still cannot connect from local (IPv6 only, pooler rejects). PostgREST workaround active.
+- Supabase MCP `execute_sql` still broken. PostgREST workaround active.
+- `alert.worker.ts` — logs only, not wired to Resend. 161 `change_events` in DB, no emails sent.
+- Stripe live-mode webhook not registered (launch blocker).
+- Fly.io app still not destroyed — `fly apps destroy cannaspy-api` pending Patrick's confirmation.
+- VITE_MAPBOX_TOKEN cannot be committed (GitHub push protection). Must stay as Vercel env var.
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Verify AlertFeed shows change_events** — 161 rows in `change_events`; check if `/api/v1/alerts` surfaces them and AlertFeed renders them.
+2. **Add 3–5 more real competitors** — use `collector.py --slug <slug> --competitor-id <uuid>` + `run_diff_rest.py` to generate richer alert data for demo.
+3. **Wire `alert.worker.ts` to Resend** — send email on `price_change` / `sale_started`; `RESEND_API_KEY` already set in Railway env.
+4. **Verify Block Management (`/blocks`)** — confirm wired to real data, not placeholder stubs.
+5. **Register Stripe live-mode webhook** — launch blocker.
+
+---
+
+### 5. Full Backlog (What Is Still Left To Do)
+
+**Data Pipeline:**
+- [ ] Add 3–5 more real competitors with valid slugs (cannabis-house-4 is the only one)
+- [ ] Wire `scrape.worker.ts` → `collector.py` as primary (falls back to `dispensary_scraper.py`)
+- [ ] Configure production proxy IP pool (single IP in dev)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**API / Backend:**
+- [ ] Verify `alerts` API surfaces `change_events` (AlertFeed depends on this)
+- [ ] Wire `alert.worker.ts` to Resend
+- [ ] Full Stripe subscription quantity sync on slot add/remove
+- [ ] `billing.service.ts` — usage sync cron
+
+**Frontend:**
+- [ ] Wire Block Management (`/blocks`) to real data
+- [ ] Scaffold → wire Promotions screen
+- [ ] Apply DM Sans + Space Mono typography across all screens
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Destroy Fly.io app (`fly apps destroy cannaspy-api`) — Patrick must confirm
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+---
+
+### Key Credentials
+
+```
+API (Railway):      https://cannaspy-production.up.railway.app
+API health:         https://cannaspy-production.up.railway.app/health
+Frontend:           https://web-rouge-one-15.vercel.app
+Railway project:    https://railway.com/project/9829ee26-dff3-4db2-850c-2cb87207cdaa
+Database:           Supabase cbhbrbkirzpncpxlvehk
+Seed location ID:   b0000000-0000-0000-0000-000000000001
+Competitor UUID:    19f0699b-436a-4144-b1a4-35a0180b28a7 (cannabis-house-4)
+Snapshot 1:         e5a43c17 — 1,993 items (2026-05-10)
+Snapshot 2:         cf921eef — 1,993 items synthetic (2026-05-11) → 161 change_events generated
+Vercel deploy:      git push origin main (auto-deploys)
+Railway deploy:     cd /Users/patricksimac/CannaSpy && railway up --detach
+```
+
+---
+
 **Date:** 2026-05-11 (Session 25 — collector.py fix + second snapshot + first real change_events via PostgREST diff)
 
 ---
