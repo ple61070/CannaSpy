@@ -1,5 +1,132 @@
 # CannaSpy Session Handoff
-**Date:** 2026-05-12 (Session 26 — Vercel CSS/auth fixes; production app fully styled and operational)
+**Date:** 2026-05-14 (Session 27 — debug/me endpoint + Clerk/org account investigation)
+
+---
+
+## Session 27 — 2026-05-14
+
+**Commits:** No commits this session — debug endpoint deployed to Railway but not yet committed to git
+**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` (no change) | Railway API ✅ deployed via `railway up --detach` with debug endpoint
+
+---
+
+### 1. What Was Done
+
+#### Added unauthenticated debug endpoint
+
+Added `GET /api/v1/debug/me` to `packages/api/src/index.ts`, registered before `clerkPlugin` so it bypasses all auth middleware. It decodes the Bearer JWT and returns the raw payload — used to inspect what `orgId` Clerk is sending from the frontend.
+
+Deployed to Railway and verified healthy: `{"status":"ok"}` from `/health`.
+
+#### Investigated Patrick's account state (Clerk + DB)
+
+Goal was to figure out why `setup/locations` shows no data. Found:
+- Patrick's Clerk user ID: `user_3D148kdy4fZPXIWmTskLn8rxs8E` (email: ple123.6682@gmail.com)
+- **No Clerk Organizations exist** — Patrick has never created one in the Clerk dashboard
+- Since `auth.orgId` is null, the clerk middleware falls back to `tenantKey = user_user_3D148kdy4fZPXIWmTskLn8rxs8E`
+- The `organizations` table has only the test seed row (`org_test_block_cancel`) — no real org for Patrick
+- The `locations` table has only the test seed row linked to the test org
+
+**Conclusion:** When Patrick logs in, the clerk middleware auto-creates an org keyed to `user_user_3D148kdy4fZPXIWmTskLn8rxs8E`, but that org has no locations. The setup/locations page is empty because no location has been seeded for his account.
+
+**Blocked on:** Patrick needs to provide a dispensary name + address so a location can be inserted directly into the DB (or he can add one via the UI after logging in).
+
+#### Created instruction .docx files
+
+Two files created on the Desktop for Patrick:
+- `CannaSpy_Auth_Token_Instructions.docx` — step-by-step DevTools token grab instructions
+- `CannaSpy_Next_Steps.docx` — summary of account state + what's needed to proceed
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/api/src/index.ts` | Added `GET /api/v1/debug/me` unauthenticated endpoint (UNCOMMITTED) |
+
+No schema migrations. No new dependencies. No frontend changes.
+
+⚠️ The debug endpoint is **live on Railway** but **not committed to git**. It should be committed or removed before next deploy.
+
+---
+
+### 3. What Failed
+
+- Could not complete the "grab auth token from DevTools" flow — Patrick found the instructions too complex to follow manually; browser automation is not available.
+- Could not pre-seed Patrick's location — need dispensary name + address from Patrick first.
+
+Known standing issues (not touched this session):
+- psycopg2 cannot connect locally (IPv6 only, pooler rejects) — PostgREST workaround active
+- Supabase MCP `execute_sql` still broken
+- `alert.worker.ts` logs only, not wired to Resend — 161 `change_events` in DB, no emails sent
+- Stripe live-mode webhook not registered (launch blocker)
+- Fly.io app not yet destroyed
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Commit or remove debug endpoint** — `packages/api/src/index.ts` has uncommitted changes; either commit with `feat(api): add debug/me endpoint` or revert before next Railway deploy
+2. **Get Patrick's dispensary name + address** — then insert org + location directly into Supabase so setup/locations page shows data on login
+3. **Verify AlertFeed** — 161 `change_events` rows exist; confirm `/api/v1/alerts` surfaces them and AlertFeed renders them
+4. **Add more real competitors** — `collector.py --slug <slug>` + `run_diff_rest.py` to build richer demo data
+5. **Wire `alert.worker.ts` to Resend** — `RESEND_API_KEY` already in Railway env
+
+---
+
+### 5. Full Backlog (What Is Still Left To Do)
+
+**Data Pipeline:**
+- [ ] Get Patrick's dispensary name + address → seed org + location in DB
+- [ ] Add 3–5 more real competitors with valid slugs (cannabis-house-4 is the only one)
+- [ ] Wire `scrape.worker.ts` → `collector.py` as primary (falls back to `dispensary_scraper.py`)
+- [ ] Configure production proxy IP pool (single IP in dev)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**API / Backend:**
+- [ ] Commit or revert debug/me endpoint in `packages/api/src/index.ts`
+- [ ] Verify `alerts` API surfaces `change_events` (AlertFeed depends on this)
+- [ ] Wire `alert.worker.ts` to Resend
+- [ ] Full Stripe subscription quantity sync on slot add/remove
+- [ ] `billing.service.ts` — usage sync cron
+
+**Frontend:**
+- [ ] Wire Block Management (`/blocks`) to real data
+- [ ] Scaffold → wire Promotions screen
+- [ ] Apply DM Sans + Space Mono typography across all screens
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Destroy Fly.io app (`fly apps destroy cannaspy-api`) — Patrick must confirm
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+---
+
+### Key Credentials
+
+```
+API (Railway):      https://cannaspy-production.up.railway.app
+API health:         https://cannaspy-production.up.railway.app/health
+Frontend:           https://web-rouge-one-15.vercel.app
+Railway project:    https://railway.com/project/9829ee26-dff3-4db2-850c-2cb87207cdaa
+Database:           Supabase cbhbrbkirzpncpxlvehk
+Seed org ID:        a0000000-0000-0000-0000-000000000001 (org_test_block_cancel)
+Seed location ID:   b0000000-0000-0000-0000-000000000001
+Competitor UUID:    19f0699b-436a-4144-b1a4-35a0180b28a7 (cannabis-house-4)
+Snapshot 1:         e5a43c17 — 1,993 items (2026-05-10)
+Snapshot 2:         cf921eef — 1,993 items synthetic (2026-05-11) → 161 change_events generated
+Patrick Clerk ID:   user_3D148kdy4fZPXIWmTskLn8rxs8E (no Clerk org; tenantKey = user_user_3D148kdy4fZPXIWmTskLn8rxs8E)
+Vercel deploy:      git push origin main (auto-deploys)
+Railway deploy:     railway up --detach
+```
+
+---
+
+
 
 ---
 
