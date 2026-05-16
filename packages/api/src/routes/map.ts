@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { getAuth } from '@clerk/fastify'
-import { query } from '../db/client'
+import { getAdminDb } from '../db/client'
 
 interface MapQuerystring {
   bbox?: string
@@ -51,68 +51,68 @@ export async function mapRoutes(fastify: FastifyInstance) {
         // No token or invalid token — continue as anonymous
       }
 
-      // Build WHERE clause
-      const params: unknown[] = [west, south, east, north, maxLimit]
-      let paramIdx = 6
-      let where = `WHERE d.lat IS NOT NULL AND d.lng IS NOT NULL
-        AND d.lng BETWEEN $1 AND $3
-        AND d.lat BETWEEN $2 AND $4`
-
-      if (tier) {
-        where += ` AND d.market_tier = $${paramIdx++}`
-        params.push(tier)
-      }
-      // type filter: 'storefront' | 'delivery' | 'both'
-      // 'both' means show all — no filter clause needed
-      if (type && type !== 'both') {
-        where += ` AND d.business_type = $${paramIdx++}`
-        params.push(type)
-      }
-      if (enriched === 'true') {
-        where += ` AND d.enriched = true`
-      } else if (enriched === 'false') {
-        where += ` AND d.enriched = false`
-      }
-      if (q) {
-        where += ` AND d.name ILIKE $${paramIdx++}`
-        params.push(`%${q}%`)
-      }
-
-      const orgParam = `$${paramIdx}`
-      params.push(orgDbId)
-
-      const sql = `
-        SELECT
-          d.id,
-          d.dcc_license,
-          d.name,
-          d.city,
-          d.county,
-          d.license_type,
-          d.business_type,
-          d.market_tier,
-          d.enriched,
-          d.threat_score,
-          d.price_observations_count,
-          d.last_scraped_at,
-          d.lat,
-          d.lng,
-          COALESCE(ods.track_state, 'untracked') AS track_state
-        FROM dispensaries d
-        LEFT JOIN org_dispensary_state ods
-          ON ods.dispensary_id = d.id
-          AND ods.org_id = ${orgParam}
-        ${where}
-        ORDER BY d.threat_score DESC NULLS LAST
-        LIMIT $5
-      `
-
       try {
-        const result = await query(sql, params)
+        const supabase = getAdminDb()
+
+        // Build dispensaries query via PostgREST (bypasses pg Pool / pooler)
+        let dispensaryQuery = supabase
+          .from('dispensaries')
+          .select(
+            'id, dcc_license, name, city, county, license_type, business_type, market_tier, enriched, threat_score, price_observations_count, last_scraped_at, lat, lng'
+          )
+          .not('lat', 'is', null)
+          .not('lng', 'is', null)
+          .gte('lng', west)
+          .lte('lng', east)
+          .gte('lat', south)
+          .lte('lat', north)
+          .order('threat_score', { ascending: false, nullsFirst: false })
+          .limit(maxLimit)
+
+        if (tier) {
+          dispensaryQuery = dispensaryQuery.eq('market_tier', tier)
+        }
+        if (type && type !== 'both') {
+          dispensaryQuery = dispensaryQuery.eq('business_type', type)
+        }
+        if (enriched === 'true') {
+          dispensaryQuery = dispensaryQuery.eq('enriched', true)
+        } else if (enriched === 'false') {
+          dispensaryQuery = dispensaryQuery.eq('enriched', false)
+        }
+        if (q) {
+          dispensaryQuery = dispensaryQuery.ilike('name', `%${q}%`)
+        }
+
+        const { data: dispensaries, error: dispError } = await dispensaryQuery
+
+        if (dispError) {
+          req.log.error({ err: dispError.message }, '[map] dispensaries query error')
+          return reply
+            .code(500)
+            .send({ success: false, error: 'Internal server error', code: 'INTERNAL_ERROR' })
+        }
+
+        // Fetch org track states if authenticated
+        let trackStateMap: Record<string, string> = {}
+        if (orgDbId && dispensaries && dispensaries.length > 0) {
+          const dispensaryIds = dispensaries.map((d: any) => d.id)
+          const { data: trackStates } = await supabase
+            .from('org_dispensary_state')
+            .select('dispensary_id, track_state')
+            .eq('org_id', orgDbId)
+            .in('dispensary_id', dispensaryIds)
+
+          if (trackStates) {
+            for (const ts of trackStates as { dispensary_id: string; track_state: string }[]) {
+              trackStateMap[ts.dispensary_id] = ts.track_state
+            }
+          }
+        }
 
         const geojson = {
           type: 'FeatureCollection' as const,
-          features: result.rows.map((r: any) => ({
+          features: (dispensaries || []).map((r: any) => ({
             type: 'Feature' as const,
             geometry: {
               type: 'Point' as const,
@@ -131,28 +131,16 @@ export async function mapRoutes(fastify: FastifyInstance) {
               threat_score: r.threat_score,
               price_observations_count: r.price_observations_count,
               last_scraped_at: r.last_scraped_at,
-              track_state: r.track_state,
+              track_state: trackStateMap[r.id] || 'untracked',
             },
           })),
         }
 
         reply.header('Cache-Control', 'public, max-age=60')
-        return { success: true, data: geojson, count: result.rows.length }
+        return { success: true, data: geojson, count: (dispensaries || []).length }
       } catch (err: any) {
-        // Gracefully handle missing dispensaries / org_dispensary_state tables
         const msg: string = err?.message || String(err)
-        if (
-          msg.includes('relation "dispensaries" does not exist') ||
-          msg.includes('relation "org_dispensary_state" does not exist')
-        ) {
-          reply.header('Cache-Control', 'public, max-age=60')
-          return {
-            success: true,
-            data: { type: 'FeatureCollection', features: [] },
-            count: 0,
-          }
-        }
-        req.log.error({ err: msg }, '[map] dispensaries query error')
+        req.log.error({ err: msg }, '[map] unexpected error')
         return reply
           .code(500)
           .send({ success: false, error: 'Internal server error', code: 'INTERNAL_ERROR' })
