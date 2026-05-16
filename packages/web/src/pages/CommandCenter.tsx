@@ -18,7 +18,11 @@ const MAP_STYLES: Record<MapStyleId, Record<AppTheme, string>> = {
   satellite: { light: 'mapbox://styles/mapbox/satellite-streets-v12', dark: 'mapbox://styles/mapbox/satellite-streets-v12' },
 }
 function useAppTheme(): AppTheme {
-  const [theme, setTheme] = useState<AppTheme>(() => (localStorage.getItem('cs-theme') as AppTheme) || 'light')
+  const [theme, setTheme] = useState<AppTheme>(() => {
+    const attr = document.documentElement.getAttribute('data-theme')
+    if (attr === 'light' || attr === 'dark') return attr
+    return (localStorage.getItem('cs-theme') as AppTheme) || 'light'
+  })
   useEffect(() => {
     const obs = new MutationObserver(() => {
       const t = document.documentElement.getAttribute('data-theme') as AppTheme | null
@@ -713,7 +717,7 @@ export default function CommandCenter() {
 
       {/* ── Map Area ────────────────────────────────────────────────────── */}
       <div ref={mapContainerRef} style={{
-        flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0,
+        flex: 1, width: '100%', position: 'relative', overflow: 'hidden', minHeight: 0,
         background: 'var(--bg)',
       }}>
         {/* Real Mapbox map */}
@@ -727,7 +731,7 @@ export default function CommandCenter() {
             attributionControl={false}
             onLoad={handleMapLoad}
           >
-            <NavigationControl position="bottom-right" showCompass={false} />
+            <NavigationControl position="top-right" showCompass={false} />
             {/* Your location marker */}
             {firstLocation?.lat && firstLocation?.lng && (
               <Marker
