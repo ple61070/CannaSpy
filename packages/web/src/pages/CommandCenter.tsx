@@ -692,7 +692,7 @@ export default function CommandCenter() {
 
       {/* ── Map Area ────────────────────────────────────────────────────── */}
       <div ref={mapContainerRef} style={{
-        flex: 1, position: 'relative', overflow: 'hidden',
+        flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0,
         background: 'var(--bg)',
       }}>
         {/* Real Mapbox map */}
@@ -702,7 +702,7 @@ export default function CommandCenter() {
             mapboxAccessToken={MAPBOX_TOKEN}
             initialViewState={mapCenter}
             mapStyle="mapbox://styles/mapbox/dark-v11"
-            style={{ position: 'absolute', inset: 0 }}
+            style={{ width: '100%', height: '100%' }}
             attributionControl={false}
             onLoad={handleMapLoad}
           >
