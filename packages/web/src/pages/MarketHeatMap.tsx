@@ -137,7 +137,8 @@ function tierBadgeStyle(tier: Tier): React.CSSProperties {
 
 export default function MarketHeatMap() {
   const navigate = useNavigate()
-  const mapRef   = useRef<MapRef | null>(null)
+  const mapRef          = useRef<MapRef | null>(null)
+  const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const appTheme = useAppTheme()
 
   const [mapStyleId, setMapStyleId]   = useState<MapStyleId>('streets')
@@ -197,6 +198,17 @@ export default function MarketHeatMap() {
   const { data: dispensaries, loading: dispensariesLoading, count: dispCount } = useDispensaryMap(bbox, {
     type: operatorType === 'both' ? undefined : operatorType,
   })
+
+  // ─── Resize observer — keeps Mapbox canvas in sync with container ─────────
+  useEffect(() => {
+    const el = mapContainerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => {
+      mapRef.current?.getMap()?.resize()
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   // ─── Bbox / zoom ──────────────────────────────────────────────────────────
   const updateBbox = useCallback(() => {
@@ -331,7 +343,7 @@ export default function MarketHeatMap() {
       <MarketSubNav />
 
       {/* MAP — full width */}
-      <div style={{ flex: 1, width: '100%', position: 'relative', overflow: 'hidden', minHeight: 0, transition: 'width 0.22s cubic-bezier(.2,.8,.2,1)' }}>
+      <div ref={mapContainerRef} style={{ flex: 1, width: '100%', position: 'relative', overflow: 'hidden', minHeight: 0, transition: 'width 0.22s cubic-bezier(.2,.8,.2,1)' }}>
         {isMapConfigured() ? (
           <Map
             ref={mapRef}
