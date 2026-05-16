@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react'
+import { SignedIn, SignedOut, RedirectToSignIn, useAuth } from '@clerk/clerk-react'
 import Layout from './components/shared/Layout'
 
 // Existing pages
@@ -42,6 +42,10 @@ import Offboarded from './pages/Offboarded'
 import ActionQueue from './pages/ActionQueue'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isLoaded } = useAuth()
+  if (!isLoaded) return (
+    <div style={{ height: '100vh', background: 'var(--bg, #081018)' }} />
+  )
   return (
     <>
       <SignedIn>{children}</SignedIn>

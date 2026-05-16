@@ -748,11 +748,16 @@ export default function PriceIntelligence() {
           onChange={setCategory}
           options={[
             { value: '', label: 'All categories' },
-            { value: 'Flower', label: 'Flower' },
-            { value: 'Vapes', label: 'Vapes' },
-            { value: 'Edibles', label: 'Edibles' },
-            { value: 'Preroll', label: 'Pre-rolls' },
             { value: 'Concentrate', label: 'Concentrates' },
+            { value: 'Indica', label: 'Indica' },
+            { value: 'Hybrid', label: 'Hybrid' },
+            { value: 'Edible', label: 'Edibles' },
+            { value: 'Preroll', label: 'Pre-rolls' },
+            { value: 'Gear', label: 'Gear' },
+            { value: 'Drink', label: 'Drinks' },
+            { value: 'Wax', label: 'Wax' },
+            { value: 'Tincture', label: 'Tinctures' },
+            { value: 'Topicals', label: 'Topicals' },
           ]}
           active={!!category}
         />

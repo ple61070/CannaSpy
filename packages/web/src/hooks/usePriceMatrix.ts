@@ -30,7 +30,11 @@ export function usePriceMatrix(locationId: string | null, category?: string, typ
     authFetch(`${API}/api/v1/prices/matrix?${params}`)
       .then((r) => r.json())
       .then((data) => {
-        setMatrix(data.data?.matrix || [])
+        const rows = (data.data?.matrix || []).map((r: any) => ({
+          ...r,
+          price: parseFloat(r.price),
+        }))
+        setMatrix(rows)
         setLoading(false)
       })
       .catch((err) => {
