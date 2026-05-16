@@ -53,3 +53,9 @@ CannaSpy_UI/audit_renders/
 /build_*.py
 /HANDOFF_UI_2026-04-16.md
 .claude/worktrees/
+
+# Vercel
+.vercel/
+
+# Session notes
+docs/SESSION-HANDOFF-MASTER.md
