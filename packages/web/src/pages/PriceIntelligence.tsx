@@ -763,9 +763,8 @@ export default function PriceIntelligence() {
           onChange={setCategory}
           options={[
             { value: '', label: 'All categories' },
+            { value: 'Flower', label: 'Flower' },
             { value: 'Concentrate', label: 'Concentrates' },
-            { value: 'Indica', label: 'Indica' },
-            { value: 'Hybrid', label: 'Hybrid' },
             { value: 'Edible', label: 'Edibles' },
             { value: 'Preroll', label: 'Pre-rolls' },
             { value: 'Gear', label: 'Gear' },
