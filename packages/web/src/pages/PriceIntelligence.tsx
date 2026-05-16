@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { usePriceMatrix } from '../hooks/usePriceMatrix'
 import { useAuthFetch } from '../lib/useAuthFetch'
@@ -98,25 +99,70 @@ interface DropdownProps {
 
 function Dropdown({ label, value, options, onChange, active }: DropdownProps) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
   const selected = options.find(o => o.value === value)
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
+  function handleToggle() {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setMenuPos({ top: r.bottom + 5, left: r.left })
+    }
+    setOpen(o => !o)
+  }
+
+  const menu = open ? createPortal(
+    <div style={{
+      position: 'fixed', top: menuPos.top, left: menuPos.left,
+      background: 'var(--surface)', border: '1px solid var(--border-2)',
+      borderRadius: 'var(--r-sm)', boxShadow: '0 8px 32px rgba(30,60,80,0.14)',
+      zIndex: 9999, minWidth: 160, padding: 5,
+    }}>
+      {options.map(opt => (
+        <div
+          key={opt.value}
+          onClick={() => { onChange(opt.value); setOpen(false) }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '7px 10px', borderRadius: 6,
+            fontSize: 12, color: opt.value === value ? 'var(--accent)' : 'var(--text-1)',
+            fontWeight: opt.value === value ? 700 : 400,
+            cursor: 'pointer', fontFamily: 'var(--sans)',
+            background: 'transparent',
+            transition: 'background 0.1s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-3)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >
+          {opt.dot && (
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: opt.dot, flexShrink: 0 }} />
+          )}
+          {opt.label}
+          {opt.value === value && <span style={{ marginLeft: 'auto', fontSize: 11 }}>✓</span>}
+        </div>
+      ))}
+    </div>,
+    document.body
+  ) : null
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+    <div ref={wrapRef} style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
       <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-3)' }}>
         {label}
       </span>
-      <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+      <div style={{ position: 'relative', display: 'inline-block' }}>
         <button
-          onClick={() => setOpen(o => !o)}
+          ref={btnRef}
+          onClick={handleToggle}
           style={{
             display: 'flex', alignItems: 'center', gap: 5,
             padding: '5px 11px', borderRadius: 'var(--r-sm)',
@@ -134,38 +180,7 @@ function Dropdown({ label, value, options, onChange, active }: DropdownProps) {
           {selected?.label || options[0].label}
           <ChevronDown />
         </button>
-        {open && (
-          <div style={{
-            position: 'absolute', top: 'calc(100% + 5px)', left: 0,
-            background: 'var(--surface)', border: '1px solid var(--border-2)',
-            borderRadius: 'var(--r-sm)', boxShadow: '0 8px 32px rgba(30,60,80,0.14)',
-            zIndex: 200, minWidth: 160, padding: 5,
-          }}>
-            {options.map(opt => (
-              <div
-                key={opt.value}
-                onClick={() => { onChange(opt.value); setOpen(false) }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '7px 10px', borderRadius: 6,
-                  fontSize: 12, color: opt.value === value ? 'var(--accent)' : 'var(--text-1)',
-                  fontWeight: opt.value === value ? 700 : 400,
-                  cursor: 'pointer', fontFamily: 'var(--sans)',
-                  background: 'transparent',
-                  transition: 'background 0.1s',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-3)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-              >
-                {opt.dot && (
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: opt.dot, flexShrink: 0 }} />
-                )}
-                {opt.label}
-                {opt.value === value && <span style={{ marginLeft: 'auto', fontSize: 11 }}>✓</span>}
-              </div>
-            ))}
-          </div>
-        )}
+        {menu}
       </div>
     </div>
   )
