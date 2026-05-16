@@ -11,6 +11,25 @@ import { OperatorTypeFilter, type OperatorType } from '../components/filters/Ope
 const API = import.meta.env.VITE_API_URL ?? ''
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
 
+type MapStyleId = 'streets' | 'satellite'
+type AppTheme = 'light' | 'dark'
+const MAP_STYLES: Record<MapStyleId, Record<AppTheme, string>> = {
+  streets:   { light: 'mapbox://styles/mapbox/streets-v12', dark: 'mapbox://styles/mapbox/dark-v11' },
+  satellite: { light: 'mapbox://styles/mapbox/satellite-streets-v12', dark: 'mapbox://styles/mapbox/satellite-streets-v12' },
+}
+function useAppTheme(): AppTheme {
+  const [theme, setTheme] = useState<AppTheme>(() => (localStorage.getItem('cs-theme') as AppTheme) || 'light')
+  useEffect(() => {
+    const obs = new MutationObserver(() => {
+      const t = document.documentElement.getAttribute('data-theme') as AppTheme | null
+      if (t) setTheme(t)
+    })
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => obs.disconnect()
+  }, [])
+  return theme
+}
+
 // Default to LA if no location coords
 const LA_VIEWPORT = { longitude: -118.2437, latitude: 34.0522, zoom: 11 }
 
@@ -155,6 +174,8 @@ export default function CommandCenter() {
   // Locations list
   const mapRef          = useRef<MapRef | null>(null)
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const appTheme        = useAppTheme()
+  const [mapStyleId, setMapStyleId] = useState<MapStyleId>('streets')
   const [locations, setLocations] = useState<{ id: string; name: string; lat?: number | null; lng?: number | null }[]>([])
   const [locationName, setLocationName] = useState('All locations')
 
@@ -701,7 +722,7 @@ export default function CommandCenter() {
             ref={mapRef}
             mapboxAccessToken={MAPBOX_TOKEN}
             initialViewState={mapCenter}
-            mapStyle="mapbox://styles/mapbox/dark-v11"
+            mapStyle={MAP_STYLES[mapStyleId][appTheme]}
             style={{ width: '100%', height: '100%' }}
             attributionControl={false}
             onLoad={handleMapLoad}
@@ -733,6 +754,21 @@ export default function CommandCenter() {
             )}
           </Map>
         )}
+
+        {/* Streets / Satellite toggle */}
+        <div style={{ position: 'absolute', bottom: 16, right: 16, zIndex: 10, display: 'flex', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+          {(['streets', 'satellite'] as MapStyleId[]).map((id) => (
+            <button key={id} onClick={() => setMapStyleId(id)} style={{
+              padding: '5px 11px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
+              border: 'none', borderRight: id === 'streets' ? '1px solid var(--border)' : 'none',
+              background: mapStyleId === id ? 'var(--accent-intel)' : 'transparent',
+              color: mapStyleId === id ? '#fff' : 'var(--text-2)',
+              transition: 'background 0.12s, color 0.12s',
+            }}>
+              {id === 'streets' ? '🗺 Streets' : '🛰 Satellite'}
+            </button>
+          ))}
+        </div>
 
         {/* Map topbar */}
         <div style={{
