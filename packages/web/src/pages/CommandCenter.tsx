@@ -153,7 +153,8 @@ export default function CommandCenter() {
   const [toast, setToast] = useState<{ msg: string; color: string } | null>(null)
 
   // Locations list
-  const mapRef = useRef<MapRef | null>(null)
+  const mapRef          = useRef<MapRef | null>(null)
+  const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const [locations, setLocations] = useState<{ id: string; name: string; lat?: number | null; lng?: number | null }[]>([])
   const [locationName, setLocationName] = useState('All locations')
 
@@ -176,6 +177,15 @@ export default function CommandCenter() {
     const count = alerts.filter((a) => !a.reviewed).length
     setUnreviewed(count)
   }, [alerts, setUnreviewed])
+
+  // Keep Mapbox canvas in sync with container size (sidebar expand/collapse)
+  useEffect(() => {
+    const el = mapContainerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => { mapRef.current?.getMap()?.resize() })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const unreviewedCount = alerts.filter((a) => !a.reviewed).length
@@ -681,7 +691,7 @@ export default function CommandCenter() {
       </div>
 
       {/* ── Map Area ────────────────────────────────────────────────────── */}
-      <div style={{
+      <div ref={mapContainerRef} style={{
         flex: 1, position: 'relative', overflow: 'hidden',
         background: 'var(--bg)',
       }}>

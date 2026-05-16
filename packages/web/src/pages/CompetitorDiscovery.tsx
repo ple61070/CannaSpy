@@ -73,7 +73,8 @@ const radiusOutlineLayer: LayerProps = {
 export default function CompetitorDiscovery() {
   const authFetch = useAuthFetch()
   const navigate = useNavigate()
-  const mapRef = useRef<MapRef | null>(null)
+  const mapRef          = useRef<MapRef | null>(null)
+  const mapContainerRef = useRef<HTMLDivElement | null>(null)
 
   const [locations, setLocations] = useState<Location[]>([])
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null)
@@ -93,6 +94,15 @@ export default function CompetitorDiscovery() {
       })
       .catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep Mapbox canvas in sync with container size (sidebar expand/collapse)
+  useEffect(() => {
+    const el = mapContainerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => { mapRef.current?.getMap()?.resize() })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   // Fly to selected location when it changes
   useEffect(() => {
@@ -193,7 +203,7 @@ export default function CompetitorDiscovery() {
     <div style={{ display: 'flex', height: 'calc(100vh - 128px)', minHeight: 560, maxHeight: 780 }}>
 
       {/* ── Map panel ── */}
-      <div style={{
+      <div ref={mapContainerRef} style={{
         flex: '0 0 58%',
         position: 'relative',
         borderRadius: '8px 0 0 8px',
