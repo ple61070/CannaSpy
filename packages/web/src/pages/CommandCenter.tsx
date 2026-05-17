@@ -18,11 +18,9 @@ const MAP_STYLES: Record<MapStyleId, Record<AppTheme, string>> = {
   satellite: { light: 'mapbox://styles/mapbox/satellite-streets-v12', dark: 'mapbox://styles/mapbox/satellite-streets-v12' },
 }
 function useAppTheme(): AppTheme {
-  const [theme, setTheme] = useState<AppTheme>(() => {
-    const attr = document.documentElement.getAttribute('data-theme')
-    if (attr === 'light' || attr === 'dark') return attr
-    return (localStorage.getItem('cs-theme') as AppTheme) || 'light'
-  })
+  const [theme, setTheme] = useState<AppTheme>(
+    () => (localStorage.getItem('cs-theme') as AppTheme) || 'light'
+  )
   useEffect(() => {
     const obs = new MutationObserver(() => {
       const t = document.documentElement.getAttribute('data-theme') as AppTheme | null
