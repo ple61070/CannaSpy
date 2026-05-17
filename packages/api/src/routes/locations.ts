@@ -169,6 +169,8 @@ export async function locationsRoutes(fastify: FastifyInstance) {
          c.id as competitor_id,
          c.name,
          c.address,
+         c.lat,
+         c.lng,
          c.website_url,
          c.platform,
          c.last_scraped,

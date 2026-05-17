@@ -182,6 +182,10 @@ export default function CommandCenter() {
   const [locationName, setLocationName] = useState('All locations')
 
   const [operatorType, setOperatorType] = useState<OperatorType>('both')
+  const [competitors, setCompetitors] = useState<{
+    tracked_id: string; competitor_id: string; name: string
+    lat: number | null; lng: number | null; slot_type: string; blocked_at: string | null
+  }[]>([])
 
   const { alerts, loading, markReviewed } = useAlerts({
     reviewed: statusFilter,
@@ -195,6 +199,16 @@ export default function CommandCenter() {
       .then((d) => setLocations(d.data?.locations || []))
       .catch(() => {})
   }, [authFetch])
+
+  // Fetch tracked competitors for the first location (for map pins + search)
+  useEffect(() => {
+    const locId = locations[0]?.id
+    if (!locId) return
+    authFetch(`${API}/api/v1/locations/${locId}/competitors`)
+      .then((r) => r.json())
+      .then((d) => setCompetitors(d.competitors || []))
+      .catch(() => {})
+  }, [authFetch, locations])
 
   useEffect(() => {
     const count = alerts.filter((a) => !a.reviewed).length
@@ -222,6 +236,11 @@ export default function CommandCenter() {
     if (typeFilter !== 'all' && a.alert_type !== typeFilter) return false
     return true
   })
+
+  // Search across competitors even when no alerts exist
+  const filteredCompetitors = search
+    ? competitors.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
+    : []
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handleMarkReviewed = async (id: string, e?: React.MouseEvent) => {
@@ -510,16 +529,52 @@ export default function CommandCenter() {
               Pulling latest intelligence from {locations.length || 0} markets…
             </div>
           ) : filteredAlerts.length === 0 ? (
-            <div style={{ padding: '32px 16px', textAlign: 'center' }}>
-              <div style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'var(--mono)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
-                {statusFilter === 'unreviewed' ? 'All clear' : 'No alerts found'}
+            <>
+              <div style={{ padding: '32px 16px', textAlign: 'center' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'var(--mono)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+                  {statusFilter === 'unreviewed' ? 'All clear' : 'No alerts found'}
+                </div>
+                <div style={{ fontSize: 11.5, color: 'var(--text-3)', lineHeight: 1.6 }}>
+                  {statusFilter === 'unreviewed'
+                    ? `All clear across ${locations.length || 0} markets. Last checked ${lastScan}.`
+                    : 'Try adjusting your filters.'}
+                </div>
               </div>
-              <div style={{ fontSize: 11.5, color: 'var(--text-3)', lineHeight: 1.6 }}>
-                {statusFilter === 'unreviewed'
-                  ? `All clear across ${locations.length || 0} markets. Last checked ${lastScan}.`
-                  : 'Try adjusting your filters.'}
-              </div>
-            </div>
+              {/* Show competitor matches when search finds rivals but no alerts */}
+              {filteredCompetitors.length > 0 && (
+                <div style={{ padding: '0 10px 12px' }}>
+                  <div style={{ fontSize: 9.5, fontFamily: 'var(--mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 8, paddingLeft: 4 }}>
+                    Rivals matched
+                  </div>
+                  {filteredCompetitors.map(c => (
+                    <div
+                      key={c.competitor_id}
+                      onClick={() => {
+                        if (c.lat && c.lng) mapRef.current?.flyTo({ center: [Number(c.lng), Number(c.lat)], zoom: 14, duration: 600 })
+                      }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '10px 12px', borderRadius: 12, marginBottom: 6,
+                        background: 'var(--surface)', border: '1px solid var(--border)',
+                        cursor: c.lat && c.lng ? 'pointer' : 'default',
+                      }}
+                    >
+                      <div style={{
+                        width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+                        background: c.slot_type === 'block' ? 'var(--accent-block)' : 'var(--accent-intel)',
+                      }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div>
+                        <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>{c.slot_type === 'block' ? 'BLOCKED' : 'TRACKING'}</div>
+                      </div>
+                      {c.lat && c.lng && (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="11" height="11" style={{ color: 'var(--text-3)', flexShrink: 0 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           ) : (
             filteredAlerts.map((alert) => {
               const sev = getSeverity(alert)
@@ -731,6 +786,18 @@ export default function CommandCenter() {
             onLoad={handleMapLoad}
           >
             <NavigationControl position="top-right" showCompass={false} />
+            {/* Competitor pins */}
+            {competitors.filter(c => c.lat && c.lng).map(c => (
+              <Marker key={c.competitor_id} longitude={Number(c.lng)} latitude={Number(c.lat)} anchor="center">
+                <div style={{
+                  width: 12, height: 12, borderRadius: '50%',
+                  background: c.slot_type === 'block' ? 'var(--accent-block)' : 'var(--accent-intel)',
+                  border: '2px solid rgba(255,255,255,0.85)',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.45)',
+                  cursor: 'pointer',
+                }} title={c.name} />
+              </Marker>
+            ))}
             {/* Your location marker */}
             {firstLocation?.lat && firstLocation?.lng && (
               <Marker
