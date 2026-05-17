@@ -721,6 +721,7 @@ export default function CommandCenter() {
         {/* Real Mapbox map */}
         {MAPBOX_TOKEN && (
           <Map
+            key={MAP_STYLES[mapStyleId][appTheme]}
             ref={mapRef}
             mapboxAccessToken={MAPBOX_TOKEN}
             initialViewState={mapCenter}
