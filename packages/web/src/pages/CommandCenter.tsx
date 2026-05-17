@@ -196,7 +196,7 @@ export default function CommandCenter() {
   useEffect(() => {
     authFetch(`${API}/api/v1/locations`)
       .then((r) => r.json())
-      .then((d) => setLocations(d.data?.locations || []))
+      .then((d) => setLocations(d.locations || d.data?.locations || []))
       .catch(() => {})
   }, [authFetch])
 
