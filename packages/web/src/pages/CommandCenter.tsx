@@ -200,14 +200,25 @@ export default function CommandCenter() {
       .catch(() => {})
   }, [authFetch])
 
-  // Fetch tracked competitors for the first location (for map pins + search)
+  // Fetch tracked competitors across ALL locations for map pins + search
   useEffect(() => {
-    const locId = locations[0]?.id
-    if (!locId) return
-    authFetch(`${API}/api/v1/locations/${locId}/competitors`)
-      .then((r) => r.json())
-      .then((d) => setCompetitors(d.competitors || []))
-      .catch(() => {})
+    if (!locations.length) return
+    Promise.all(
+      locations.map(loc =>
+        authFetch(`${API}/api/v1/locations/${loc.id}/competitors`)
+          .then(r => r.json())
+          .then(d => d.competitors || [])
+          .catch(() => [] as typeof competitors)
+      )
+    ).then(results => {
+      const seen = new Set<string>()
+      const merged = results.flat().filter(c => {
+        if (seen.has(c.competitor_id)) return false
+        seen.add(c.competitor_id)
+        return true
+      })
+      setCompetitors(merged)
+    })
   }, [authFetch, locations])
 
   useEffect(() => {
@@ -340,24 +351,70 @@ export default function CommandCenter() {
           padding: '10px 14px',
           borderBottom: '1px solid var(--border)',
           flexShrink: 0,
+          position: 'relative',
         }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8,
             background: 'var(--surface-2)', borderRadius: 10,
-            border: '1px solid var(--border-2)', padding: '7px 12px',
+            border: `1px solid ${search && filteredCompetitors.length > 0 ? 'var(--accent)' : 'var(--border-2)'}`,
+            padding: '7px 12px',
           }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13" style={{ color: 'var(--text-3)', flexShrink: 0 }}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Escape') setSearch('') }}
               placeholder="Search rivals, SKUs, alerts…"
               style={{
                 flex: 1, background: 'transparent', border: 'none', outline: 'none',
                 fontSize: 12.5, color: 'var(--text-1)', fontFamily: 'var(--sans)',
               }}
             />
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--text-3)', background: 'var(--surface-3)', padding: '2px 5px', borderRadius: 4, border: '1px solid var(--border)', whiteSpace: 'nowrap' }}>⌘K</span>
+            {search
+              ? <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', padding: 0, lineHeight: 1, fontSize: 14 }}>×</button>
+              : <span style={{ fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--text-3)', background: 'var(--surface-3)', padding: '2px 5px', borderRadius: 4, border: '1px solid var(--border)', whiteSpace: 'nowrap' }}>⌘K</span>
+            }
           </div>
+          {/* Autocomplete dropdown — rivals matched */}
+          {search && filteredCompetitors.length > 0 && (
+            <div style={{
+              position: 'absolute', top: '100%', left: 14, right: 14, zIndex: 300,
+              background: 'var(--surface)', border: '1px solid var(--accent)',
+              borderTop: 'none', borderRadius: '0 0 10px 10px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+              overflow: 'hidden',
+            }}>
+              <div style={{ padding: '5px 10px 3px', fontSize: 9, fontFamily: 'var(--mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)' }}>
+                Rivals matched
+              </div>
+              {filteredCompetitors.map(c => (
+                <button
+                  key={c.competitor_id}
+                  onClick={() => {
+                    setSearch('')
+                    if (c.lat && c.lng) mapRef.current?.flyTo({ center: [Number(c.lng), Number(c.lat)], zoom: 14, duration: 700 })
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                    padding: '8px 12px', border: 'none', cursor: 'pointer',
+                    background: 'transparent', textAlign: 'left',
+                    transition: 'background 0.1s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-2)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <div style={{
+                    width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                    background: c.slot_type === 'block' ? 'var(--accent-block)' : 'var(--accent-intel)',
+                  }} />
+                  <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-1)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                  <span style={{ fontSize: 9.5, fontFamily: 'var(--mono)', color: 'var(--text-3)', flexShrink: 0 }}>
+                    {c.slot_type === 'block' ? 'BLOCKED' : 'TRACKING'}{c.lat ? ' · fly to' : ''}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Operator type filter */}
@@ -529,52 +586,16 @@ export default function CommandCenter() {
               Pulling latest intelligence from {locations.length || 0} markets…
             </div>
           ) : filteredAlerts.length === 0 ? (
-            <>
-              <div style={{ padding: '32px 16px', textAlign: 'center' }}>
-                <div style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'var(--mono)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
-                  {statusFilter === 'unreviewed' ? 'All clear' : 'No alerts found'}
-                </div>
-                <div style={{ fontSize: 11.5, color: 'var(--text-3)', lineHeight: 1.6 }}>
-                  {statusFilter === 'unreviewed'
-                    ? `All clear across ${locations.length || 0} markets. Last checked ${lastScan}.`
-                    : 'Try adjusting your filters.'}
-                </div>
+            <div style={{ padding: '32px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-3)', fontFamily: 'var(--mono)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+                {statusFilter === 'unreviewed' ? 'All clear' : 'No alerts found'}
               </div>
-              {/* Show competitor matches when search finds rivals but no alerts */}
-              {filteredCompetitors.length > 0 && (
-                <div style={{ padding: '0 10px 12px' }}>
-                  <div style={{ fontSize: 9.5, fontFamily: 'var(--mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 8, paddingLeft: 4 }}>
-                    Rivals matched
-                  </div>
-                  {filteredCompetitors.map(c => (
-                    <div
-                      key={c.competitor_id}
-                      onClick={() => {
-                        if (c.lat && c.lng) mapRef.current?.flyTo({ center: [Number(c.lng), Number(c.lat)], zoom: 14, duration: 600 })
-                      }}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '10px 12px', borderRadius: 12, marginBottom: 6,
-                        background: 'var(--surface)', border: '1px solid var(--border)',
-                        cursor: c.lat && c.lng ? 'pointer' : 'default',
-                      }}
-                    >
-                      <div style={{
-                        width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
-                        background: c.slot_type === 'block' ? 'var(--accent-block)' : 'var(--accent-intel)',
-                      }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div>
-                        <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontFamily: 'var(--mono)' }}>{c.slot_type === 'block' ? 'BLOCKED' : 'TRACKING'}</div>
-                      </div>
-                      {c.lat && c.lng && (
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="11" height="11" style={{ color: 'var(--text-3)', flexShrink: 0 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
+              <div style={{ fontSize: 11.5, color: 'var(--text-3)', lineHeight: 1.6 }}>
+                {statusFilter === 'unreviewed'
+                  ? `All clear across ${locations.length || 0} markets. Last checked ${lastScan}.`
+                  : 'Try adjusting your filters.'}
+              </div>
+            </div>
           ) : (
             filteredAlerts.map((alert) => {
               const sev = getSeverity(alert)
