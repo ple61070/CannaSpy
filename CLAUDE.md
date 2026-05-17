@@ -46,7 +46,7 @@ Flag conflicts rather than silently choosing one over the other.
 | API layer | Node.js + Fastify + TypeScript | `packages/api/` |
 | Frontend | React 18 + Vite + TypeScript | `packages/web/` |
 | Styling | Tailwind CSS + CSS variables | Dark theme — see BRAND.md |
-| Database | PostgreSQL 15 (Supabase prod — project `cbhbrbkirzpncpxlvehk`) | |
+| Database | PostgreSQL 15 (Railway Postgres — `metro.proxy.rlwy.net:36204`) | Supabase abandoned — pooler broken, MCP broken; Railway is canonical |
 | Cache / queue backend | Redis 7 | BullMQ + session cache |
 | Auth | Clerk | Multi-tenant MSO orgs, role-based |
 | Billing | Stripe | Metered per-slot, volume discounts |
@@ -76,7 +76,7 @@ cannaspy/
 ├── packages/
 │   ├── scraper/                     ← Python data pipeline
 │   │   ├── dispensary_scraper.py    ← ✅ FALLBACK scraper (rebranded, no CannaIntel refs)
-│   │   ├── collector.py             ← ✅ PRIMARY pipeline (6,002 items collected)
+│   │   ├── collector.py             ← ✅ PRIMARY pipeline (9,584 items collected — 4 Corona + 4 LA competitors)
 │   │   ├── diff_engine.py           ← ✅ built (not yet tested end-to-end)
 │   │   ├── ip_pool.py               ← ✅ built (prod proxy pool not yet configured)
 │   │   ├── scheduler.py             ← ✅ built
@@ -124,7 +124,7 @@ cannaspy/
 │   │       ├── db/
 │   │       │   ├── schema.sql       ← ✅ complete schema
 │   │       │   ├── redis.ts         ← ✅ shared IORedis cache singleton
-│   │       │   └── migrations/      ← ✅ 001–011 applied (Supabase prod)
+│   │       │   └── migrations/      ← ✅ 001–011 applied (Railway Postgres)
 │   │       ├── scheduler.ts         ← ✅ exists
 │   │       └── index.ts             ← ✅ exists
 │   │
@@ -158,17 +158,17 @@ cannaspy/
 - Clerk auth middleware (`middleware/clerk.ts`) — all protected routes
 - RLS policies applied (migration 006)
 - All React pages (35 screens built)
-- MarketHeatMap — live Mapbox GL, 1,785 CA dispensary pins, two-layer pin system (ring + fill), bbox API. Pin states: amber=blocked, teal 100%=enriched, teal 70%=prospect (no grey pins). Clusters at zoom <10. Theme-aware basemap (dark-v11 / streets-v12), hover state active (`promoteId="id"`), legend corrected.
+- MarketHeatMap — live Mapbox GL, 1,785 CA dispensary pins, two-layer pin system (ring + fill), bbox API. Pin states: amber=blocked, teal 100%=enriched, teal 70%=prospect (no grey pins). Clusters at zoom <10. Theme-aware basemap (dark-v11 / streets-v12), legend corrected. (`promoteId="id"` hover NOT yet applied — see pending below)
 - `business_type` column on `competitors` + `dispensaries` (migration 011); `OperatorTypeFilter` wired to 6 screens
 - Fallback scraper (`dispensary_scraper.py` — rebranded, no CannaIntel references)
-- Primary pipeline (`collector.py` — live, 6,002 menu items from 4 competitors)
-- DCC ingest (`dcc_ingest.py` — 1,785 CA dispensary records, 1,323 with lat/lng, in Supabase)
+- Primary pipeline (`collector.py` — live, 9,584 menu items from 8 competitors: 4 Corona + 4 LA)
+- DCC ingest (`dcc_ingest.py` — 1,785 CA dispensary records, 1,323 with lat/lng, in Railway Postgres)
 - IP rotation (`ip_pool.py`)
 - Off-peak scheduler (`scheduler.py`)
 - Diff engine (`diff_engine.py`)
 - Promo parser (`promo_parser.py`)
 - CLI tools (all 4 + test-block-cancel.py)
-- Database schema — all 11 migrations applied to Supabase prod
+- Database schema — all 11 migrations applied to Railway Postgres
 - Parsers (Dutchie, HTML, normalizer)
 - Places client (slug discovery)
 - Robots checker
@@ -189,7 +189,7 @@ cannaspy/
 - `scrape.worker.ts` wiring to `collector.py` — fallback to `dispensary_scraper.py` still active
 - `REDIS_URL` on Railway points to Railway internal Redis — workers should start cleanly (verify after deploy)
 - `PriceHistory.tsx` — still on hardcoded mock data; needs `GET /api/v1/pricing/history` endpoint
-- Supabase MCP `execute_sql` broken — "Database authentication failed"; use PostgREST workaround
+- Supabase MCP `execute_sql` broken — "Database authentication failed"; Railway Postgres is canonical DB; Supabase is no longer in use
 
 ---
 
@@ -465,9 +465,9 @@ WEB_PORT=3000
 **Status: COMPLETE ✅ — Pipeline live in production since 2026-04-28.**
 
 Done:
-- [x] Schema applied — 11 migrations on Supabase prod
+- [x] Schema applied — 11 migrations on Railway Postgres
 - [x] `dispensary_scraper.py` rebranded (no CannaIntel references)
-- [x] `collector.py` built and run — 6,002 menu items collected from 4 competitors
+- [x] `collector.py` built and run — 9,584 menu items collected (4 Corona + 4 LA competitors)
 - [x] `ip_pool.py` built
 - [x] `scheduler.py` built
 - [x] `diff_engine.py` built
@@ -501,20 +501,22 @@ Still needed:
 **Status: KEY SCREENS WIRED ✅ — Some screens pending.**
 
 Done:
-- [x] PriceIntelligence wired to real `menu_items` data (6,002 rows, 4 competitors)
-- [x] CommandCenter wired (loads location count; alert feed empty — no diffs run yet)
+- [x] PriceIntelligence wired to real `menu_items` data (9,584 rows, 8 competitors: 4 Corona + 4 LA)
+- [x] CommandCenter wired — map pins + autocomplete search dropdown, competitor fetch via Promise.all across all locations (Session 30)
 - [x] AlertFeed wired (loads location filter options)
 - [x] LocationDashboard wired (loads location + competitors)
 - [x] CancellationFlow wired to Stripe Customer Portal
 - [x] All pages using `authFetch` (Clerk token on all API calls)
 - [x] MarketHeatMap — live Mapbox GL, 1,785 DCC dispensary pins, two-layer pin system (ring + fill), clusters at zoom <10, bbox API fetch on map move. Pin colors: amber=blocked, teal 100%=enriched, teal 70%=prospect.
 - [x] Map sidebar gap fix — explicit `width:100%` + matching CSS transition on map container (Session 13)
-- [x] Theme-aware basemap (`dark-v11` in dark mode, `streets-v12` in light) — Session 14
-- [x] `promoteId="id"` on dispensary Source — hover state active (Session 14)
+- [x] Theme-aware basemap (`dark-v11` in dark mode, `streets-v12` in light) — Session 14; `key` prop on all Map components to prevent race conditions (Session 29)
 - [x] Map legend corrected to teal 70% prospect (Session 14)
 - [x] `PriceHistory.tsx` brand fixes — Space Mono font, amber rival line, corrected delta colors (Session 19)
+- [x] Price Intelligence dropdown clipping fixed — `createPortal` to escape overflow (Session 29)
+- [x] `map.ts` route fixed — `getAdminDb()` instead of `query()`, returns 275+ pins for LA bbox (Session 29)
 
 Still needed:
+- [ ] `promoteId="id"` on dispensary `<Source>` in `MarketHeatMap.tsx` — hover state not yet applied (1-line fix)
 - [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
 - [ ] Block Management (`/blocks`) — verify wired to real data
 - [ ] Promotions — scaffold only, not wired
@@ -527,7 +529,7 @@ Still needed:
 
 Done:
 - [x] Railway API deployed and live: `https://cannaspy-production.up.railway.app` (us-west2) — Session 20 (migrated from Fly.io)
-- [x] Supabase DB active — 1,785 CA dispensaries, all 11 migrations applied
+- [x] Railway Postgres active — 1,785 CA dispensaries, all 11 migrations applied, 9,584 menu items
 - [x] Frontend deployed to Vercel (`web-rouge-one-15.vercel.app`) — monorepo deploy from workspace root
 - [x] Dunning logic — 3-day grace period on `invoice.payment_failed`
 - [x] Webhook test-mode endpoint registered + verified
@@ -538,7 +540,7 @@ Still needed:
 - [ ] Register Stripe live-mode webhook endpoint (launch blocker)
 - [ ] Sentry error tracking integration
 - [ ] Uptime Robot scrape health monitoring
-- [ ] Fix `REDIS_URL` on Fly.io — currently `localhost:6379`; set to Upstash Redis or disable BullMQ workers (non-fatal, noisy startup crashes)
+- [ ] Destroy abandoned Fly.io app (`fly apps destroy cannaspy-api`) — Patrick must confirm (REDIS_URL already correct on Railway)
 - [ ] `cannaspy_brand.html` — review and integrate or archive
 
 ---
@@ -589,6 +591,29 @@ to hit $130K MRR.
 
 ---
 
+---
+
+## Live Data — Key IDs and Credentials
+
+```
+Railway Postgres (public):  postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Railway API:                https://cannaspy-production.up.railway.app
+Frontend (Vercel):          https://web-rouge-one-15.vercel.app
+
+Org ID (Patrick):           4b507cd2-17e6-439c-8993-78476cdf08e1
+Patrick Clerk ID:           user_3D148kdy4fZPXIWmTskLn8rxs8E
+
+Locations:
+  Culture Cannabis Club (Corona):  ffdefc3f-8d55-4701-b7ea-6b9d4195b16f
+    → Competitors: Off The Charts, Catalyst Cannabis Co., Zen Dispensary, Caliva
+  Cannabis House (LA):             9354f184-5b88-4a8f-abc3-012fdaa4058f
+    → Competitors: STIIIZY Downtown LA, Highway DTLA, Jungle Boys DTLA, LA Cannabis Co
+```
+
+Total menu items in DB: **9,584** (8 competitors, 2 locations as of Session 28)
+
+---
+
 *Maintained by the CannaSpy founder and Claude.*
-*Last updated: March 2026 — v2.0*
+*Last updated: 2026-05-17 — v2.1 (corrected DB → Railway Postgres; updated item counts; fixed promoteId status)*
 *Do not commit changes to this file without founder approval.*

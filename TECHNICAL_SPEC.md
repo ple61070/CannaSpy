@@ -41,7 +41,7 @@ cannaspy/
 ├── packages/
 │   ├── scraper/                 ← Python data pipeline
 │   │   ├── dispensary_scraper.py    ← ✅ FALLBACK scraper (rebranded, no CannaIntel refs)
-│   │   ├── collector.py             ← ✅ PRIMARY pipeline (6,002 items collected)
+│   │   ├── collector.py             ← ✅ PRIMARY pipeline (9,584 items collected — 4 Corona + 4 LA)
 │   │   ├── diff_engine.py           ← ✅ built (not yet tested end-to-end)
 │   │   ├── ip_pool.py               ← ✅ built
 │   │   ├── scheduler.py             ← ✅ built
@@ -84,7 +84,7 @@ cannaspy/
 │   │   │   ├── db/
 │   │   │   │   ├── schema.sql
 │   │   │   │   ├── redis.ts         ← ✅ shared IORedis cache singleton
-│   │   │   │   └── migrations/      ← ✅ 001–011 applied (Supabase prod)
+│   │   │   │   └── migrations/      ← ✅ 001–011 applied (Railway Postgres)
 │   │   │   ├── services/            ← ✅ 4 services
 │   │   │   │   ├── blocking.service.ts
 │   │   │   │   ├── pricing.service.ts
@@ -510,7 +510,7 @@ python cli/data-qa.py normalize --name "Blue Dream 1g flower"
 CANNASPY_PRIMARY_API_HOST=        # platform API host — never hardcode inline
 
 # Database
-DATABASE_URL=                     # PostgreSQL connection string (Supabase pooler)
+DATABASE_URL=                     # PostgreSQL connection string (Railway Postgres — metro.proxy.rlwy.net:36204)
 REDIS_URL=                        # Redis connection string (Railway internal)
 
 # Auth (Clerk)
