@@ -346,6 +346,7 @@ export default function MarketHeatMap() {
       <div ref={mapContainerRef} style={{ flex: 1, width: '100%', position: 'relative', overflow: 'hidden', minHeight: 0, transition: 'width 0.22s cubic-bezier(.2,.8,.2,1)' }}>
         {isMapConfigured() ? (
           <Map
+            key={MAP_STYLES[mapStyleId][appTheme]}
             ref={mapRef}
             mapboxAccessToken={MAPBOX_TOKEN}
             mapStyle={MAP_STYLES[mapStyleId][appTheme]}

@@ -234,6 +234,7 @@ export default function CompetitorDiscovery() {
       }}>
         {MAPBOX_TOKEN && (
           <Map
+            key={MAP_STYLES[mapStyleId][appTheme]}
             ref={mapRef}
             mapboxAccessToken={MAPBOX_TOKEN}
             initialViewState={CA_VIEWPORT}
