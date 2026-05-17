@@ -1,4 +1,124 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-17 (Session 30 — Fix 401 auth + Command Center map pins + search)
+
+---
+
+## Session 30 — 2026-05-17
+
+**Commits:** `b7d0e2a` fix(command-center): add competitor map pins + extend search → `af200fd` fix(command-center): autocomplete dropdown + fetch all locations' competitors → `882a22f` fix(command-center): parse locations from d.locations not d.data.locations
+**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` (auto-deployed via git push) | Railway API ✅ redeployed (new container `28ae605b7636`, `DATABASE_URL` fixed)
+
+---
+
+### 1. What Was Done
+
+#### Fix 401 Unauthorized on all API routes (critical)
+
+Every authenticated API route was returning 401. Root cause: Railway's `DATABASE_URL` env var was pointing to the Supabase transaction mode pooler (`aws-0-us-west-1.pooler.supabase.com:6543`) with an incorrect password (`k1paUDmtqSky4zeC`). When the Clerk auth middleware attempted to look up the org in the DB, Supabase returned `"Tenant or user not found"`, which was caught in the try/catch and surfaced as 401 to the client.
+
+Diagnosis: Railway logs showed `[clerk] auth middleware error … err="Tenant or user not found"` — not a Clerk error at all, a DB connection failure caught by the Clerk middleware's try/catch.
+
+Fix: Updated `DATABASE_URL` on Railway to the working Railway Postgres URL (`metro.proxy.rlwy.net:36204/railway`, confirmed live with psycopg2 — 3 orgs, 8 competitors). Redeployed via `railway redeploy --yes` (no code rebuild, just picks up new env var). New container `28ae605b7636` started cleanly with no DB errors.
+
+#### Command Center — map pins + search autocomplete (three rounds)
+
+**Round 1 (`b7d0e2a`):** Added `competitors` state, fetched tracked competitors for `locations[0]`, rendered `<Marker>` components, added inline search section. Pins not visible because: (a) `locations[0]` had no lat/lng so the only competitor was off-screen; (b) the inline search section was below the alert feed, not near the search bar.
+
+**Round 2 (`af200fd`):** Full rewrite of competitor fetch — `Promise.all` across all locations in parallel, deduplication by `competitor_id`. Replaced buried inline search with floating autocomplete dropdown attached to the search bar (`position: absolute; top: 100%`), teal/amber color-coded dots, click flies map to rival via `mapRef.current?.flyTo()`. Also updated Culture Cannabis Club lat/lng in DB (`33.8753, -117.5664` — Corona) via psycopg2.
+
+**Round 3 (`882a22f`):** Fixed locations fetch parsing. The API returns `{ locations: [...], total, limit, offset }` (no `data` wrapper), but the component was reading `d.data?.locations` — always `undefined`. Changed to `d.locations || d.data?.locations || []`. This was the reason `locations` was always `[]`, which caused the competitor fetch effect to bail early (`if (!locations.length) return`), leaving both pins and search empty.
+
+#### Verified fix is in deployed Vercel bundle
+
+Downloaded the live Vercel JS bundle and found the minified fix at occurrence 4: `z(I.locations||((J=I.data)==null?void 0:J.locations)||[])` — confirmed the corrected parsing is deployed.
+
+#### Installed chrome-devtools-mcp
+
+Added `chrome-devtools-mcp` to user-scope Claude Code MCP config (`~/.claude.json`) via `claude mcp add chrome-devtools --scope user -- npx -y chrome-devtools-mcp@latest`. Will enable direct browser testing (navigate, screenshot, inspect DOM, check network) in the next session.
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/web/src/pages/CommandCenter.tsx` | Competitor fetch via Promise.all across all locations; autocomplete dropdown on search bar; map pins with color-coded slot_type; `d.locations` fix for locations parsing |
+| `packages/api/src/routes/locations.ts` | Added `c.lat, c.lng` to `GET /:id/competitors` SELECT (was missing, so competitors had no coordinates) |
+
+**Infrastructure changes (not code):**
+- Railway `DATABASE_URL` updated from broken Supabase pooler → working Railway Postgres (`metro.proxy.rlwy.net:36204/railway`)
+- Railway redeployed via `railway redeploy --yes`
+- `chrome-devtools-mcp` added to `~/.claude.json` (user-scope MCP)
+
+No schema migrations. No new npm dependencies.
+
+---
+
+### 3. What Failed
+
+- **Playwright headless browser test:** Mapbox GL JS crashes headless Chromium due to WebGL not being available even with `--use-gl=swiftshader`. Bundle analysis used as alternative proof of fix.
+- **Supabase MCP execute_sql:** Still broken — "Database authentication failed". Supabase pooler password `k1paUDmtqSky4zeC` is also wrong for direct connection. Railway Postgres is the working DB with live data.
+- **Railway GraphQL API for env var inspection:** "Not Authorized" with the access token from `~/.railway/config.json`. Used `railway variables` CLI instead (worked).
+
+Known standing issues (not touched this session):
+- `alert.worker.ts` logs only, no Resend emails
+- `diff_engine.py` not tested end-to-end
+- Stripe live-mode webhook not registered
+- `chrome-devtools-mcp` requires a new session to activate (MCP servers load at session start)
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Test Command Center in browser with chrome-devtools-mcp** — new session will have the Chrome MCP; navigate to `/command-center`, verify map pins appear + search autocomplete works, check Network tab confirms `/api/v1/locations` returns 200
+2. **Wire Block Management (`/blocks`)** — verify it's hitting real `tracked_competitors` + `block_list` data, not placeholder
+3. **Run `diff_engine.py` end-to-end** — need two snapshots from same competitor to generate first `alerts` rows so Alert Feed shows real data
+4. **Update CLAUDE.md** — Railway Postgres is the canonical DB (Supabase pooler broken, Supabase MCP broken); update the DB reference from Supabase to Railway Postgres
+5. **Wire Promotions (`/promotions`)** — currently scaffold only; needs API endpoint + data
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Map / Data Pipeline:**
+- [ ] `promoteId="id"` on dispensary Source → activates hover (1 line, `MarketHeatMap.tsx`)
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
+- [ ] `diff_engine.py` — test end-to-end with two real snapshots (needed to generate first `alerts` rows)
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] `scrape.worker.ts` → call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+- [ ] Update CLAUDE.md — Railway Postgres is canonical DB, not Supabase
+
+**API / Backend:**
+- [ ] Remove or commit debug/me endpoint in `packages/api/src/index.ts`
+- [ ] Verify `alerts` API surfaces `change_events` end-to-end
+- [ ] Full Stripe subscription quantity sync on slot add/remove
+- [ ] `billing.service.ts` — usage sync cron
+
+**Frontend:**
+- [ ] Block Management (`/blocks`) — verify wired to real data, not placeholder
+- [ ] Promotions (`/promotions`) — scaffold only, not wired to API
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state on API failure
+- [ ] Apply DM Sans + Space Mono typography across all screens
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Destroy Fly.io app (`fly apps destroy cannaspy-api`) — Patrick must confirm
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Corona)
+Cannabis House:   9354f184-5b88-4a8f-abc3-012fdaa4058f (LA)
+```
+
+---
+
 **Date:** 2026-05-16 (Session 29 — Map theme race condition + all-environment fix)
 
 ---
