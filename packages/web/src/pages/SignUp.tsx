@@ -152,13 +152,6 @@ export default function SignUp() {
               </div>
             </Card>
 
-            <button
-              onClick={handleContinue}
-              disabled={loading}
-              style={{ width: '100%', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', padding: '13px 0', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 600, cursor: loading ? 'default' : 'pointer', boxShadow: '0 4px 18px rgba(9,161,161,0.32)', opacity: loading ? 0.85 : 1 }}
-            >
-              {loading ? 'Setting up your account…' : 'Start free trial  →'}
-            </button>
           </div>
 
           {/* Right */}
@@ -181,11 +174,19 @@ export default function SignUp() {
             </Card>
 
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '16px 18px', boxShadow: 'var(--card-shadow)', fontSize: 12, color: 'var(--text-3)', lineHeight: 1.7 }}>
-              After your trial, pricing starts at <span style={{ fontFamily: 'var(--mono)', color: 'var(--text-2)', fontWeight: 500 }}>$100/slot/month</span>. You choose how many competitors to track or block — no fixed bundles, no contracts.
+              After your trial, pricing starts at <span style={{ fontFamily: 'var(--mono)', color: 'var(--text-2)', fontWeight: 500 }}>$100/slot/month</span>. You choose how many competitors to track or block.
             </div>
           </div>
 
         </div>
+
+        <button
+          onClick={handleContinue}
+          disabled={loading}
+          style={{ width: '100%', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', padding: '13px 0', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 600, cursor: loading ? 'default' : 'pointer', boxShadow: '0 4px 18px rgba(9,161,161,0.32)', opacity: loading ? 0.85 : 1, marginTop: 4 }}
+        >
+          {loading ? 'Setting up your account…' : 'Start free trial  →'}
+        </button>
       </div>
     </div>
   );
