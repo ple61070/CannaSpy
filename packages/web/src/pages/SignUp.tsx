@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import cannaspyIcon from '../assets/cannaspy-icon.png';
 
 const inputStyle: React.CSSProperties = {
   width: '100%', background: 'var(--surface-2)', border: '1.5px solid var(--border-2)',
@@ -93,6 +94,9 @@ export default function SignUp() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg)', fontFamily: 'var(--sans)' }}>
       {/* Topbar */}
       <div style={{ padding: '10px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, background: 'var(--surface)' }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: '#1a2f42', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <img src={cannaspyIcon} alt="CannaSpy" style={{ width: 32, height: 32 }} />
+        </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-1)', letterSpacing: '-0.01em' }}>Create your organization</div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)', letterSpacing: '0.08em', marginTop: 2 }}>SCREEN 01 · ORG SETUP · STEP 1 OF 3</div>
