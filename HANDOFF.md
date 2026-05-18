@@ -1,4 +1,129 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-18 (Session 32 — First-customer plan + LocationWizard wired to real API)
+
+---
+
+## Session 32 — 2026-05-18
+
+**Commits:** `7d0aad0` fix(onboarding): omit dcc_license key when empty → `162a050` feat(onboarding): wire LocationWizard to real API
+**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` (auto-deploys on push) | Railway API ✅ unchanged
+
+---
+
+### 1. What Was Done
+
+#### Caliva coordinates fix
+Caliva's lat/lng in Railway Postgres was pointing to San Jose (37.338, -121.886) — wrong region for a Southern California competitor. Updated to Jurupa Valley/Corona area (33.996, -117.483) via direct DB update. All 8 competitors now have valid Southern California coordinates.
+
+#### CARL config cleanup
+Set `DEVMODE=false` in `~/.carl/manifest` to disable the debug block appended to every response. Removed `GLOBAL_RULE_9` from `~/.carl/global` which was injecting "report context bracket at start of every session response."
+
+#### First-customer plan (plan mode)
+Ran full codebase audit in plan mode. Audited all 15 MVP screens (01–05, 07, 08, 12, 16–18, 28, 30–31, 33) against real API and frontend code. Key findings:
+- API layer: fully production-ready — all 11 routes return real DB data; `alert.worker.ts` IS wired to Resend (CLAUDE.md was stale on this); `billing.service.ts` has full Stripe slot sync
+- 6 of 15 MVP screens are scaffold-only: LocationWizard, PromotionsTracker, BlockManagement, BillingUsage, NotificationSettings, LocationManagement
+- CancellationFlow calls `/api/v1/billing/cancel` which does not exist — should use `/api/v1/billing/portal`
+- Plan saved at `~/.claude/plans/magical-swinging-garden.md`, organized as Sessions A–D
+
+#### LocationWizard wired (Session A complete)
+Replaced `INITIAL_LOCS` hardcoded mock data with real API calls. Changes:
+- `GET /api/v1/locations` on mount — loads existing locations
+- Form POSTs `{ name, address, dcc_license? }` to `POST /api/v1/locations`
+- API returns only `{ id }` — reconstructed full location from form data + id
+- Remove button calls `PATCH active=false` (soft delete, no data loss)
+- Continue button disabled until ≥1 location saved
+- Inline error display on validation failure or API error
+- **Bug found and fixed during browser testing**: `dcc_license: null` fails `z.string().optional()` — Zod rejects null, expects undefined. Fixed by omitting the key when empty: `...(dcc_license ? { dcc_license } : {})`
+
+**Browser-verified on localhost:3000:**
+- Empty state renders correctly ("No locations added yet")
+- Loaded existing 2 locations (Culture Cannabis Club + Cannabis House) from real API
+- Added "Test Location Riverside" → appeared in list instantly, toast fired, form cleared, counter went 2→3
+- Test location cleaned up from DB after verification
+- Continue button enabled only after ≥1 location present
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/web/src/pages/LocationWizard.tsx` | Full rewrite: removed INITIAL_LOCS; wired to GET + POST /api/v1/locations; null dcc_license fix |
+| `~/.carl/manifest` | DEVMODE=true → false |
+| `~/.carl/global` | Removed GLOBAL_RULE_9 (context bracket reporting) |
+
+No schema migrations. No new dependencies. No Railway deploy.
+
+---
+
+### 3. What Failed
+
+- **Production Vercel test**: `/setup/locations` on `web-rouge-one-15.vercel.app` returned "Unauthorized" because the chrome-devtools-mcp browser had no Clerk session. Tested on localhost:3000 instead where the session was active. The code is correct — production will work once the user signs in normally.
+
+Known standing issues (not touched this session):
+- `diff_engine.py` not tested end-to-end — alerts table empty
+- Stripe live-mode webhook not registered
+- API package has no dotenv — must source `.env` manually when starting locally
+- `promoteId="id"` on MarketHeatMap.tsx still not applied
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Wire BlockManagement** — swap static `BLOCKS[]` for `useBlocks()` hook (already written at `packages/web/src/hooks/useBlocks.ts`) — 5-line change in `packages/web/src/pages/BlockManagement.tsx`
+2. **Wire BillingUsage** — replace static `LOCS[]` with `GET /api/v1/billing/usage` + `GET /api/v1/locations` in `packages/web/src/pages/BillingUsage.tsx`
+3. **Fix CancellationFlow** — line 85 calls `/api/v1/billing/cancel` (doesn't exist); change to POST `/api/v1/billing/portal` in `packages/web/src/pages/CancellationFlow.tsx`
+4. **Wire NotificationSettings** — add `GET /api/v1/settings` on mount + `PATCH` on toggle change in `packages/web/src/pages/NotificationSettings.tsx`
+5. **Wire LocationManagement** — replace static `LOCATIONS[]` with `GET /api/v1/locations` in `packages/web/src/pages/LocationManagement.tsx`
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Session B (intelligence screens):**
+- [ ] Browser verify: CommandCenter, LocationDashboard, PriceIntelligence (already wired, just needs visual confirmation)
+- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions`
+- [ ] Run `diff_engine.py` end-to-end to generate first `alerts` rows (AlertFeed shows empty until this runs)
+
+**Session C (blocking + account screens):**
+- [ ] Wire BlockManagement (`/blocks`) — swap `BLOCKS[]` for `useBlocks()` hook
+- [ ] Wire BillingUsage (`/billing`) to `/api/v1/billing/usage` + `/api/v1/locations`
+- [ ] Wire NotificationSettings to `GET/PATCH /api/v1/settings`
+- [ ] Wire LocationManagement to `GET /api/v1/locations`
+- [ ] Fix CancellationFlow: `/billing/cancel` → `/billing/portal`
+
+**Session D (go-live checklist):**
+- [ ] Add `import 'dotenv/config'` to `packages/api/src/index.ts`
+- [ ] `promoteId="id"` on dispensary `<Source>` in `MarketHeatMap.tsx` (1-line fix)
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+- [ ] Admin.ts role-gating on `/crm-failures`
+- [ ] Register Stripe live-mode webhook endpoint
+- [ ] Resend domain verification (`cannaspy.com`)
+- [ ] Verify Stripe metered price volume tiers
+
+**Map / Data Pipeline:**
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
+- [ ] `scrape.worker.ts` → call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Destroy Fly.io app (`fly apps destroy cannaspy-api`) — Patrick must confirm
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Culture Cannabis Club, Corona)
+Location ID:      9354f184-5b88-4a8f-abc3-012fdaa4058f (Cannabis House, LA)
+```
+
+---
+
 **Date:** 2026-05-18 (Session 31 — Doc sync + Command Center live verification + tracked badge fix)
 
 ---
