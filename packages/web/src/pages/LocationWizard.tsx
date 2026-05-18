@@ -78,8 +78,6 @@ const labelStyle: React.CSSProperties = {
   marginBottom: 6, letterSpacing: '0.03em', textTransform: 'uppercase' as const,
 };
 
-const TOTAL_SLOTS = 50;
-
 export default function LocationWizard() {
   const navigate = useNavigate();
   const authFetch = useAuthFetch();
@@ -94,9 +92,6 @@ export default function LocationWizard() {
   const nameRef = useRef<HTMLInputElement>(null);
   const addressRef = useRef<HTMLInputElement>(null);
   const licenseRef = useRef<HTMLInputElement>(null);
-
-  const usedSlots = locs.length * 5;
-  const fillPct = Math.min((usedSlots / TOTAL_SLOTS) * 100, 100);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -176,10 +171,8 @@ export default function LocationWizard() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
         <StepBar active={1} />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 310px', gap: 20, alignItems: 'start' }}>
+        <div style={{ maxWidth: 740, margin: '0 auto' }}>
 
-          {/* Left */}
-          <div>
             {/* Add form */}
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '26px 28px', boxShadow: 'var(--card-shadow)', marginBottom: 18 }}>
               <div style={{ marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
@@ -287,49 +280,14 @@ export default function LocationWizard() {
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* Right */}
-          <div>
-            {/* Slot usage */}
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: 22, boxShadow: 'var(--card-shadow)', marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', letterSpacing: '-0.01em' }}>Slot usage</div>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' }}>{usedSlots} / {TOTAL_SLOTS}</div>
-              </div>
-              <div style={{ background: 'var(--surface-3)', borderRadius: 6, height: 7, overflow: 'hidden', margin: '10px 0 6px' }}>
-                <div style={{ height: '100%', borderRadius: 6, background: 'linear-gradient(90deg, #09A1A1, #F6C992)', width: `${fillPct}%`, transition: 'width 0.5s ease' }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)', fontVariantNumeric: 'tabular-nums' }}>
-                <span>0 used</span><span>{usedSlots} reserved</span><span>{TOTAL_SLOTS - usedSlots} free</span>
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)', lineHeight: 1.65 }}>
-                Slots assigned in step 3 when you add rivals. Adjust total from Billing anytime.
+            {/* Pro tip strip */}
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '14px 20px', marginTop: 4, display: 'flex', alignItems: 'flex-start', gap: 12, boxShadow: 'var(--card-shadow)' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 600, letterSpacing: '0.12em', color: 'var(--accent)', background: 'var(--accent-soft)', border: '1px solid rgba(9,161,161,0.22)', borderRadius: 20, padding: '4px 10px', whiteSpace: 'nowrap' as const, marginTop: 1 }}>TIP</div>
+              <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.7 }}>
+                Add all your locations before moving to step 3 — rival discovery runs independently per location, so each market gets its own competitor set. You can add more locations from Location Management at any time.
               </div>
             </div>
-
-            {/* Market coverage */}
-            {locs.length > 0 && (
-              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: 22, boxShadow: 'var(--card-shadow)', marginBottom: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid var(--border)', letterSpacing: '-0.01em' }}>Market coverage</div>
-                {locs.map((loc, i) => (
-                  <div key={loc.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < locs.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                    <div style={{ fontSize: 12, color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: 170 }}>{loc.name}</div>
-                    <TierBadge tier="standard" />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Pro tip */}
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: 22, boxShadow: 'var(--card-shadow)' }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid var(--border)', letterSpacing: '-0.01em' }}>Pro tip</div>
-              <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.75 }}>
-                Add all locations before step 3. Rival discovery runs per location — WeHo competitors differ from Long Beach.<br /><br />
-                <strong style={{ color: 'var(--text-1)' }}>Missing one later?</strong> Add from Location Management — each new location auto-expands slot count.
-              </div>
-            </div>
-          </div>
 
         </div>
       </div>
