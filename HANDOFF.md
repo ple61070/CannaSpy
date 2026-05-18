@@ -1,4 +1,114 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-18 (Session 33 — CannaSpy logo placed in sidebar, favicon, and onboarding topbars)
+
+---
+
+## Session 33 — 2026-05-18
+
+**Commits:** `c4e922f` feat(nav): replace logo gem with CannaSpy icon PNG + CSS wordmark → `8828e25` feat(brand): add CannaSpy logo to favicon, SignUp, and LocationWizard
+**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` (auto-deploys on push) | Railway API ✅ unchanged
+
+---
+
+### 1. What Was Done
+
+#### Logo design iteration
+Worked through multiple AI-generated logo versions with the user (ChatGPT + Gemini Banana). Evaluated transparency, line-art fidelity, color accuracy, and glow artifact removal across ~8 iterations. Final decision: use a white icon-only PNG (no text) and render the "CANNASPY" wordmark and tagline via CSS — avoids all AI text rendering quality issues.
+
+#### Sidebar logo replacement (`Layout.tsx`)
+Removed the `LogoGem` placeholder (teal-to-amber gradient gem SVG). Replaced with `LogoIcon` — a 54×54px `<img>` rendering `cannaspy-icon.png` (white eye-leaf mark on transparent bg). Expanded sidebar shows the icon + CSS "CANNASPY" in white (DM Sans, 700, letter-spacing 0.08em) + "AI-Powered Strategic Advantage" tagline in white below. Logo container padding tightened from 14px to 5px to fit 54px icon in 64px rail. Asset saved to `packages/web/src/assets/cannaspy-icon.png`.
+
+#### Favicon
+Created `packages/web/public/` directory (did not exist). Copied icon as `favicon.png`. Added `<link rel="icon" type="image/png" href="/favicon.png" />` to `index.html`. Browser tab now shows the CannaSpy icon.
+
+#### Logo in onboarding topbars
+Added a 40×40px dark badge (`background: #1a2f42, borderRadius: 10`) with the white icon inside to the topbar of both `SignUp.tsx` and `LocationWizard.tsx`. The dark badge ensures the white icon is visible in both light theme (`--surface: #ffffff`) and dark theme.
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/web/src/components/shared/Layout.tsx` | `LogoGem` → `LogoIcon` (54×54 PNG); wordmark + tagline updated; logo padding 14px → 5px |
+| `packages/web/src/assets/cannaspy-icon.png` | New asset — white eye-leaf icon |
+| `packages/web/public/favicon.png` | New asset — same icon, served as browser favicon |
+| `packages/web/index.html` | Added `<link rel="icon">` pointing to `/favicon.png` |
+| `packages/web/src/pages/SignUp.tsx` | Added dark logo badge to topbar (left of page title) |
+| `packages/web/src/pages/LocationWizard.tsx` | Added dark logo badge to topbar (left of page title) |
+
+No schema migrations. No new npm dependencies. No Railway deploy.
+
+---
+
+### 3. What Failed
+
+Nothing failed this session — all logo placements implemented and TypeScript clean.
+
+Known standing issues (not touched this session):
+- `diff_engine.py` not tested end-to-end — alerts table empty
+- Stripe live-mode webhook not registered
+- API package has no dotenv — must source `.env` manually when starting locally
+- `promoteId="id"` on MarketHeatMap.tsx still not applied
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Wire BlockManagement** — swap static `BLOCKS[]` for `useBlocks()` hook already at `packages/web/src/hooks/useBlocks.ts` — 5-line change in `packages/web/src/pages/BlockManagement.tsx`
+2. **Wire BillingUsage** — replace static `LOCS[]` with `GET /api/v1/billing/usage` + `GET /api/v1/locations` in `packages/web/src/pages/BillingUsage.tsx`
+3. **Fix CancellationFlow** — line 85 calls `/api/v1/billing/cancel` (route doesn't exist); change to POST `/api/v1/billing/portal` in `packages/web/src/pages/CancellationFlow.tsx`
+4. **Wire NotificationSettings** — add `GET /api/v1/settings` on mount + `PATCH` on toggle in `packages/web/src/pages/NotificationSettings.tsx`
+5. **Wire LocationManagement** — replace static `LOCATIONS[]` with `GET /api/v1/locations` in `packages/web/src/pages/LocationManagement.tsx`
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Session B (intelligence screens):**
+- [ ] Browser verify: CommandCenter, LocationDashboard, PriceIntelligence (already wired, just needs visual confirmation)
+- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions`
+- [ ] Run `diff_engine.py` end-to-end to generate first `alerts` rows (AlertFeed shows empty until this runs)
+
+**Session C (blocking + account screens):**
+- [ ] Wire BlockManagement (`/blocks`) — swap `BLOCKS[]` for `useBlocks()` hook
+- [ ] Wire BillingUsage (`/billing`) to `/api/v1/billing/usage` + `/api/v1/locations`
+- [ ] Wire NotificationSettings to `GET/PATCH /api/v1/settings`
+- [ ] Wire LocationManagement to `GET /api/v1/locations`
+- [ ] Fix CancellationFlow: `/billing/cancel` → `/billing/portal`
+
+**Session D (go-live checklist):**
+- [ ] Add `import 'dotenv/config'` to `packages/api/src/index.ts`
+- [ ] `promoteId="id"` on dispensary `<Source>` in `MarketHeatMap.tsx` (1-line fix)
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+- [ ] Admin.ts role-gating on `/crm-failures`
+- [ ] Register Stripe live-mode webhook endpoint
+- [ ] Resend domain verification (`cannaspy.com`)
+- [ ] Verify Stripe metered price volume tiers
+
+**Map / Data Pipeline:**
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
+- [ ] `scrape.worker.ts` → call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Destroy Fly.io app (`fly apps destroy cannaspy-api`) — Patrick must confirm
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Culture Cannabis Club, Corona)
+Location ID:      9354f184-5b88-4a8f-abc3-012fdaa4058f (Cannabis House, LA)
+```
+
+---
+
 **Date:** 2026-05-18 (Session 32 — First-customer plan + LocationWizard wired to real API)
 
 ---
