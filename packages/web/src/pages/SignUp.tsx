@@ -107,86 +107,75 @@ export default function SignUp() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
         <StepBar active={0} />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start' }}>
+        <div style={{ maxWidth: 740, margin: '0 auto' }}>
 
-          {/* Left */}
-          <div>
-            <Card title="Company information" sub="How your organization appears in CannaSpy.">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
-                <div>
-                  <label style={labelStyle}>Company name <span style={{ color: 'var(--rose)' }}>*</span></label>
-                  <input type="text" placeholder="Pacific MSO Group" style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>DBA / Trade name</label>
-                  <input type="text" placeholder="Optional" style={inputStyle} />
-                </div>
+          <Card title="Company information" sub="How your organization appears in CannaSpy.">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
+              <div>
+                <label style={labelStyle}>Company name <span style={{ color: 'var(--rose)' }}>*</span></label>
+                <input type="text" placeholder="Pacific MSO Group" style={inputStyle} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
-                <div>
-                  <label style={labelStyle}>Primary contact <span style={{ color: 'var(--rose)' }}>*</span></label>
-                  <input type="text" placeholder="Your name" style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Email <span style={{ color: 'var(--rose)' }}>*</span></label>
-                  <input type="email" placeholder="you@company.com" style={inputStyle} />
-                </div>
+              <div>
+                <label style={labelStyle}>DBA / Trade name</label>
+                <input type="text" placeholder="Optional" style={inputStyle} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <div>
-                  <label style={labelStyle}>Phone</label>
-                  <input type="tel" placeholder="(555) 000-0000" style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Number of locations <span style={{ color: 'var(--rose)' }}>*</span></label>
-                  <select defaultValue="" style={{ ...inputStyle, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235484A4' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 11px center', paddingRight: 32 }}>
-                    <option value="" disabled>Select range</option>
-                    <option>1–2 locations</option>
-                    <option>3–5 locations</option>
-                    <option>6–9 locations</option>
-                    <option>10–15 locations</option>
-                    <option>16–20 locations</option>
-                    <option>20+ locations</option>
-                  </select>
-                </div>
-              </div>
-            </Card>
-
-          </div>
-
-          {/* Right */}
-          <div>
-            {/* Trial badge */}
-            <div style={{ background: 'linear-gradient(135deg, var(--accent-soft) 0%, var(--warm-soft) 100%)', border: '1px solid rgba(9,161,161,0.22)', borderRadius: 'var(--r)', padding: '20px 22px', marginBottom: 18, textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 8 }}>Free trial</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 36, fontWeight: 700, color: 'var(--accent)', lineHeight: 1 }}>14</div>
-              <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 4 }}>days free. No card required.</div>
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
+              <div>
+                <label style={labelStyle}>Primary contact <span style={{ color: 'var(--rose)' }}>*</span></label>
+                <input type="text" placeholder="Your name" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Email <span style={{ color: 'var(--rose)' }}>*</span></label>
+                <input type="email" placeholder="you@company.com" style={inputStyle} />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <div>
+                <label style={labelStyle}>Phone</label>
+                <input type="tel" placeholder="(555) 000-0000" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Number of locations <span style={{ color: 'var(--rose)' }}>*</span></label>
+                <select defaultValue="" style={{ ...inputStyle, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235484A4' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 11px center', paddingRight: 32 }}>
+                  <option value="" disabled>Select range</option>
+                  <option>1–2 locations</option>
+                  <option>3–5 locations</option>
+                  <option>6–9 locations</option>
+                  <option>10–15 locations</option>
+                  <option>16–20 locations</option>
+                  <option>20+ locations</option>
+                </select>
+              </div>
+            </div>
+          </Card>
 
-            <Card title="Included in your trial">
-              <CheckItem>Daily competitor price & catalog monitoring</CheckItem>
+          {/* Trial strip */}
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '18px 24px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 0, boxShadow: 'var(--card-shadow)' }}>
+            <div style={{ background: 'linear-gradient(135deg, var(--accent-soft), var(--warm-soft))', border: '1px solid rgba(9,161,161,0.22)', borderRadius: 'var(--r-sm)', padding: '10px 20px', textAlign: 'center', marginRight: 24, flexShrink: 0 }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 8, fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 2 }}>Free trial</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 28, fontWeight: 700, color: 'var(--accent)', lineHeight: 1 }}>14</div>
+              <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2 }}>days free</div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px 20px', flex: 1 }}>
+              <CheckItem>Daily price & catalog monitoring</CheckItem>
               <CheckItem>Promotions and deal tracking</CheckItem>
               <CheckItem>Price history and trend charts</CheckItem>
               <CheckItem>Market heat map — 1,785 CA dispensaries</CheckItem>
-              <CheckItem>Alert feed — price drops, new products, promos</CheckItem>
-              <div style={{ height: 1, background: 'var(--border)', margin: '14px 0' }} />
-              <LockItem><strong style={{ color: 'var(--text-2)' }}>Blocking</strong> — keep rivals off CannaSpy. Unlocks when you upgrade.</LockItem>
-            </Card>
-
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '16px 18px', boxShadow: 'var(--card-shadow)', fontSize: 12, color: 'var(--text-3)', lineHeight: 1.7 }}>
-              After your trial, pricing starts at <span style={{ fontFamily: 'var(--mono)', color: 'var(--text-2)', fontWeight: 500 }}>$100/slot/month</span>. You choose how many competitors to track or block.
+              <CheckItem>Alert feed — price drops, new products</CheckItem>
+              <LockItem><strong style={{ color: 'var(--text-3)' }}>Blocking</strong> — unlocks when you upgrade</LockItem>
             </div>
           </div>
 
-        </div>
+          <button
+            onClick={handleContinue}
+            disabled={loading}
+            style={{ width: '100%', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', padding: '13px 0', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 600, cursor: loading ? 'default' : 'pointer', boxShadow: '0 4px 18px rgba(9,161,161,0.32)', opacity: loading ? 0.85 : 1 }}
+          >
+            {loading ? 'Setting up your account…' : 'Start free trial  →'}
+          </button>
 
-        <button
-          onClick={handleContinue}
-          disabled={loading}
-          style={{ width: '100%', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', padding: '13px 0', fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 600, cursor: loading ? 'default' : 'pointer', boxShadow: '0 4px 18px rgba(9,161,161,0.32)', opacity: loading ? 0.85 : 1, marginTop: 4 }}
-        >
-          {loading ? 'Setting up your account…' : 'Start free trial  →'}
-        </button>
+        </div>
       </div>
     </div>
   );
