@@ -882,7 +882,7 @@ export default function CommandCenter() {
           {/* Stat pills */}
           {[
             { dot: 'var(--danger)', label: `${unreviewedCount} alerts` },
-            { dot: 'var(--accent)', label: `${alerts.length} tracked` },
+            { dot: 'var(--accent)', label: `${competitors.length} tracked` },
             { dot: 'var(--rose)', label: `${blocks.length} blocked` },
           ].map((s, i) => (
             <div key={i} style={{
