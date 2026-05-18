@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
 import { UserButton } from '@clerk/clerk-react'
 import { useStore } from '../../store'
+import cannaspyIcon from '../../assets/cannaspy-icon.png'
 
 // ── SVG Icons (inline, matching HTML prototype) ──────────────────────────
 const Icons = {
@@ -149,21 +150,16 @@ const navItems = [
   { label: 'Data Trust',      path: '/data-trust',              icon: ExtraIcons.database,     group: 'Account' },
 ]
 
-// Logo gem SVG — teal-to-amber gradient gem
-function LogoGem() {
+function LogoIcon() {
   return (
-    <div style={{
-      width: 36, height: 36,
-      background: 'linear-gradient(135deg, #09A1A1 0%, #F6C992 100%)',
-      borderRadius: 10,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexShrink: 0,
-      boxShadow: '0 4px 14px rgba(9,161,161,0.45), inset 0 1px 0 rgba(255,255,255,0.25)',
-    }}>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M1 6l5 5 6-9 6 9 5-5" /><path d="M1 6h22" />
-      </svg>
-    </div>
+    <img
+      src={cannaspyIcon}
+      alt="CannaSpy"
+      style={{
+        width: 54, height: 54,
+        flexShrink: 0,
+      }}
+    />
   )
 }
 
@@ -232,24 +228,25 @@ export default function Layout() {
         <div style={{ padding: '18px 0', display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', zIndex: 1 }}>
 
           {/* Logo */}
-          <div style={{ padding: '0 14px 18px', borderBottom: '1px solid var(--rail-divider)', marginBottom: 14 }}>
+          <div style={{ padding: '0 5px 14px', borderBottom: '1px solid var(--rail-divider)', marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
-              <LogoGem />
+              <LogoIcon />
               <div style={{ overflow: 'hidden' }}>
                 <div className="rail-label" style={{
-                  fontSize: 15, fontWeight: 700, color: 'var(--rail-fg)',
-                  letterSpacing: '-0.01em', whiteSpace: 'nowrap',
+                  fontSize: 14, fontWeight: 700, color: '#ffffff',
+                  letterSpacing: '0.08em', whiteSpace: 'nowrap',
                   opacity: 0, transition: 'opacity 0.2s 0.05s',
+                  fontFamily: 'var(--sans)',
                 }}>
-                  CannaSpy
+                  CANNASPY
                 </div>
                 <div className="rail-label mono rail-group-label" style={{
-                  fontSize: '8.5px', color: 'var(--rail-fg-dim)',
-                  letterSpacing: '0.14em', textTransform: 'uppercase',
+                  fontSize: '7.5px', color: '#ffffff',
+                  letterSpacing: '0.12em', textTransform: 'uppercase',
                   marginTop: 2, whiteSpace: 'nowrap',
                   opacity: 0, transition: 'opacity 0.2s 0.05s',
                 }}>
-                  Intel Platform
+                  AI-Powered Strategic Advantage
                 </div>
               </div>
             </div>
