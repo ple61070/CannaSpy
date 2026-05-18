@@ -1,4 +1,132 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-18 (Session 31 — Doc sync + Command Center live verification + tracked badge fix)
+
+---
+
+## Session 31 — 2026-05-18
+
+**Commits:** `fd90ce4` docs: correct contradictions in CLAUDE.md + TECHNICAL_SPEC.md → `677cfec` fix(command-center): tracked badge uses competitors.length not alerts.length
+**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` (auto-deploys on push) | Railway API ✅ unchanged (no redeploy needed)
+
+---
+
+### 1. What Was Done
+
+#### CLAUDE.md + TECHNICAL_SPEC.md contradiction audit
+
+Read all project docs (CLAUDE.md, TECHNICAL_SPEC.md, HANDOFF.md Sessions 27–30, memory files) and corrected every stale reference:
+
+- **Database**: `Supabase prod (cbhbrbkirzpncpxlvehk)` → `Railway Postgres (metro.proxy.rlwy.net:36204)` across all 7 occurrences in CLAUDE.md and TECHNICAL_SPEC.md. Supabase has been abandoned since Session 2 (pooler broken, MCP broken, project likely paused).
+- **Menu item count**: `6,002` → `9,584` (Session 28 added 4 LA competitors / 3,582 items; CLAUDE.md was never updated).
+- **`promoteId="id"`**: Removed false ✅ from CLAUDE.md Phase 3 done list — grep confirmed it is NOT in `MarketHeatMap.tsx`; moved to pending.
+- **Phase 4 stale item**: "Fix REDIS_URL on Fly.io" → replaced with correct "Destroy Fly.io app" task (REDIS_URL on Railway is already correct).
+- **Added "Live Data" section** to CLAUDE.md with both locations, all 8 competitor slugs, and DB credentials.
+- **Memory files updated**: `project_build_status.md` (34 days stale) and `project_infrastructure.md` (9 days stale) fully rewritten with current state.
+
+#### Command Center live browser verification (chrome-devtools-mcp)
+
+Used `chrome-devtools-mcp` (added Session 30, activated this session) to test the Command Center end-to-end:
+
+**Root cause discovered:** A duplicate Vite process (PID 57457, started at 11:31 AM) had auto-incremented onto port 3001 when port 3000 was taken — silently stealing all API traffic. Browser requests to `localhost:3001/api/v1/*` were hitting Vite and returning 500 instead of the API. Additionally, the legitimate API process (PID 46488, started 10:12 AM) had loaded without `DATABASE_URL` in its environment (no dotenv in the API package; env vars must be sourced at process start).
+
+**Fix applied:**
+1. Killed both the stale API process (46488) and the duplicate Vite process (57457)
+2. Restarted API with `set -a && source .env && set +a && pnpm dev` to load env vars correctly
+
+**Verified working:**
+- All 6 API routes returning 200 (`/alerts`, `/blocks`, `/locations`, `/locations/:id/competitors` × 2)
+- 6 map marker elements confirmed in a11y tree (competitor pins rendering)
+- Search autocomplete: typed "STIIIZY" → "RIVALS MATCHED" dropdown appeared with "STIIIZY Downtown LA · TRACKING · fly to"
+- Fly-to: clicked result → map animated from LA overview to Downtown LA at zoom 14, centered on STIIIZY's coordinates
+
+#### "0 tracked" badge fix
+
+The Command Center header showed "0 tracked" despite 8 competitors loading. Root cause: `CommandCenter.tsx:885` used `alerts.length` for the "tracked" badge — `alerts` is always empty until diff engine runs. Fixed to `competitors.length`. Verified: badge now shows "5 tracked" (5 competitors with valid lat/lng coordinates loaded).
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `CLAUDE.md` | DB reference Supabase → Railway Postgres (7 occurrences); item count 6,002 → 9,584; `promoteId` moved to pending; Phase 4 stale Fly.io REDIS item replaced; Cannabis House + 4 LA competitors added; "Live Data" section added |
+| `TECHNICAL_SPEC.md` | Migrations comment + DATABASE_URL comment: Supabase → Railway Postgres |
+| `packages/web/src/pages/CommandCenter.tsx` | Line 885: `alerts.length` → `competitors.length` for "tracked" badge |
+
+**Infrastructure changes (not code):**
+- Duplicate Vite process on port 3001 killed (do not run `pnpm dev` twice in `packages/web/`)
+- Local API restarted with `.env` sourced via `set -a && source .env && set +a && pnpm dev`
+- Memory files updated (not committed — live in `~/.claude/projects/`)
+
+No schema migrations. No new npm dependencies. No Railway deploy.
+
+---
+
+### 3. What Failed
+
+- **Vercel deployment of `677cfec`**: The tracked badge fix commit will auto-deploy to Vercel on next push — no manual push was done this session. The fix is in local code and committed to git but Vercel may not have it yet.
+- **"0 tracked" was 5 not 8**: Three of the 8 competitors (likely the original Corona set — Off The Charts, Catalyst, Zen Dispensary, Caliva) have null lat/lng in Railway Postgres. They don't render as pins and don't count toward `competitors.length`. Fix: update their coordinates in the DB.
+
+Known standing issues (not touched this session):
+- `alert.worker.ts` logs only, no Resend emails
+- `diff_engine.py` not tested end-to-end
+- Stripe live-mode webhook not registered
+- API package has no dotenv — must source `.env` manually when starting locally
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Push `677cfec` to Vercel** — `git push origin main` to trigger auto-deploy of tracked badge fix; verify on `web-rouge-one-15.vercel.app`
+2. **Fix null lat/lng for Corona competitors** — Off The Charts, Catalyst, Zen Dispensary, Caliva have no coordinates in Railway Postgres; run psycopg2 update with correct Corona-area coords so all 8 competitors show pins
+3. **Wire Block Management (`/blocks`)** — verify the page is hitting real `tracked_competitors` + `block_list` data, not placeholder
+4. **Run `diff_engine.py` end-to-end** — need two snapshots from same competitor to generate first `alerts` rows so Alert Feed shows real data
+5. **Add dotenv to API** — install `dotenv` in `packages/api`, add `import 'dotenv/config'` at top of `index.ts` so local dev doesn't require manual env sourcing
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Map / Data Pipeline:**
+- [ ] `promoteId="id"` on dispensary `<Source>` in `MarketHeatMap.tsx` — hover not applied (1-line fix, confirmed NOT in code)
+- [ ] Fix null lat/lng for Corona competitors (Off The Charts, Catalyst, Zen Dispensary, Caliva) in Railway Postgres
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
+- [ ] `diff_engine.py` — test end-to-end with two real snapshots (needed to generate first `alerts` rows)
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] `scrape.worker.ts` → call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**API / Backend:**
+- [ ] Add dotenv to `packages/api` — `import 'dotenv/config'` in `index.ts` (prevents local "0 tracked" class of bugs)
+- [ ] Remove or commit debug/me endpoint in `packages/api/src/index.ts`
+- [ ] Full Stripe subscription quantity sync on slot add/remove
+- [ ] `billing.service.ts` — usage sync cron
+
+**Frontend:**
+- [ ] Block Management (`/blocks`) — verify wired to real data, not placeholder
+- [ ] Promotions (`/promotions`) — scaffold only, not wired to API
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state on API failure
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Destroy Fly.io app (`fly apps destroy cannaspy-api`) — Patrick must confirm
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+- [ ] Investigate Railway auto-deploy — git push should trigger deploy without `railway up`
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Culture Cannabis Club, Corona)
+Location ID:      9354f184-5b88-4a8f-abc3-012fdaa4058f (Cannabis House, LA)
+```
+
+---
+
 **Date:** 2026-05-17 (Session 30 — Fix 401 auth + Command Center map pins + search)
 
 ---
