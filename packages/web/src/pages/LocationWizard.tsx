@@ -1,18 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthFetch } from '../lib/useAuthFetch';
 
-interface AddedLocation {
+const API = import.meta.env.VITE_API_URL ?? '';
+
+interface Location {
   id: string;
   name: string;
   address: string;
-  tier: 'elite' | 'hot' | 'competitive' | 'standard';
+  dcc_license: string | null;
+  active: boolean;
 }
-
-const INITIAL_LOCS: AddedLocation[] = [
-  { id: '1', name: 'West Hollywood Flagship', address: '8001 Santa Monica Blvd, West Hollywood, CA 90046', tier: 'elite' },
-  { id: '2', name: 'DTLA — South Figueroa', address: '1234 S Figueroa St, Los Angeles, CA 90015', tier: 'elite' },
-  { id: '3', name: 'Long Beach — Pacific Coast', address: '500 Pacific Coast Hwy, Long Beach, CA 90802', tier: 'competitive' },
-];
 
 const TIER_STYLES: Record<string, { bg: string; color: string; border: string; label: string }> = {
   elite:       { bg: 'rgba(211,150,166,0.13)', color: 'var(--rose)',  border: 'rgba(211,150,166,0.28)', label: 'ELITE' },
@@ -34,7 +32,7 @@ function TierBadge({ tier }: { tier: string }) {
 function StepBar({ active }: { active: number }) {
   const steps = [
     { n: '01', label: 'Org Setup', sub: 'Complete' },
-    { n: '02', label: 'Add Locations', sub: '3 of 10+ added' },
+    { n: '02', label: 'Add Locations', sub: 'Add your dispensaries' },
     { n: '03', label: 'Find Rivals', sub: 'Track & block' },
   ];
   return (
@@ -84,12 +82,20 @@ const TOTAL_SLOTS = 50;
 
 export default function LocationWizard() {
   const navigate = useNavigate();
-  const [locs, setLocs] = useState<AddedLocation[]>(INITIAL_LOCS);
+  const authFetch = useAuthFetch();
+
+  const [locs, setLocs] = useState<Location[]>([]);
+  const [loading, setLoading] = useState(true);
   const [addLoading, setAddLoading] = useState(false);
   const [nextLoading, setNextLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const usedSlots = locs.length * 5; // rough estimate
+  const nameRef = useRef<HTMLInputElement>(null);
+  const addressRef = useRef<HTMLInputElement>(null);
+  const licenseRef = useRef<HTMLInputElement>(null);
+
+  const usedSlots = locs.length * 5;
   const fillPct = Math.min((usedSlots / TOTAL_SLOTS) * 100, 100);
 
   const showToast = (msg: string) => {
@@ -97,34 +103,61 @@ export default function LocationWizard() {
     setTimeout(() => setToast(null), 2400);
   };
 
-  const handleAdd = () => {
+  useEffect(() => {
+    authFetch(`${API}/api/v1/locations`)
+      .then(r => r.json())
+      .then(d => setLocs(d.locations ?? []))
+      .catch(() => setLocs([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleAdd = async () => {
+    const name = nameRef.current?.value.trim() ?? '';
+    const address = addressRef.current?.value.trim() ?? '';
+    const dcc_license = licenseRef.current?.value.trim() || null;
+
+    if (!name) { setFormError('Location name is required.'); return; }
+    if (!address) { setFormError('Street address is required.'); return; }
+    setFormError(null);
     setAddLoading(true);
-    setTimeout(() => {
+
+    try {
+      const res = await authFetch(`${API}/api/v1/locations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, address, dcc_license }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Failed to add location');
+      setLocs(prev => [...prev, { id: data.id, name, address, dcc_license, active: true }]);
+      if (nameRef.current) nameRef.current.value = '';
+      if (addressRef.current) addressRef.current.value = '';
+      if (licenseRef.current) licenseRef.current.value = '';
+      showToast(`${name} added`);
+    } catch (err: any) {
+      setFormError(err.message);
+    } finally {
       setAddLoading(false);
-      showToast('Location added');
-    }, 1000);
+    }
   };
 
   const handleNext = () => {
+    if (!locs.length) { showToast('Add at least one location to continue.'); return; }
     setNextLoading(true);
-    setTimeout(() => {
-      navigate('/setup/competitors');
-    }, 1200);
+    setTimeout(() => navigate('/setup/competitors'), 400);
   };
 
-  const removeLocation = (id: string) => {
+  const removeLocation = async (id: string) => {
     setLocs(prev => prev.filter(l => l.id !== id));
+    await authFetch(`${API}/api/v1/locations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active: false }),
+    }).catch(() => {});
   };
 
-  const btnNext: React.CSSProperties = { flex: 2, background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--r-sm)', padding: '11px 20px', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 18px rgba(9,161,161,0.32)' };
+  const btnNext: React.CSSProperties = { flex: 2, background: locs.length ? 'var(--accent)' : 'var(--surface-3)', color: locs.length ? '#fff' : 'var(--text-3)', border: 'none', borderRadius: 'var(--r-sm)', padding: '11px 20px', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 600, cursor: locs.length ? 'pointer' : 'default', boxShadow: locs.length ? '0 4px 18px rgba(9,161,161,0.32)' : 'none' };
   const btnBack: React.CSSProperties = { flex: 1, background: 'var(--surface-2)', color: 'var(--text-2)', border: '1px solid var(--border-2)', borderRadius: 'var(--r-sm)', padding: '10px 14px', fontFamily: 'var(--sans)', fontSize: 13, fontWeight: 500, cursor: 'pointer' };
-
-  const marketCoverage = [
-    { name: 'West Hollywood', tier: 'elite' },
-    { name: 'Downtown LA', tier: 'elite' },
-    { name: 'Long Beach', tier: 'competitive' },
-    { name: '+ 7 more pending', tier: 'pending' },
-  ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg)', fontFamily: 'var(--sans)' }}>
@@ -135,8 +168,7 @@ export default function LocationWizard() {
           <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)', letterSpacing: '0.08em', marginTop: 2 }}>SCREEN 02 · LOCATION WIZARD · STEP 2 OF 3</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)', letterSpacing: '0.08em', padding: '5px 10px', border: '1px solid var(--border-2)', borderRadius: 20 }}>PACIFIC MSO GROUP</div>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #09A1A1, #D396A6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, color: '#fff', boxShadow: '0 2px 8px rgba(9,161,161,0.3)' }}>PS</div>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #09A1A1, #D396A6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, color: '#fff', boxShadow: '0 2px 8px rgba(9,161,161,0.3)' }}>CS</div>
         </div>
       </div>
 
@@ -157,73 +189,55 @@ export default function LocationWizard() {
 
               {/* Map placeholder */}
               <div style={{ background: 'var(--surface-3)', border: '1.5px solid var(--border-2)', borderRadius: 'var(--r-sm)', height: 168, position: 'relative', overflow: 'hidden', marginBottom: 16 }}>
-                {/* Grid lines */}
                 <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(84,132,164,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(84,132,164,0.08) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-                {/* Roads */}
                 <div style={{ position: 'absolute', top: '38%', left: 0, right: 0, height: 5, background: 'var(--border-2)', borderRadius: 2 }} />
                 <div style={{ position: 'absolute', top: '64%', left: 0, right: 0, height: 5, background: 'var(--border-2)', borderRadius: 2 }} />
                 <div style={{ position: 'absolute', left: '34%', top: 0, bottom: 0, width: 5, background: 'var(--border-2)', borderRadius: 2 }} />
                 <div style={{ position: 'absolute', left: '66%', top: 0, bottom: 0, width: 5, background: 'var(--border-2)', borderRadius: 2 }} />
-                {/* Blocks */}
                 <div style={{ position: 'absolute', top: '12%', left: '36%', width: '28%', height: '22%', background: 'rgba(84,132,164,0.07)', borderRadius: 3 }} />
                 <div style={{ position: 'absolute', top: '42%', left: '8%', width: '23%', height: '18%', background: 'rgba(84,132,164,0.07)', borderRadius: 3 }} />
                 <div style={{ position: 'absolute', top: '42%', left: '70%', width: '20%', height: '18%', background: 'rgba(84,132,164,0.07)', borderRadius: 3 }} />
                 <div style={{ position: 'absolute', top: '68%', left: '36%', width: '28%', height: '20%', background: 'rgba(84,132,164,0.07)', borderRadius: 3 }} />
-                {/* Pin */}
                 <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -68%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
                   <div style={{ position: 'relative', width: 24, height: 24 }}>
-                    <div style={{ position: 'absolute', top: -4, left: -4, width: 30, height: 30, borderRadius: '50%', background: 'rgba(9,161,161,0.2)', animation: 'pinPulse 2s ease-out infinite' }} />
+                    <div style={{ position: 'absolute', top: -4, left: -4, width: 30, height: 30, borderRadius: '50%', background: 'rgba(9,161,161,0.2)' }} />
                     <div style={{ width: 22, height: 22, background: 'var(--accent)', borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)', boxShadow: '0 4px 14px rgba(9,161,161,0.5)' }} />
                     <div style={{ width: 8, height: 8, background: '#fff', borderRadius: '50%', position: 'absolute', top: 7, left: 7 }} />
                   </div>
-                  <div style={{ background: 'var(--surface)', border: '1px solid var(--border-2)', borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 600, color: 'var(--text-1)', whiteSpace: 'nowrap' as const, boxShadow: 'var(--card-shadow)' }}>West Hollywood, CA</div>
+                  <div style={{ background: 'var(--surface)', border: '1px solid var(--border-2)', borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 600, color: 'var(--text-1)', whiteSpace: 'nowrap' as const, boxShadow: 'var(--card-shadow)' }}>Your location</div>
                 </div>
                 <div style={{ position: 'absolute', bottom: 9, left: '50%', transform: 'translateX(-50%)', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)', letterSpacing: '0.1em', whiteSpace: 'nowrap' as const }}>ADDRESS AUTO-PINS AS YOU TYPE</div>
               </div>
 
               <div style={{ marginBottom: 15 }}>
                 <label style={labelStyle}>Location name <span style={{ color: 'var(--rose)' }}>*</span></label>
-                <input type="text" placeholder="e.g. West Hollywood Flagship" style={inputStyle} />
+                <input ref={nameRef} type="text" placeholder="e.g. West Hollywood Flagship" style={inputStyle} />
               </div>
 
               <div style={{ marginBottom: 15 }}>
-                <label style={labelStyle}>Street address <span style={{ color: 'var(--rose)' }}>*</span></label>
-                <input type="text" placeholder="Start typing — Google Places autocomplete" style={inputStyle} />
+                <label style={labelStyle}>Full address <span style={{ color: 'var(--rose)' }}>*</span></label>
+                <input ref={addressRef} type="text" placeholder="e.g. 8001 Santa Monica Blvd, West Hollywood, CA 90046" style={inputStyle} />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 13, marginBottom: 15 }}>
-                <div>
-                  <label style={labelStyle}>City</label>
-                  <input type="text" placeholder="West Hollywood" style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>ZIP</label>
-                  <input type="text" placeholder="90046" style={inputStyle} />
-                </div>
+              <div style={{ marginBottom: 6 }}>
+                <label style={labelStyle}>DCC License #</label>
+                <input ref={licenseRef} type="text" placeholder="C10-0000000-LIC" style={inputStyle} />
+                <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>California retailer license (optional).</div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 13, marginBottom: 6 }}>
-                <div>
-                  <label style={labelStyle}>DCC License # <span style={{ color: 'var(--rose)' }}>*</span></label>
-                  <input type="text" placeholder="C10-0000000-LIC" style={inputStyle} />
-                  <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>California retailer license.</div>
+              {formError && (
+                <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(212,83,126,0.1)', border: '1px solid rgba(212,83,126,0.3)', borderRadius: 'var(--r-sm)', fontSize: 12, color: 'var(--rose)' }}>
+                  {formError}
                 </div>
-                <div>
-                  <label style={labelStyle}>Market tier</label>
-                  <select defaultValue="Hot" style={{ ...inputStyle, appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235484A4' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 11px center', paddingRight: 30 }}>
-                    <option>Auto-detect</option>
-                    <option>Standard — $100/slot</option>
-                    <option>Competitive — $150/slot</option>
-                    <option>Hot — $200/slot</option>
-                    <option>Elite — $250–300/slot</option>
-                  </select>
-                </div>
-              </div>
+              )}
 
-              <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-                <button style={{ ...btnBack, flex: 1 }}>Import CSV</button>
-                <button style={{ ...btnNext, flex: 2 }} onClick={handleAdd} disabled={addLoading}>
-                  {addLoading ? 'Adding location…' : 'Add this location +'}
+              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <button
+                  style={{ ...btnNext, flex: 1, boxShadow: '0 4px 18px rgba(9,161,161,0.32)', background: 'var(--accent)', color: '#fff', cursor: 'pointer' }}
+                  onClick={handleAdd}
+                  disabled={addLoading}
+                >
+                  {addLoading ? 'Adding…' : 'Add this location +'}
                 </button>
               </div>
             </div>
@@ -238,33 +252,38 @@ export default function LocationWizard() {
                 <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 3 }}>Each is an independent monitoring node.</div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
-                {locs.map(loc => (
-                  <div key={loc.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)' }}>
-                    <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(9,161,161,0.32)' }}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" style={{ width: 13, height: 13 }}><polyline points="20 6 9 17 4 12" /></svg>
+              {loading ? (
+                <div style={{ padding: '20px 0', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-3)' }}>Loading…</div>
+              ) : locs.length === 0 ? (
+                <div style={{ padding: '20px 0', textAlign: 'center' as const, fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-3)', border: '1.5px dashed var(--border-2)', borderRadius: 'var(--r-sm)' }}>
+                  No locations added yet. Fill in the form above to add your first.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+                  {locs.map(loc => (
+                    <div key={loc.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)' }}>
+                      <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(9,161,161,0.32)' }}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" style={{ width: 13, height: 13 }}><polyline points="20 6 9 17 4 12" /></svg>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{loc.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{loc.address}</div>
+                      </div>
+                      {loc.dcc_license && (
+                        <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)', border: '1px solid var(--border-2)', borderRadius: 20, padding: '2px 8px', whiteSpace: 'nowrap' as const }}>{loc.dcc_license}</div>
+                      )}
+                      <button onClick={() => removeLocation(loc.id)} style={{ width: 22, height: 22, borderRadius: '50%', border: '1px solid var(--border-2)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', flexShrink: 0 }}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 11, height: 11 }}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                      </button>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{loc.name}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{loc.address}</div>
-                    </div>
-                    <TierBadge tier={loc.tier} />
-                    <button onClick={() => removeLocation(loc.id)} style={{ width: 22, height: 22, borderRadius: '50%', border: '1px solid var(--border-2)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', flexShrink: 0 }}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 11, height: 11 }}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <button style={{ width: '100%', background: 'transparent', border: '1.5px dashed var(--border-2)', borderRadius: 'var(--r-sm)', padding: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: 'var(--sans)', fontSize: 12, fontWeight: 500, color: 'var(--text-2)', cursor: 'pointer' }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                Add another location
-              </button>
+                  ))}
+                </div>
+              )}
 
               <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
                 <button style={btnBack} onClick={() => navigate('/setup')}>← Back</button>
-                <button style={btnNext} onClick={handleNext} disabled={nextLoading}>
-                  {nextLoading ? 'Loading rivals…' : 'Continue to Rival Discovery →'}
+                <button style={btnNext} onClick={handleNext} disabled={nextLoading || !locs.length}>
+                  {nextLoading ? 'Loading rivals…' : locs.length ? 'Continue to Rival Discovery →' : 'Add a location to continue'}
                 </button>
               </div>
             </div>
@@ -290,19 +309,17 @@ export default function LocationWizard() {
             </div>
 
             {/* Market coverage */}
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: 22, boxShadow: 'var(--card-shadow)', marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid var(--border)', letterSpacing: '-0.01em' }}>Market coverage</div>
-              {marketCoverage.map((m, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < marketCoverage.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                  <div style={{ fontSize: 12, color: m.tier === 'pending' ? 'var(--text-3)' : 'var(--text-2)' }}>{m.name}</div>
-                  {m.tier === 'pending' ? (
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)', border: '1px solid var(--border-2)', borderRadius: 20, padding: '2px 8px' }}>PENDING</div>
-                  ) : (
-                    <TierBadge tier={m.tier} />
-                  )}
-                </div>
-              ))}
-            </div>
+            {locs.length > 0 && (
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: 22, boxShadow: 'var(--card-shadow)', marginBottom: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid var(--border)', letterSpacing: '-0.01em' }}>Market coverage</div>
+                {locs.map((loc, i) => (
+                  <div key={loc.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < locs.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: 170 }}>{loc.name}</div>
+                    <TierBadge tier="standard" />
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Pro tip */}
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: 22, boxShadow: 'var(--card-shadow)' }}>
