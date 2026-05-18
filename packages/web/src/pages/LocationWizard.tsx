@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Map, { Marker, NavigationControl } from 'react-map-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { MAPBOX_TOKEN } from '../components/map/mapStyle';
 import { useAuthFetch } from '../lib/useAuthFetch';
 
 const API = import.meta.env.VITE_API_URL ?? '';
@@ -93,6 +96,28 @@ export default function LocationWizard() {
   const addressRef = useRef<HTMLInputElement>(null);
   const licenseRef = useRef<HTMLInputElement>(null);
 
+  const [viewport, setViewport] = useState({ lng: -117.5, lat: 33.9, zoom: 9 });
+  const [markerPos, setMarkerPos] = useState<{ lng: number; lat: number } | null>(null);
+  const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const geocodeAddress = (addr: string) => {
+    if (geocodeTimer.current) clearTimeout(geocodeTimer.current);
+    if (addr.length < 6) { setMarkerPos(null); return; }
+    geocodeTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(addr)}.json?access_token=${MAPBOX_TOKEN}&country=US&types=address,poi&limit=1`
+        );
+        const data = await res.json();
+        if (data.features?.length) {
+          const [lng, lat] = data.features[0].center;
+          setMarkerPos({ lng, lat });
+          setViewport({ lng, lat, zoom: 14 });
+        }
+      } catch {}
+    }, 600);
+  };
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2400);
@@ -180,26 +205,26 @@ export default function LocationWizard() {
                 <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.55 }}>Each location gets independent monitoring and its own rival set.</div>
               </div>
 
-              {/* Map placeholder */}
-              <div style={{ background: 'var(--surface-3)', border: '1.5px solid var(--border-2)', borderRadius: 'var(--r-sm)', height: 168, position: 'relative', overflow: 'hidden', marginBottom: 16 }}>
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(84,132,164,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(84,132,164,0.08) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-                <div style={{ position: 'absolute', top: '38%', left: 0, right: 0, height: 5, background: 'var(--border-2)', borderRadius: 2 }} />
-                <div style={{ position: 'absolute', top: '64%', left: 0, right: 0, height: 5, background: 'var(--border-2)', borderRadius: 2 }} />
-                <div style={{ position: 'absolute', left: '34%', top: 0, bottom: 0, width: 5, background: 'var(--border-2)', borderRadius: 2 }} />
-                <div style={{ position: 'absolute', left: '66%', top: 0, bottom: 0, width: 5, background: 'var(--border-2)', borderRadius: 2 }} />
-                <div style={{ position: 'absolute', top: '12%', left: '36%', width: '28%', height: '22%', background: 'rgba(84,132,164,0.07)', borderRadius: 3 }} />
-                <div style={{ position: 'absolute', top: '42%', left: '8%', width: '23%', height: '18%', background: 'rgba(84,132,164,0.07)', borderRadius: 3 }} />
-                <div style={{ position: 'absolute', top: '42%', left: '70%', width: '20%', height: '18%', background: 'rgba(84,132,164,0.07)', borderRadius: 3 }} />
-                <div style={{ position: 'absolute', top: '68%', left: '36%', width: '28%', height: '20%', background: 'rgba(84,132,164,0.07)', borderRadius: 3 }} />
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -68%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                  <div style={{ position: 'relative', width: 24, height: 24 }}>
-                    <div style={{ position: 'absolute', top: -4, left: -4, width: 30, height: 30, borderRadius: '50%', background: 'rgba(9,161,161,0.2)' }} />
-                    <div style={{ width: 22, height: 22, background: 'var(--accent)', borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)', boxShadow: '0 4px 14px rgba(9,161,161,0.5)' }} />
-                    <div style={{ width: 8, height: 8, background: '#fff', borderRadius: '50%', position: 'absolute', top: 7, left: 7 }} />
-                  </div>
-                  <div style={{ background: 'var(--surface)', border: '1px solid var(--border-2)', borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 600, color: 'var(--text-1)', whiteSpace: 'nowrap' as const, boxShadow: 'var(--card-shadow)' }}>Your location</div>
-                </div>
-                <div style={{ position: 'absolute', bottom: 9, left: '50%', transform: 'translateX(-50%)', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)', letterSpacing: '0.1em', whiteSpace: 'nowrap' as const }}>ADDRESS AUTO-PINS AS YOU TYPE</div>
+              {/* Live map */}
+              <div style={{ borderRadius: 'var(--r-sm)', overflow: 'hidden', marginBottom: 16, height: 200, border: '1.5px solid var(--border-2)' }}>
+                <Map
+                  mapboxAccessToken={MAPBOX_TOKEN}
+                  longitude={viewport.lng}
+                  latitude={viewport.lat}
+                  zoom={viewport.zoom}
+                  style={{ width: '100%', height: '100%' }}
+                  mapStyle="mapbox://styles/mapbox/streets-v12"
+                  onMove={e => setViewport({ lng: e.viewState.longitude, lat: e.viewState.latitude, zoom: e.viewState.zoom })}
+                >
+                  <NavigationControl position="top-right" />
+                  {markerPos && (
+                    <Marker longitude={markerPos.lng} latitude={markerPos.lat} anchor="bottom">
+                      <div style={{ width: 22, height: 22, background: 'var(--accent)', borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)', boxShadow: '0 4px 14px rgba(9,161,161,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ width: 8, height: 8, background: '#fff', borderRadius: '50%', transform: 'rotate(45deg)' }} />
+                      </div>
+                    </Marker>
+                  )}
+                </Map>
               </div>
 
               <div style={{ marginBottom: 15 }}>
@@ -209,7 +234,7 @@ export default function LocationWizard() {
 
               <div style={{ marginBottom: 15 }}>
                 <label style={labelStyle}>Full address <span style={{ color: 'var(--rose)' }}>*</span></label>
-                <input ref={addressRef} type="text" placeholder="e.g. 8001 Santa Monica Blvd, West Hollywood, CA 90046" style={inputStyle} />
+                <input ref={addressRef} type="text" placeholder="e.g. 8001 Santa Monica Blvd, West Hollywood, CA 90046" style={inputStyle} onChange={e => geocodeAddress(e.target.value)} />
               </div>
 
               <div style={{ marginBottom: 6 }}>
