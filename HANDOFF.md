@@ -1,4 +1,124 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-19 (Session 34 — Onboarding flow verified + CompetitorDiscovery UI fixes)
+
+---
+
+## Session 34 — 2026-05-19
+
+**Commits:** `10e7bdf` feat(onboarding): replace billing picker with 14-day free trial screen → `2bd6fb6` fix(discover): theme-aware CSS vars, wider map, legend + dropdown contrast
+**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` (auto-deploys on push) | Railway API ✅ unchanged
+
+---
+
+### 1. What Was Done
+
+#### Free trial onboarding flow — full walkthrough and fixes
+Walked the entire onboarding flow as a new user (`/setup/org` → `/setup/locations` → `/setup/competitors`), identifying and fixing issues on each screen.
+
+**SignUp.tsx (Screen 01)**
+- Replaced the billing/plan picker (À La Carte vs Slot Tiers, 10–80 slot selection, $1,800/mo total) with a 14-day free trial design. New layout: single-column centered, company info form, horizontal trial strip (14 days free / no card required, 5 included features + blocking locked with amber lock icon), full-width "Start free trial →" CTA.
+- Fixed blank space issue (was two-column grid with height mismatch; fixed by going single-column max-width 740px).
+
+**LocationWizard.tsx (Screen 02)**
+- Removed Slot usage widget (20/50 progress bar — not relevant during free trial).
+- Removed Market coverage sidebar (redundant with locations list, all "STANDARD").
+- Replaced two-column layout with single-column centered layout.
+- Updated Pro tip copy: removed "auto-expands slot count" reference.
+- Replaced fake CSS map placeholder with real Mapbox `streets-v12` map. Address field geocodes via Mapbox API (debounced 600ms) and flies to result with teal pin. Verified live: typed "8001 Santa Monica Blvd, West Hollywood" — map flew to WeHo with pin.
+
+**CompetitorDiscovery.tsx (Screen 03)**
+- Added topbar ("Find your rivals / SCREEN 03 · RIVAL DISCOVERY · STEP 3 OF 3").
+- Added step bar showing 01✓ Org Setup, 02✓ Add Locations, 03 active Find Rivals.
+- Removed "Setup · Step 2 of 2" label.
+- Locked Block buttons during trial: greyed out with lock icon, tooltip "Blocking unlocks when you upgrade".
+- Removed `$X/mo` cost estimate from footer.
+- Fixed all hardcoded dark-theme CSS vars (`--bg-elevated`, `--text-primary`, `--text-muted`, `--accent-intel`, etc.) → CannaSpy design tokens (`--surface-2`, `--text-1`, `--text-3`, `--accent`, `--warm`).
+- Removed dark radius label overlay (was black box on light theme).
+- Legend now uses `--surface`/`--border`/`--text-2` (theme-aware, white bg in light mode).
+- Map panel widened: 58% → 68%; right panel narrowed: 42% → 32%.
+- Dropdown contrast fixed: `--bg-elevated`/`--border-default` → `--surface-2`/`--border-2`.
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/web/src/pages/SignUp.tsx` | Full rewrite: billing section removed, 14-day trial design, single-column layout |
+| `packages/web/src/pages/LocationWizard.tsx` | Slot usage + market coverage removed; single-column; real Mapbox map with geocoding |
+| `packages/web/src/pages/CompetitorDiscovery.tsx` | Topbar + step bar added; block locked; cost removed; all CSS vars corrected; map 68/32 ratio |
+
+No schema migrations. No new npm dependencies. No Railway deploy.
+
+---
+
+### 3. What Failed
+
+- **Production CompetitorDiscovery still has 6 issues (not fixed this session)** — complex engineering, deferred to next session (see "What Is Next").
+- **New user onboarding not fully wired** — SignUp/LocationWizard forms are still cosmetic (no API POST to create org or save company info). This is intentional for demo; wire before first real customer.
+
+Known standing issues:
+- `diff_engine.py` not tested end-to-end — alerts table empty
+- Stripe live-mode webhook not registered
+- API package has no dotenv — must source `.env` manually when starting locally
+- `promoteId="id"` on MarketHeatMap.tsx still not applied
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Rebuild CompetitorDiscovery map layer** — wire bbox API to load all 1,785 DCC dispensaries (same as MarketHeatMap); replace plain dot markers with ring+fill pin layer. Files: `packages/web/src/pages/CompetitorDiscovery.tsx`, reuse `packages/web/src/components/map/layers.ts`.
+2. **Add "search this area" + radius slider** — "Redo search in this area" button appears after map pan/zoom; radius picker (1–25 mi) replaces hardcoded 5 miles. Same file.
+3. **Fix flyTo race condition** — map doesn't fly to selected location on initial load because location data arrives after map init. Fix: store `pendingFly` ref and fire in `onLoad` if map wasn't ready. Same file.
+4. **Investigate Culture Stanton data** — scan returns wrong/stale data for that location; check `locations` table lat/lng and discover route for that location ID.
+5. **Wire BlockManagement** — swap static `BLOCKS[]` for `useBlocks()` hook at `packages/web/src/hooks/useBlocks.ts` — `packages/web/src/pages/BlockManagement.tsx`.
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**CompetitorDiscovery map (next session priority):**
+- [ ] Wire bbox API → load all DCC dispensaries on map (issues 8)
+- [ ] Port ring+fill pin layer from MarketHeatMap (issue 7)
+- [ ] "Search this area" button + radius slider (issue 9)
+- [ ] Fix flyTo race condition on initial location load (issue 6)
+- [ ] Investigate Culture Stanton discover API returning wrong data (issue 5)
+
+**Frontend (account screens):**
+- [ ] Wire BlockManagement (`/blocks`) — swap `BLOCKS[]` for `useBlocks()` hook
+- [ ] Wire BillingUsage (`/billing`) to `/api/v1/billing/usage` + `/api/v1/locations`
+- [ ] Wire NotificationSettings to `GET/PATCH /api/v1/settings`
+- [ ] Wire LocationManagement to `GET /api/v1/locations`
+- [ ] Fix CancellationFlow: `/billing/cancel` → `/billing/portal`
+- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions`
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Map / Data Pipeline:**
+- [ ] `promoteId="id"` on dispensary `<Source>` in `MarketHeatMap.tsx` (1-line fix)
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
+- [ ] `scrape.worker.ts` → call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] `diff_engine.py` — test end-to-end with two real snapshots
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Add `import 'dotenv/config'` to `packages/api/src/index.ts`
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Culture Cannabis Club, Corona)
+Location ID:      9354f184-5b88-4a8f-abc3-012fdaa4058f (Cannabis House, LA)
+```
+
+---
+
 **Date:** 2026-05-18 (Session 33 — CannaSpy logo placed in sidebar, favicon, and onboarding topbars)
 
 ---
