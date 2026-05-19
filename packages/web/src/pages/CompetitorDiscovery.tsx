@@ -5,6 +5,13 @@ import type { LayerProps } from 'react-map-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useAuthFetch } from '../lib/useAuthFetch'
 import { OperatorTypeFilter, type OperatorType } from '../components/filters/OperatorTypeFilter'
+import { useDispensaryMap } from '../hooks/useDispensaryMap'
+import {
+  dispensaryRingLayer,
+  dispensaryClusterLayer,
+  dispensaryClusterCountLayer,
+  dispensaryPointLayer,
+} from '../components/map/layers'
 
 const API = import.meta.env.VITE_API_URL ?? ''
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
@@ -122,6 +129,8 @@ export default function CompetitorDiscovery() {
   const navigate = useNavigate()
   const mapRef          = useRef<MapRef | null>(null)
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const mapReadyRef     = useRef(false)
+  const pendingFlyRef   = useRef<[number, number] | null>(null)
   const appTheme        = useAppTheme()
   const [mapStyleId, setMapStyleId] = useState<MapStyleId>('streets')
 
@@ -132,7 +141,12 @@ export default function CompetitorDiscovery() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [scanned, setScanned] = useState(false)
+  const [mapMoved, setMapMoved] = useState(false)
   const [operatorType, setOperatorType] = useState<OperatorType>('both')
+  const [bbox, setBbox] = useState<string | null>(null)
+  const [radius, setRadius] = useState(5)
+
+  const { data: dispensaries } = useDispensaryMap(bbox)
 
   useEffect(() => {
     authFetch(`${API}/api/v1/locations`)
@@ -153,29 +167,46 @@ export default function CompetitorDiscovery() {
     return () => ro.disconnect()
   }, [])
 
-  // Fly to selected location when it changes
-  useEffect(() => {
-    if (!selectedLocation?.lat || !selectedLocation?.lng) return
-    mapRef.current?.flyTo({
-      center: [Number(selectedLocation.lng), Number(selectedLocation.lat)],
-      zoom: 12,
-      duration: 1000,
-    })
-  }, [selectedLocation])
+  // flyTo — defers if map not yet ready
+  const flyToLocation = useCallback((loc: Location) => {
+    if (!loc?.lat || !loc?.lng) return
+    const center: [number, number] = [Number(loc.lng), Number(loc.lat)]
+    if (mapReadyRef.current) {
+      mapRef.current?.flyTo({ center, zoom: 12, duration: 1000 })
+    } else {
+      pendingFlyRef.current = center
+    }
+  }, [])
 
-  // Also fly on map load in case selectedLocation was set before map was ready
+  useEffect(() => {
+    if (selectedLocation) flyToLocation(selectedLocation)
+  }, [selectedLocation, flyToLocation])
+
   const handleMapLoad = useCallback(() => {
-    if (!selectedLocation?.lat || !selectedLocation?.lng) return
-    mapRef.current?.flyTo({
-      center: [Number(selectedLocation.lng), Number(selectedLocation.lat)],
-      zoom: 12,
-      duration: 800,
-    })
-  }, [selectedLocation])
+    mapReadyRef.current = true
+    const map = mapRef.current?.getMap()
+    if (map) {
+      const b = map.getBounds()
+      if (b) setBbox(`${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`)
+    }
+    if (pendingFlyRef.current) {
+      mapRef.current?.flyTo({ center: pendingFlyRef.current, zoom: 12, duration: 800 })
+      pendingFlyRef.current = null
+    }
+  }, [])
+
+  const handleMoveEnd = useCallback(() => {
+    const map = mapRef.current?.getMap()
+    if (!map) return
+    const b = map.getBounds()
+    if (b) setBbox(`${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`)
+    setMapMoved(true)
+  }, [])
 
   const handleDiscover = async () => {
     if (!selectedLocation?.id) return
     setLoading(true)
+    setMapMoved(false)
     setSelections(new globalThis.Map())
     try {
       const res = await authFetch(`${API}/api/v1/locations/${selectedLocation.id}/discover`)
@@ -238,7 +269,7 @@ export default function CompetitorDiscovery() {
 
   const centerLat = selectedLocation?.lat ? Number(selectedLocation.lat) : null
   const centerLng = selectedLocation?.lng ? Number(selectedLocation.lng) : null
-  const radiusGeoJSON = centerLat && centerLng ? makeCircleGeoJSON(centerLat, centerLng, 5) : null
+  const radiusGeoJSON = centerLat && centerLng ? makeCircleGeoJSON(centerLat, centerLng, radius) : null
 
   // Filter competitors by operator type — fall back to showing all if business_type not set
   const filteredCompetitors = operatorType === 'both'
@@ -284,10 +315,41 @@ export default function CompetitorDiscovery() {
             style={{ width: '100%', height: '100%' }}
             attributionControl={true}
             onLoad={handleMapLoad}
+            onMoveEnd={handleMoveEnd}
           >
             <NavigationControl position="top-right" showCompass={false} />
 
-            {/* 5-mile radius ring around selected location */}
+            {/* DCC dispensary pins — background context */}
+            <Source
+              id="cs-dispensaries"
+              type="geojson"
+              data={dispensaries as unknown as Parameters<typeof Source>[0]['data']}
+              cluster clusterMaxZoom={13} clusterRadius={35}
+            >
+              <Layer {...dispensaryRingLayer} minzoom={9} />
+              <Layer {...dispensaryPointLayer} minzoom={9} />
+              <Layer {...dispensaryClusterLayer} minzoom={9} />
+              <Layer {...dispensaryClusterCountLayer} minzoom={9} />
+            </Source>
+
+            {/* Redo search overlay — appears after map pan when a scan has been run */}
+            {mapMoved && scanned && (
+              <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+                <button
+                  onClick={() => handleDiscover()}
+                  style={{
+                    padding: '7px 16px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                    background: 'var(--surface)', border: '1.5px solid var(--border)',
+                    color: 'var(--text-1)', cursor: 'pointer', fontFamily: 'var(--sans)',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.2)', whiteSpace: 'nowrap',
+                  }}
+                >
+                  Redo search in this area
+                </button>
+              </div>
+            )}
+
+            {/* Radius ring around selected location */}
             {radiusGeoJSON && (
               <Source id="radius" type="geojson" data={radiusGeoJSON}>
                 <Layer {...radiusFillLayer} />
@@ -369,6 +431,7 @@ export default function CompetitorDiscovery() {
         }}>
           {[
             { color: '#1d9e75', label: 'Your location' },
+            { color: 'rgba(29,158,117,0.7)', label: 'CA dispensaries' },
             { color: '#94a3b8', label: 'Detected rivals' },
             { color: '#1d9e75', label: 'Selected — tracking' },
             { color: '#ba7517', label: 'Selected — blocked' },
@@ -401,7 +464,22 @@ export default function CompetitorDiscovery() {
             <OperatorTypeFilter value={operatorType} onChange={setOperatorType} />
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 14, alignItems: 'center' }}>
+          {/* Radius slider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>RADIUS</span>
+            <input
+              type="range"
+              min={1} max={25} step={1}
+              value={radius}
+              onChange={(e) => setRadius(Number(e.target.value))}
+              style={{ flex: 1, accentColor: '#1d9e75', cursor: 'pointer' }}
+            />
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-2)', minWidth: 36, textAlign: 'right' }}>
+              {radius} mi
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
             {locations.length > 1 && (
               <select
                 value={selectedLocation?.id || ''}
