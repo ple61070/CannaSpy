@@ -267,11 +267,11 @@ export default function CompetitorDiscovery() {
 
       {/* ── Map panel ── */}
       <div ref={mapContainerRef} style={{
-        flex: '0 0 58%',
+        flex: '0 0 68%',
         position: 'relative',
         borderRadius: '8px 0 0 8px',
         overflow: 'hidden',
-        border: '1px solid var(--border-subtle)',
+        border: '1px solid var(--border)',
         borderRight: 'none',
       }}>
         {MAPBOX_TOKEN && (
@@ -340,7 +340,7 @@ export default function CompetitorDiscovery() {
             <button key={id} onClick={() => setMapStyleId(id)} style={{
               padding: '5px 11px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
               border: 'none', borderRight: id === 'streets' ? '1px solid var(--border)' : 'none',
-              background: mapStyleId === id ? 'var(--accent-intel)' : 'transparent',
+              background: mapStyleId === id ? 'var(--accent)' : 'transparent',
               color: mapStyleId === id ? '#fff' : 'var(--text-2)',
               transition: 'background 0.12s, color 0.12s',
             }}>
@@ -352,48 +352,30 @@ export default function CompetitorDiscovery() {
           <div style={{
             width: '100%', height: '100%', display: 'flex',
             alignItems: 'center', justifyContent: 'center',
-            background: 'var(--bg-surface)',
+            background: 'var(--surface)',
             fontFamily: 'Space Mono, monospace', fontSize: 11,
-            color: 'var(--text-muted)', textAlign: 'center', padding: 32,
+            color: 'var(--text-3)', textAlign: 'center', padding: 32,
           }}>
             MAP UNCONFIGURED — set VITE_MAPBOX_TOKEN in Railway
           </div>
         )}
 
-        {/* Radius label */}
-        <div style={{
-          position: 'absolute', top: 12, left: 12, pointerEvents: 'none',
-          background: 'rgba(13,15,17,0.85)', border: '1px solid var(--border-default)',
-          borderRadius: 4, padding: '4px 10px', backdropFilter: 'blur(6px)',
-          fontFamily: 'Space Mono, monospace', fontSize: 10,
-          color: 'var(--text-muted)', letterSpacing: '0.08em',
-        }}>
-          5-MILE RADIUS · CALIFORNIA
-        </div>
-
         {/* Legend */}
         <div style={{
           position: 'absolute', bottom: 12, left: 12, pointerEvents: 'none',
-          background: 'rgba(13,15,17,0.85)', border: '1px solid var(--border-default)',
-          borderRadius: 4, padding: '8px 12px', backdropFilter: 'blur(6px)',
+          background: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 6, padding: '8px 12px', boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
           display: 'flex', flexDirection: 'column', gap: 5,
         }}>
           {[
             { color: '#1d9e75', label: 'Your location' },
-            { color: '#4a4845', label: 'Detected rivals' },
+            { color: '#94a3b8', label: 'Detected rivals' },
             { color: '#1d9e75', label: 'Selected — tracking' },
             { color: '#ba7517', label: 'Selected — blocked' },
           ].map((item) => (
             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <span style={{
-                width: 7, height: 7, borderRadius: '50%',
-                background: item.color, flexShrink: 0,
-                border: '1px solid rgba(255,255,255,0.15)',
-              }} />
-              <span style={{
-                fontFamily: 'Space Mono, monospace', fontSize: 9,
-                color: 'var(--text-muted)', letterSpacing: '0.04em',
-              }}>{item.label}</span>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: item.color, flexShrink: 0 }} />
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-2)', letterSpacing: '0.04em' }}>{item.label}</span>
             </div>
           ))}
         </div>
@@ -401,17 +383,17 @@ export default function CompetitorDiscovery() {
 
       {/* ── Right panel ── */}
       <div style={{
-        flex: '0 0 42%', display: 'flex', flexDirection: 'column',
-        background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
+        flex: '0 0 32%', display: 'flex', flexDirection: 'column',
+        background: 'var(--surface)', border: '1px solid var(--border)',
         borderRadius: '0 8px 8px 0', overflow: 'hidden',
       }}>
 
         {/* Header */}
-        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border-subtle)', flexShrink: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
+        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-1)', marginBottom: 6 }}>
             Identify your rivals
           </div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.55 }}>
             Track monitors prices and promotions. Block suppresses a rival from the platform entirely.
           </div>
 
@@ -428,10 +410,10 @@ export default function CompetitorDiscovery() {
                   setSelectedLocation(loc)
                 }}
                 style={{
-                  flex: 1, background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border-default)', borderRadius: 6,
-                  padding: '7px 10px', color: 'var(--text-primary)',
-                  fontSize: 12, fontFamily: 'DM Sans, sans-serif', outline: 'none', cursor: 'pointer',
+                  flex: 1, background: 'var(--surface-2)',
+                  border: '1.5px solid var(--border-2)', borderRadius: 6,
+                  padding: '7px 10px', color: 'var(--text-1)',
+                  fontSize: 12, fontFamily: 'var(--sans)', outline: 'none', cursor: 'pointer',
                 }}
               >
                 {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
@@ -452,7 +434,7 @@ export default function CompetitorDiscovery() {
         <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
           {competitors.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '32px 16px' }}>
-              <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.65, maxWidth: 280, margin: '0 auto' }}>
+              <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.65, maxWidth: 280, margin: '0 auto' }}>
                 {loading
                   ? 'Scanning your market for rival dispensaries...'
                   : scanned
@@ -474,23 +456,23 @@ export default function CompetitorDiscovery() {
                 const isTracked = sel?.action === 'track'
                 return (
                   <div key={key} style={{
-                    background: isBlocked ? 'rgba(186,117,23,0.07)' : isTracked ? 'rgba(29,158,117,0.07)' : 'var(--bg-elevated)',
-                    border: `1px solid ${isBlocked ? 'rgba(186,117,23,0.28)' : isTracked ? 'rgba(29,158,117,0.28)' : 'var(--border-subtle)'}`,
+                    background: isBlocked ? 'rgba(186,117,23,0.07)' : isTracked ? 'rgba(29,158,117,0.07)' : 'var(--surface-2)',
+                    border: `1px solid ${isBlocked ? 'rgba(186,117,23,0.28)' : isTracked ? 'rgba(29,158,117,0.28)' : 'var(--border)'}`,
                     borderRadius: 6, padding: '10px 12px',
                     display: 'flex', alignItems: 'center', gap: 10,
                     transition: 'border-color 0.1s, background 0.1s',
                   }}>
                     <span style={{
                       width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-                      background: isBlocked ? 'var(--accent-block)' : isTracked ? 'var(--accent-intel)' : 'var(--text-muted)',
+                      background: isBlocked ? 'var(--warm)' : isTracked ? 'var(--accent)' : 'var(--text-3)',
                     }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{
-                        fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 2,
+                        fontSize: 13, fontWeight: 500, color: 'var(--text-1)', marginBottom: 2,
                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                       }}>{comp.name}</div>
                       <div style={{
-                        fontSize: 10, color: 'var(--text-muted)', fontFamily: 'Space Mono, monospace',
+                        fontSize: 10, color: 'var(--text-3)', fontFamily: 'Space Mono, monospace',
                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                       }}>
                         {comp.distance_miles ? `${comp.distance_miles.toFixed(1)} mi` : ''}
@@ -503,13 +485,13 @@ export default function CompetitorDiscovery() {
                         style={{
                           fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
                           fontFamily: 'DM Sans, sans-serif', fontWeight: 500,
-                          border: `1px solid ${isTracked ? 'var(--accent-intel)' : 'var(--border-default)'}`,
-                          background: isTracked ? 'var(--accent-intel)' : 'transparent',
-                          color: isTracked ? '#fff' : 'var(--text-secondary)',
+                          border: `1px solid ${isTracked ? 'var(--accent)' : 'var(--border-2)'}`,
+                          background: isTracked ? 'var(--accent)' : 'transparent',
+                          color: isTracked ? '#fff' : 'var(--text-2)',
                         }}
                         onClick={() => setSelection(comp, isTracked ? null : 'track')}
                       >Track</button>
-                      <div title="Blocking unlocks when you upgrade" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 10px', borderRadius: 4, fontFamily: 'DM Sans, sans-serif', fontWeight: 500, border: '1px solid var(--border-default)', color: 'var(--text-muted)', cursor: 'not-allowed', opacity: 0.5, userSelect: 'none' as const }}>
+                      <div title="Blocking unlocks when you upgrade" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 10px', borderRadius: 4, fontFamily: 'DM Sans, sans-serif', fontWeight: 500, border: '1px solid var(--border-2)', color: 'var(--text-3)', cursor: 'not-allowed', opacity: 0.5, userSelect: 'none' as const }}>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 10, height: 10, flexShrink: 0 }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                         Block
                       </div>
@@ -523,19 +505,19 @@ export default function CompetitorDiscovery() {
 
         {/* Footer */}
         <div style={{
-          padding: '12px 16px', borderTop: '1px solid var(--border-subtle)',
-          background: 'var(--bg-elevated)', display: 'flex',
+          padding: '12px 16px', borderTop: '1px solid var(--border)',
+          background: 'var(--surface-2)', display: 'flex',
           alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12,
         }}>
           <div style={{ fontSize: 12, minWidth: 0 }}>
             {selections.size > 0 ? (
               <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                {trackCount > 0 && <span style={{ color: 'var(--accent-intel)' }}>{trackCount} tracking</span>}
-                {trackCount > 0 && blockCount > 0 && <span style={{ color: 'var(--text-muted)' }}>·</span>}
-                {blockCount > 0 && <span style={{ color: 'var(--accent-block)' }}>{blockCount} blocked</span>}
+                {trackCount > 0 && <span style={{ color: 'var(--accent)' }}>{trackCount} tracking</span>}
+                {trackCount > 0 && blockCount > 0 && <span style={{ color: 'var(--text-3)' }}>·</span>}
+                {blockCount > 0 && <span style={{ color: 'var(--warm)' }}>{blockCount} blocked</span>}
               </span>
             ) : (
-              <span style={{ color: 'var(--text-muted)', fontSize: 11, fontFamily: 'Space Mono, monospace' }}>
+              <span style={{ color: 'var(--text-3)', fontSize: 11, fontFamily: 'Space Mono, monospace' }}>
                 No rivals selected
               </span>
             )}
