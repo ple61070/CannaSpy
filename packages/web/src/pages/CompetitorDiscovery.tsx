@@ -9,6 +9,34 @@ import { OperatorTypeFilter, type OperatorType } from '../components/filters/Ope
 const API = import.meta.env.VITE_API_URL ?? ''
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
 
+function StepBar({ active }: { active: number }) {
+  const steps = [
+    { n: '01', label: 'Org Setup', sub: 'Complete' },
+    { n: '02', label: 'Add Locations', sub: 'Complete' },
+    { n: '03', label: 'Find Rivals', sub: 'Track & block' },
+  ]
+  return (
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '14px 28px', display: 'flex', alignItems: 'center', boxShadow: 'var(--card-shadow)', flexShrink: 0 }}>
+      {steps.map((s, i) => {
+        const isDone = i < active
+        const isActive = i === active
+        return (
+          <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, position: 'relative' }}>
+            <div style={{ width: 30, height: 30, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 500, flexShrink: 0, background: isDone ? 'var(--accent)' : isActive ? 'var(--accent)' : 'var(--surface-3)', color: isDone || isActive ? '#fff' : 'var(--text-3)', boxShadow: isActive ? '0 0 0 4px rgba(9,161,161,0.15)' : isDone ? '0 0 0 3px rgba(9,161,161,0.10)' : 'none' }}>
+              {isDone ? <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" style={{ width: 13, height: 13 }}><polyline points="20 6 9 17 4 12" /></svg> : s.n}
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: isActive || isDone ? 'var(--text-1)' : 'var(--text-3)', whiteSpace: 'nowrap' as const }}>{s.label}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-3)', whiteSpace: 'nowrap' as const }}>{s.sub}</div>
+            </div>
+            {i < steps.length - 1 && <div style={{ position: 'absolute', left: 145, width: 'calc(100% - 150px)', height: 2, background: isDone ? 'var(--accent)' : 'var(--border-2)', top: '50%', transform: 'translateY(-50%)' }} />}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 type MapStyleId = 'streets' | 'satellite'
 type AppTheme = 'light' | 'dark'
 const MAP_STYLES: Record<MapStyleId, Record<AppTheme, string>> = {
@@ -221,7 +249,21 @@ export default function CompetitorDiscovery() {
       })
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 128px)', minHeight: 560, maxHeight: 780 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', fontFamily: 'var(--sans)' }}>
+      {/* Topbar */}
+      <div style={{ padding: '10px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, background: 'var(--surface)' }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-1)', letterSpacing: '-0.01em' }}>Find your rivals</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)', letterSpacing: '0.08em', marginTop: 2 }}>SCREEN 03 · RIVAL DISCOVERY · STEP 3 OF 3</div>
+        </div>
+      </div>
+
+      {/* Step bar */}
+      <div style={{ padding: '10px 20px 0', flexShrink: 0 }}>
+        <StepBar active={2} />
+      </div>
+
+    <div style={{ display: 'flex', flex: 1, minHeight: 0, padding: '0 20px 16px' }}>
 
       {/* ── Map panel ── */}
       <div ref={mapContainerRef} style={{
@@ -366,13 +408,6 @@ export default function CompetitorDiscovery() {
 
         {/* Header */}
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border-subtle)', flexShrink: 0 }}>
-          <div style={{
-            fontFamily: 'Space Mono, monospace', fontSize: 10,
-            color: 'var(--accent-intel)', letterSpacing: '0.12em',
-            textTransform: 'uppercase', marginBottom: 6,
-          }}>
-            Setup · Step 2 of 2
-          </div>
           <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>
             Identify your rivals
           </div>
@@ -474,16 +509,10 @@ export default function CompetitorDiscovery() {
                         }}
                         onClick={() => setSelection(comp, isTracked ? null : 'track')}
                       >Track</button>
-                      <button
-                        style={{
-                          fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
-                          fontFamily: 'DM Sans, sans-serif', fontWeight: 500,
-                          border: `1px solid ${isBlocked ? 'var(--accent-block)' : 'var(--border-default)'}`,
-                          background: isBlocked ? 'var(--accent-block)' : 'transparent',
-                          color: isBlocked ? '#fff' : 'var(--text-secondary)',
-                        }}
-                        onClick={() => setSelection(comp, isBlocked ? null : 'block')}
-                      >Block this rival</button>
+                      <div title="Blocking unlocks when you upgrade" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 10px', borderRadius: 4, fontFamily: 'DM Sans, sans-serif', fontWeight: 500, border: '1px solid var(--border-default)', color: 'var(--text-muted)', cursor: 'not-allowed', opacity: 0.5, userSelect: 'none' as const }}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 10, height: 10, flexShrink: 0 }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Block
+                      </div>
                     </div>
                   </div>
                 )
@@ -504,9 +533,6 @@ export default function CompetitorDiscovery() {
                 {trackCount > 0 && <span style={{ color: 'var(--accent-intel)' }}>{trackCount} tracking</span>}
                 {trackCount > 0 && blockCount > 0 && <span style={{ color: 'var(--text-muted)' }}>·</span>}
                 {blockCount > 0 && <span style={{ color: 'var(--accent-block)' }}>{blockCount} blocked</span>}
-                <span style={{ color: 'var(--text-secondary)', fontFamily: 'Space Mono, monospace', fontSize: 11 }}>
-                  ${estimatedCost}/mo
-                </span>
               </span>
             ) : (
               <span style={{ color: 'var(--text-muted)', fontSize: 11, fontFamily: 'Space Mono, monospace' }}>
@@ -524,6 +550,7 @@ export default function CompetitorDiscovery() {
           </button>
         </div>
       </div>
+    </div>
     </div>
   )
 }
