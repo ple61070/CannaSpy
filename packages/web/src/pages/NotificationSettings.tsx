@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthFetch } from '../lib/useAuthFetch';
+
+const API = import.meta.env.VITE_API_URL ?? '';
 
 type Panel = 'alerts' | 'delivery' | 'thresholds' | 'locations';
 
@@ -104,11 +107,15 @@ function AlertGrid({ rows, values, onChange }: { rows: { label: string; desc: st
   );
 }
 
+const DIGEST_OPTIONS = ['realtime', 'daily', 'weekly'] as const;
+
 export default function NotificationSettings() {
   const navigate = useNavigate();
+  const authFetch = useAuthFetch();
   const [panel, setPanel] = useState<Panel>('alerts');
   const [dirty, setDirty] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [sharedAlerts, setSharedAlerts] = useState([true, true, true, true]);
   const [generalAlerts, setGeneralAlerts] = useState([true, false, false, true]);
@@ -125,6 +132,65 @@ export default function NotificationSettings() {
   const [dollarThreshold, setDollarThreshold] = useState(2);
   const [maxAlerts, setMaxAlerts] = useState(25);
   const [cooldown, setCooldown] = useState('1 hour');
+
+  useEffect(() => {
+    authFetch(`${API}/api/v1/settings/notifications`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (!res.success) return;
+        const d = res.data;
+        if (d.email_enabled != null) setEmailOn(d.email_enabled);
+        if (d.push_enabled != null) setPushOn(d.push_enabled);
+        if (d.price_threshold_pct != null) setPriceThreshold(d.price_threshold_pct);
+        if (d.digest_frequency) {
+          const idx = DIGEST_OPTIONS.indexOf(d.digest_frequency);
+          if (idx >= 0) { setSharedDigest(idx); setGeneralDigest(idx); }
+        }
+        if (d.quiet_hours_start) setQuietOn(true);
+        if (Array.isArray(d.alert_types)) {
+          setSharedAlerts([
+            d.alert_types.includes('price_drop'),
+            d.alert_types.includes('price_increase'),
+            d.alert_types.includes('new_promo'),
+            d.alert_types.includes('new_sku'),
+          ]);
+          setGeneralAlerts([
+            d.alert_types.includes('new_competitor'),
+            d.alert_types.includes('new_sku'),
+            d.alert_types.includes('sku_removed'),
+            d.alert_types.includes('promo_ended'),
+          ]);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    try {
+      const alertTypes: string[] = [];
+      if (sharedAlerts[0]) alertTypes.push('price_drop');
+      if (sharedAlerts[1]) alertTypes.push('price_increase');
+      if (sharedAlerts[2]) alertTypes.push('new_promo');
+      if (sharedAlerts[3]) alertTypes.push('new_sku');
+      if (generalAlerts[0]) alertTypes.push('new_competitor');
+      if (generalAlerts[2]) alertTypes.push('sku_removed');
+      if (generalAlerts[3]) alertTypes.push('promo_ended');
+      await authFetch(`${API}/api/v1/settings/notifications`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          email_enabled: emailOn,
+          push_enabled: pushOn,
+          price_threshold_pct: priceThreshold,
+          digest_frequency: DIGEST_OPTIONS[sharedDigest] ?? 'realtime',
+        }),
+      });
+      setDirty(false);
+      showToast('Changes saved');
+    } catch {
+      showToast('Failed to save — please try again');
+    }
+  }, [emailOn, pushOn, priceThreshold, sharedDigest, sharedAlerts, generalAlerts]);
 
   const mark = () => setDirty(true);
 
@@ -180,7 +246,7 @@ export default function NotificationSettings() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 12, height: 12 }}><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 .49-3.51" /></svg>
             Reset to defaults
           </button>
-          <button style={btnPrimary} onClick={() => { setDirty(false); showToast('Changes saved'); }}>
+          <button style={btnPrimary} onClick={handleSave}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><polyline points="20 6 9 17 4 12" /></svg>
             Save changes
           </button>
@@ -386,7 +452,7 @@ export default function NotificationSettings() {
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button style={btnBase} onClick={() => { setDirty(false); showToast('Changes discarded'); }}>Discard changes</button>
-          <button style={btnPrimary} onClick={() => { setDirty(false); showToast('Changes saved'); }}>
+          <button style={btnPrimary} onClick={handleSave}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><polyline points="20 6 9 17 4 12" /></svg>
             Save changes
           </button>

@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthFetch } from '../lib/useAuthFetch';
+
+const API = import.meta.env.VITE_API_URL ?? '';
 
 interface Location {
   id: string;
@@ -77,9 +80,42 @@ function TableHeader({ cols }: { cols: string[] }) {
   );
 }
 
+function makeDisplayLocation(l: { id: string; name: string; address: string; dcc_license?: string | null; active: boolean; lat?: number | null; lng?: number | null }): Location {
+  return {
+    id: l.id,
+    name: l.name,
+    address: l.address ?? '—',
+    market: 'Standard',
+    mktClass: 'standard',
+    license: l.dcc_license ?? '—',
+    health: 'ok',
+    healthLabel: 'Healthy',
+    lastRun: '—',
+    items: 0,
+    track: 0,
+    block: 0,
+    active: l.active,
+    log: [],
+    competitors: [],
+    blocked: [],
+  };
+}
+
 export default function LocationManagement() {
   const navigate = useNavigate();
-  const [locs, setLocs] = useState<Location[]>(LOCATIONS);
+  const authFetch = useAuthFetch();
+  const [locs, setLocs] = useState<Location[]>([]);
+  const [locsLoading, setLocsLoading] = useState(true);
+
+  useEffect(() => {
+    authFetch(`${API}/api/v1/locations`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.locations) setLocs(res.locations.map(makeDisplayLocation));
+      })
+      .catch(() => {})
+      .finally(() => setLocsLoading(false));
+  }, []);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeactivateModal, setShowDeactivateModal] = useState<string | null>(null);
@@ -287,7 +323,7 @@ export default function LocationManagement() {
         </button>
         <div>
           <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-1)', letterSpacing: '-0.02em' }}>Location Management</div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)' }}>Catalyst Group MSO · {locs.length} locations</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)' }}>{locsLoading ? 'Loading…' : `${locs.length} location${locs.length !== 1 ? 's' : ''}`}</div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
           <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 'var(--r-sm)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)', border: '1.5px solid var(--border-2)', background: 'var(--surface-3)', color: 'var(--text-1)' }} onClick={() => showToast('All locations queued for next spy run · 2 AM')}>
