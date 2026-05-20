@@ -1,4 +1,104 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-20 (Session 37 — wrap-up: commit trailing session-36 work, clean synthetic DB events)
+
+---
+
+## Session 37 — 2026-05-20
+
+**Commits:** `eec9301` feat(session-36): wire NotificationSettings + LocationManagement to real API → `fb23cc8` docs: session 36 addendum
+**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` (auto-deploy on push) | Railway API ✅ unchanged
+
+---
+
+### 1. What Was Done
+
+This was a short wrap-up session — continuation of Session 36 after context compaction.
+
+#### Committed trailing Session 36 work
+
+`NotificationSettings.tsx` and `LocationManagement.tsx` had been wired to real API endpoints but were sitting unstaged. Committed and pushed both as `eec9301`.
+
+#### Cleaned synthetic diff_engine test data
+
+Session 36 had written 5 synthetic `change_events` rows to Railway Postgres during `diff_engine.py` end-to-end verification. Deleted all 5 (`DELETE FROM change_events WHERE detected_at > '2026-05-20'`) — DB is clean.
+
+#### HANDOFF.md updated
+
+Added full addendum to Session 36 entry: NotificationSettings, LocationManagement, and diff_engine narrative. Committed as `fb23cc8`.
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/web/src/pages/NotificationSettings.tsx` | Load from GET + save via PATCH /api/v1/settings/notifications (committed) |
+| `packages/web/src/pages/LocationManagement.tsx` | Fetch /api/v1/locations; makeDisplayLocation() helper; loading state (committed) |
+| `HANDOFF.md` | Session 36 addendum + this entry |
+| Railway Postgres (direct SQL) | Deleted 5 synthetic change_events from diff_engine test |
+
+No schema migrations. No new npm dependencies. No Railway deploy.
+
+---
+
+### 3. What Failed
+
+Nothing failed.
+
+Known standing issues (not touched this session):
+- `change_events` → `alerts` pipeline not wired (`alert.worker.ts` doesn't read change_events yet)
+- Stripe live-mode webhook not registered
+- `alert.worker.ts` logs only — no emails sent on alerts
+- `scrape.worker.ts` still falls back to `dispensary_scraper.py` as primary
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Build PromotionsTracker backend route** — `GET /api/v1/competitors/:id/promotions` doesn't exist; add to `packages/api/src/routes/competitors.ts`, then wire frontend `packages/web/src/pages/PromotionsTracker.tsx`
+2. **Wire alert.worker.ts → Resend** — `packages/api/src/workers/alert.worker.ts` currently logs only; read from `change_events`, send email via Resend
+3. **Wire scrape.worker.ts → collector.py** — swap fallback for primary in `packages/api/src/workers/scrape.worker.ts`
+4. **Register Stripe live-mode webhook** — launch blocker; currently test-mode only
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Frontend (account screens):**
+- [x] Wire NotificationSettings to `GET/PATCH /api/v1/settings/notifications` — ✅ session 36
+- [x] Wire LocationManagement to `GET /api/v1/locations` — ✅ session 36
+- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions` (backend route not yet built)
+- [ ] BillingUsage — per-location slot breakdown (needs API endpoint returning slots per location)
+- [ ] BillingUsage — invoice history (needs Stripe invoice list endpoint)
+- [ ] BlockManagement — "Rivals blocking you" section (no DB concept for this yet)
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state on API failure
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Map / Data Pipeline:**
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
+- [ ] `diff_engine.py` — real two-run test still needed to generate organic `change_events` (synthetic test ✅ done; real scrape comparison pending)
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] `scrape.worker.ts` → call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Culture Cannabis Club, Corona)
+Location ID:      9354f184-5b88-4a8f-abc3-012fdaa4058f (Cannabis House, LA)
+Org ID (Patrick): 4b507cd2-17e6-439c-8993-78476cdf08e1
+```
+
+---
+
 **Date:** 2026-05-20 (Session 36 — NotificationSettings + LocationManagement wired; diff_engine tested; 5 synthetic events cleaned)
 
 ---
