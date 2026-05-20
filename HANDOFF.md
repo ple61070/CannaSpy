@@ -1,4 +1,134 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-20 (Session 36 — fix org mapping, wire BlockManagement + BillingUsage, delivery pin colors, promoteId)
+
+---
+
+## Session 36 — 2026-05-20
+
+**Commits:** `0e1210d` feat(session-36): wire BlockManagement + BillingUsage; delivery pin colors; promoteId; fix org mapping
+**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` (push triggered auto-deploy) | Railway API ✅ unchanged
+
+---
+
+### 1. What Was Done
+
+#### DB: Org mapping fix — locations now visible in production
+
+Diagnosed why `/api/v1/locations` returned empty data (previously logged as a "500"). Patrick's current Clerk user ID (`user_3D148kdy4fZPXIWmTskLn8rxs8E`) had auto-created a second empty org (`67d67fa5`) on first login. All data (4 locations, 8 competitors, 9,584 menu items) lived under org `4b507cd2` which was still linked to an old Clerk user ID (`3CHQ1liuC7vRd5aYdytRxDM7rAy`).
+
+Fix applied directly to Railway Postgres:
+1. Deleted the empty org `67d67fa5`
+2. Updated `organizations.clerk_org_id` on `4b507cd2` → `user_user_3D148kdy4fZPXIWmTskLn8rxs8E`
+
+All 4 locations, competitors, and menu data are now accessible from Patrick's current Clerk session.
+
+#### layers.ts — delivery operator pin color
+
+`dispensaryRingLayer` and `dispensaryPointLayer` now differentiate delivery operators:
+- Blocked → amber (#ba7517)
+- Delivery (`business_type = 'delivery'`) → trust-blue (#3b8bd4)
+- Storefront/microbusiness → teal (#1d9e75)
+
+DB confirmed: 229 delivery, 347 microbusiness (both), 1211 storefront — all have `business_type` populated.
+
+#### promoteId="id" on dispensary Sources
+
+Added `promoteId="id"` to the `cs-dispensaries` Source in both `MarketHeatMap.tsx` and `CompetitorDiscovery.tsx`. This enables Mapbox feature-state hover, which the ring/point layers already reference via `['feature-state', 'hover']`.
+
+#### BlockManagement — wired to real API data
+
+Replaced static `BLOCKS[]` mock with live data from `useBlocks()` hook (`GET /api/v1/blocks`).
+- Active blocks section now shows real competitor names, days blocked (computed from `blocked_at`), and calls the real cancel endpoint on confirmation
+- Summary cards (count, slots, monthly cost) reflect real block count
+- Loading and empty states added per CannaSpy copy rules
+- "Rivals blocking you" and "Tracked rivals" sections remain as UI scaffolding (no API endpoints for these yet)
+
+#### BillingUsage — wired to real API data
+
+Replaced static `LOCS[]` / `INVOICES[]` mock with live data from `/api/v1/billing/usage` + `/api/v1/locations`.
+- Hero card: real total slots, monthly cost, next billing date (from Stripe if subscribed)
+- Slot cards: real track/block slot counts and costs
+- Discount callout: dynamic — shows savings if applicable, "add more slots" prompt if not
+- Location table: shows real location names (per-location slot breakdown still pending)
+- Billing alert: dynamic block count and renewal date
+- Invoice history: placeholder row (no invoice history API yet)
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/web/src/components/map/layers.ts` | Delivery pin color (trust-blue) in dispensaryRingLayer + dispensaryPointLayer |
+| `packages/web/src/pages/MarketHeatMap.tsx` | promoteId="id" on cs-dispensaries Source |
+| `packages/web/src/pages/CompetitorDiscovery.tsx` | promoteId="id" on cs-dispensaries Source |
+| `packages/web/src/pages/BlockManagement.tsx` | Wire useBlocks() hook; real cancel API; loading + empty states |
+| `packages/web/src/pages/BillingUsage.tsx` | Wire /api/v1/billing/usage + /api/v1/locations; real totals |
+| Railway Postgres (direct SQL) | Re-linked Patrick's current Clerk ID to data-bearing org |
+
+No schema migrations. No new npm dependencies. No Railway deploy.
+
+---
+
+### 3. What Failed
+
+Nothing failed. All changes built cleanly (`vite build` ✅, no TypeScript errors).
+
+Known standing issues (not touched this session):
+- `diff_engine.py` not tested end-to-end — alerts table still empty
+- Stripe live-mode webhook not registered
+- API package has no dotenv — must source `.env` manually when starting locally
+- `alert.worker.ts` logs only — no emails sent on alerts
+- `scrape.worker.ts` still falls back to `dispensary_scraper.py` as primary
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Wire NotificationSettings** — swap static mock for real `GET/PATCH /api/v1/settings` calls in `packages/web/src/pages/NotificationSettings.tsx`
+2. **Wire LocationManagement** — display real locations from `GET /api/v1/locations` in `packages/web/src/pages/LocationManagement.tsx`
+3. **Wire PromotionsTracker** — scaffold at `packages/web/src/pages/PromotionsTracker.tsx`, wire to `GET /api/v1/competitors/:id/promotions`
+4. **Test diff_engine.py end-to-end** — run `collector.py` twice on same competitors, then run `diff_engine.py`, verify `alerts` table gets rows
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Frontend (account screens):**
+- [ ] Wire NotificationSettings to `GET/PATCH /api/v1/settings`
+- [ ] Wire LocationManagement to `GET /api/v1/locations`
+- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions`
+- [ ] BillingUsage — per-location slot breakdown (needs API endpoint returning slots per location)
+- [ ] BillingUsage — invoice history (needs Stripe invoice list endpoint)
+- [ ] BlockManagement — "Rivals blocking you" section (no DB concept for this yet)
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state on API failure
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Map / Data Pipeline:**
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
+- [ ] `diff_engine.py` — test end-to-end with two real snapshots (needed to generate first `alerts` rows)
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] `scrape.worker.ts` → call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Culture Cannabis Club, Corona)
+Location ID:      9354f184-5b88-4a8f-abc3-012fdaa4058f (Cannabis House, LA)
+Org ID (Patrick): 4b507cd2-17e6-439c-8993-78476cdf08e1
+```
+
+---
+
 **Date:** 2026-05-20 (Session 35 — CompetitorDiscovery map rebuild: DCC pins, radius slider, flyTo fix)
 
 ---
