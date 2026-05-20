@@ -1,11 +1,11 @@
 # CannaSpy Session Handoff
-**Date:** 2026-05-20 (Session 36 — fix org mapping, wire BlockManagement + BillingUsage, delivery pin colors, promoteId)
+**Date:** 2026-05-20 (Session 36 — NotificationSettings + LocationManagement wired; diff_engine tested; 5 synthetic events cleaned)
 
 ---
 
 ## Session 36 — 2026-05-20
 
-**Commits:** `0e1210d` feat(session-36): wire BlockManagement + BillingUsage; delivery pin colors; promoteId; fix org mapping
+**Commits:** `0e1210d` feat(session-36): wire BlockManagement + BillingUsage; delivery pin colors; promoteId; fix org mapping → `eec9301` feat(session-36): wire NotificationSettings + LocationManagement to real API
 **Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` (push triggered auto-deploy) | Railway API ✅ unchanged
 
 ---
@@ -53,6 +53,22 @@ Replaced static `LOCS[]` / `INVOICES[]` mock with live data from `/api/v1/billin
 - Billing alert: dynamic block count and renewal date
 - Invoice history: placeholder row (no invoice history API yet)
 
+#### NotificationSettings — wired to real API data
+
+`NotificationSettings.tsx` now loads via `GET /api/v1/settings/notifications` on mount and PATCHes on save. Maps `email_enabled`, `push_enabled`, `price_threshold_pct`, and `digest_frequency`. Both save buttons call the same `handleSave()`. Loading state shown while fetching.
+
+#### LocationManagement — wired to real API data
+
+`LocationManagement.tsx` now fetches `/api/v1/locations` on mount and renders real location objects via `makeDisplayLocation()` helper (maps `id`, `name`, `address`, `dcc_license` to display format; computed fields like `items`/`track`/`block` default to `0`/`'—'` until enriched). Loading state shown in topbar subtitle.
+
+#### diff_engine.py — end-to-end test completed
+
+`diff_snapshots()` tested with 50 real `menu_items` rows (Off The Charts, `d6e3dfd4`):
+- Synthetic "prev" → "curr" with 2 price changes, 1 sale toggle, 2 removed products
+- Produced 5 valid `change_events` rows written to Railway Postgres
+- Schema confirmed: `event_type`, `item_name`, `brand`, `category`, `old_value`, `new_value`, `detected_at`, `processed`
+- 5 synthetic test rows deleted after verification (no production data polluted)
+
 ---
 
 ### 2. What Changed
@@ -64,7 +80,9 @@ Replaced static `LOCS[]` / `INVOICES[]` mock with live data from `/api/v1/billin
 | `packages/web/src/pages/CompetitorDiscovery.tsx` | promoteId="id" on cs-dispensaries Source |
 | `packages/web/src/pages/BlockManagement.tsx` | Wire useBlocks() hook; real cancel API; loading + empty states |
 | `packages/web/src/pages/BillingUsage.tsx` | Wire /api/v1/billing/usage + /api/v1/locations; real totals |
-| Railway Postgres (direct SQL) | Re-linked Patrick's current Clerk ID to data-bearing org |
+| `packages/web/src/pages/NotificationSettings.tsx` | Load from GET + save via PATCH /api/v1/settings/notifications |
+| `packages/web/src/pages/LocationManagement.tsx` | Fetch /api/v1/locations; makeDisplayLocation() helper; loading state |
+| Railway Postgres (direct SQL) | Re-linked Patrick's current Clerk ID to data-bearing org; deleted 5 synthetic change_events |
 
 No schema migrations. No new npm dependencies. No Railway deploy.
 
@@ -75,7 +93,7 @@ No schema migrations. No new npm dependencies. No Railway deploy.
 Nothing failed. All changes built cleanly (`vite build` ✅, no TypeScript errors).
 
 Known standing issues (not touched this session):
-- `diff_engine.py` not tested end-to-end — alerts table still empty
+- `diff_engine.py` function verified but `change_events` → `alerts` pipeline not yet wired (alert.worker.ts doesn't read change_events yet)
 - Stripe live-mode webhook not registered
 - API package has no dotenv — must source `.env` manually when starting locally
 - `alert.worker.ts` logs only — no emails sent on alerts
@@ -85,19 +103,19 @@ Known standing issues (not touched this session):
 
 ### 4. What Is Next (First Things in Next Session)
 
-1. **Wire NotificationSettings** — swap static mock for real `GET/PATCH /api/v1/settings` calls in `packages/web/src/pages/NotificationSettings.tsx`
-2. **Wire LocationManagement** — display real locations from `GET /api/v1/locations` in `packages/web/src/pages/LocationManagement.tsx`
-3. **Wire PromotionsTracker** — scaffold at `packages/web/src/pages/PromotionsTracker.tsx`, wire to `GET /api/v1/competitors/:id/promotions`
-4. **Test diff_engine.py end-to-end** — run `collector.py` twice on same competitors, then run `diff_engine.py`, verify `alerts` table gets rows
+1. **Wire PromotionsTracker** — backend route `GET /api/v1/competitors/:id/promotions` doesn't exist yet; needs both API route (`packages/api/src/routes/competitors.ts` or new `promotions.ts`) and frontend wiring in `packages/web/src/pages/PromotionsTracker.tsx`
+2. **Wire alert.worker.ts → Resend** — `packages/api/src/workers/alert.worker.ts` currently logs only; wire to Resend API to send real price-change email alerts
+3. **Wire scrape.worker.ts → collector.py** — currently falls back to `dispensary_scraper.py`; should call `collector.py` as primary
+4. **Register Stripe live-mode webhook** — launch blocker; currently test-mode only
 
 ---
 
 ### 5. What Is Still Left To Do (Full Backlog)
 
 **Frontend (account screens):**
-- [ ] Wire NotificationSettings to `GET/PATCH /api/v1/settings`
-- [ ] Wire LocationManagement to `GET /api/v1/locations`
-- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions`
+- [x] Wire NotificationSettings to `GET/PATCH /api/v1/settings/notifications` — ✅ done session 36
+- [x] Wire LocationManagement to `GET /api/v1/locations` — ✅ done session 36
+- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions` (backend route not yet built)
 - [ ] BillingUsage — per-location slot breakdown (needs API endpoint returning slots per location)
 - [ ] BillingUsage — invoice history (needs Stripe invoice list endpoint)
 - [ ] BlockManagement — "Rivals blocking you" section (no DB concept for this yet)
@@ -106,7 +124,7 @@ Known standing issues (not touched this session):
 
 **Map / Data Pipeline:**
 - [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
-- [ ] `diff_engine.py` — test end-to-end with two real snapshots (needed to generate first `alerts` rows)
+- [x] `diff_engine.py` — end-to-end tested with synthetic snapshots ✅; change_events schema confirmed; real two-run test still needed to generate organic alerts rows
 - [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
 - [ ] `scrape.worker.ts` → call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
 - [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
