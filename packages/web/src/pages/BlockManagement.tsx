@@ -1,10 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { OperatorTypeFilter, type OperatorType } from '../components/filters/OperatorTypeFilter'
-
-/* ── Static mock data ── */
-const SPARK_A = [8, 14, 20, 5, 5, 14, 18, 22, 14, 8, 5, 14, 20, 22]
-const SPARK_B = [5, 8, 14, 8, 5, 5, 14, 8, 8, 5, 14, 8, 14, 8]
+import { useBlocks } from '../hooks/useBlocks'
 
 type TimelineEntry = { type: 'down' | 'up' | 'new'; title: string; sub: string; time: string }
 
@@ -27,56 +24,15 @@ interface BlockData {
   spark: number[]
 }
 
-const BLOCKS: BlockData[] = [
-  {
-    id: 'stiiizy',
-    name: 'STIIIZY West Hollywood',
-    initials: 'ST',
-    color: '#3d7a8a',
-    dist: '1.2 mi',
-    market: 'WeHo',
-    days: 47,
-    slots: 10,
-    cost: 2000,
-    renews: 'May 1',
-    locs: ['WeHo Flagship', 'DTLA Flagship', 'SoMa SF', 'Oakland', 'San Diego', 'Koreatown', 'Long Beach', 'Culver City', 'Pasadena', 'Corona'],
-    activity: 78,
-    changes: 28,
-    narrative: 'STIIIZY has been blocked for 47 days. They have made 28 price and catalog changes during this period — none of which they can see your response to. They last attempted to contact CannaSpy 12 days ago and received no response.',
-    timeline: [
-      { type: 'down', title: 'Blue Dream dropped 22%', sub: '$45 → $35 · WeHo · 2h ago', time: '2h ago' },
-      { type: 'new',  title: '14 new SKUs added overnight', sub: 'Flower category · DTLA · 6h ago', time: '6h ago' },
-      { type: 'down', title: 'Gelato #41 7g cut 25%', sub: '$80 → $60 · DTLA · 3h ago', time: 'Yesterday' },
-      { type: 'up',   title: 'Kanha edibles restocked', sub: '22 SKUs · WeHo · Yesterday', time: 'Yesterday' },
-      { type: 'down', title: 'Raw Garden vapes repriced', sub: '−12% across all 1g SKUs · SoMa SF', time: '3 days ago' },
-      { type: 'new',  title: 'New weekly happy hour launched', sub: '20% off all concentrates 4–7pm', time: '5 days ago' },
-    ],
-    spark: SPARK_A,
-  },
-  {
-    id: 'otc',
-    name: 'Off The Charts DTLA',
-    initials: 'OT',
-    color: '#6b5b95',
-    dist: '2.9 mi',
-    market: 'DTLA',
-    days: 22,
-    slots: 8,
-    cost: 1600,
-    renews: 'May 1',
-    locs: ['DTLA Flagship', 'Koreatown', 'Long Beach', 'Culver City', 'Pasadena', 'Riverside', 'Ontario', 'Pomona'],
-    activity: 54,
-    changes: 14,
-    narrative: 'Off The Charts has been blocked for 22 days. They have made 14 price changes during the block period, primarily in their premium flower and concentrate categories.',
-    timeline: [
-      { type: 'down', title: 'Gelato #41 7g cut 25%', sub: '$80 → $60 · Weekend push · 3h ago', time: '3h ago' },
-      { type: 'new',  title: 'CBX Cherries added', sub: 'New brand addition · 8 SKUs · DTLA', time: 'Yesterday' },
-      { type: 'down', title: 'Concentrate category priced down', sub: '−10% across concentrates', time: '4 days ago' },
-      { type: 'up',   title: 'Premium flower restocked', sub: 'Jungle Boys + Maven restock', time: '1 week ago' },
-    ],
-    spark: SPARK_B,
-  },
-]
+const BLOCK_COLORS = ['#3d7a8a', '#6b5b95', '#2a7a45', '#8b4513', '#c88a20', '#5484a4']
+
+function makeInitials(name: string): string {
+  return name.split(' ').slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('')
+}
+
+function daysSince(iso: string): number {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
+}
 
 const BLOCKED_BY = [
   { id: 'jb', initials: 'JB', color: '#2a7a45', name: 'Jungle Boys DTLA', meta: '0.4 mi · DTLA · Blocking you at 4 of your locations', days: 63, notify: true },
@@ -128,6 +84,31 @@ function locRate(tier: string) {
 
 export default function BlockManagement() {
   const navigate = useNavigate()
+  const { blocks: rawBlocks, loading: blocksLoading, cancelBlock: apiCancelBlock } = useBlocks()
+
+  // Map API blocks to the display shape
+  const BLOCKS: BlockData[] = rawBlocks.map((b, i) => {
+    const days = daysSince(b.blocked_at)
+    return {
+      id: b.id,
+      name: b.competitor_name,
+      initials: makeInitials(b.competitor_name),
+      color: BLOCK_COLORS[i % BLOCK_COLORS.length],
+      dist: '—',
+      market: b.competitor_address?.split(',')[1]?.trim() ?? '—',
+      days,
+      slots: 1,
+      cost: 100,
+      renews: '—',
+      locs: [],
+      activity: 0,
+      changes: 0,
+      narrative: `${b.competitor_name} has been blocked for ${days} day${days !== 1 ? 's' : ''}. Price change tracking is active — changes will appear here as the diff engine processes new snapshots.`,
+      timeline: [],
+      spark: Array(14).fill(0),
+    }
+  })
+
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [cancelTarget, setCancelTarget] = useState<{ id: string; name: string } | null>(null)
   const [cancelModalOpen, setCancelModalOpen] = useState(false)
@@ -311,7 +292,7 @@ export default function BlockManagement() {
           </div>
           <div>
             <div style={s.tbTitle}>Block Management</div>
-            <div style={s.tbSub}>2 active blocks · 18 slots · $3,600/mo</div>
+            <div style={s.tbSub}>{blocksLoading ? 'Loading…' : `${BLOCKS.length} active block${BLOCKS.length !== 1 ? 's' : ''} · ${BLOCKS.length} slot${BLOCKS.length !== 1 ? 's' : ''} · $${(BLOCKS.length * 100).toLocaleString()}/mo`}</div>
           </div>
           <div style={s.tbActions}>
             <button style={s.btn} onClick={() => navigate('/billing')}>
@@ -363,7 +344,7 @@ export default function BlockManagement() {
         </div>
         <div style={s.fbRight}>
           <OperatorTypeFilter value={operatorType} onChange={setOperatorType} />
-          <div style={s.fbCount}>2 blocks · 18 slots</div>
+          <div style={s.fbCount}>{BLOCKS.length} block{BLOCKS.length !== 1 ? 's' : ''} · {BLOCKS.length} slot{BLOCKS.length !== 1 ? 's' : ''}</div>
         </div>
       </div>
 
@@ -375,27 +356,27 @@ export default function BlockManagement() {
           <div style={s.summary}>
             <div style={s.sc('var(--rose)')}>
               <div style={s.scTop}>
-                <div style={s.scN('var(--rose)')}>2</div>
+                <div style={s.scN('var(--rose)')}>{BLOCKS.length}</div>
                 <div style={s.scIco('var(--rose-soft)', 'var(--rose)')}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></svg>
                 </div>
               </div>
               <div style={s.scLabel}>Active blocks</div>
-              <div style={s.scSub}>Across 10 locations</div>
+              <div style={s.scSub}>{BLOCKS.length} rival{BLOCKS.length !== 1 ? 's' : ''} suppressed</div>
             </div>
             <div style={s.sc('var(--accent)')}>
               <div style={s.scTop}>
-                <div style={s.scN('var(--accent)')}>18</div>
+                <div style={s.scN('var(--accent)')}>{BLOCKS.length}</div>
                 <div style={s.scIco('var(--accent-soft)', 'var(--accent)')}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>
                 </div>
               </div>
               <div style={s.scLabel}>Block slots used</div>
-              <div style={s.scSub}>18 of 18 · plan maxed</div>
+              <div style={s.scSub}>{BLOCKS.length} slot{BLOCKS.length !== 1 ? 's' : ''} active</div>
             </div>
             <div style={s.sc('var(--warm)')}>
               <div style={s.scTop}>
-                <div style={s.scN('var(--warm)')}>$3,600</div>
+                <div style={s.scN('var(--warm)')}>${(BLOCKS.length * 100).toLocaleString()}</div>
                 <div style={s.scIco('rgba(212,144,10,0.12)', 'var(--warm)')}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
                 </div>
@@ -441,6 +422,11 @@ export default function BlockManagement() {
             <div style={s.shCount}>2 rivals blocked</div>
           </div>
 
+          {blocksLoading ? (
+            <div style={{ padding: '32px 0', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-3)' }}>Pulling active blocks…</div>
+          ) : BLOCKS.length === 0 ? (
+            <div style={{ padding: '32px 0', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-3)' }}>No rivals currently suppressed. Add a block to start building your moat.</div>
+          ) : null}
           {BLOCKS.map((b) => (
             <div key={b.id} style={s.blockCard(selectedId === b.id)} onClick={() => setSelectedId(selectedId === b.id ? null : b.id)}>
               <div style={s.bcHeader}>
@@ -684,7 +670,17 @@ export default function BlockManagement() {
           </div>
           <div style={s.modalActions}>
             <button style={s.modalBtn} onClick={() => setCancelModalOpen(false)}>Keep blocking</button>
-            <button style={s.modalBtnConfirm} onClick={() => { setCancelModalOpen(false); showToast('⚠ Block cancelled — rival being contacted by sales team') }}>Cancel block →</button>
+            <button style={s.modalBtnConfirm} onClick={async () => {
+              if (!cancelTarget) return
+              try {
+                await apiCancelBlock(cancelTarget.id)
+                setCancelModalOpen(false)
+                setSelectedId(null)
+                showToast('⚠ Block cancelled — rival being contacted by sales team')
+              } catch {
+                showToast('Failed to cancel block — please try again')
+              }
+            }}>Cancel block →</button>
           </div>
         </div>
       </div>

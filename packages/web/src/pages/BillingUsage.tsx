@@ -1,27 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuthFetch } from '../lib/useAuthFetch'
 
-/* ── Static mock data ── */
-const LOCS = [
-  { name: 'WeHo Flagship',     market: 'Elite',       mktClass: 'elite', track: 6, block: 2, rate: 250 },
-  { name: 'DTLA Flagship',     market: 'Hot',         mktClass: 'hot',   track: 7, block: 2, rate: 200 },
-  { name: 'SoMa SF',           market: 'Elite',       mktClass: 'elite', track: 5, block: 1, rate: 250 },
-  { name: 'Mission SF',        market: 'Elite',       mktClass: 'elite', track: 6, block: 2, rate: 250 },
-  { name: 'Oakland Telegraph', market: 'Hot',         mktClass: 'hot',   track: 7, block: 2, rate: 200 },
-  { name: 'Long Beach DT',     market: 'Competitive', mktClass: 'comp',  track: 6, block: 2, rate: 150 },
-  { name: 'Sacramento',        market: 'Competitive', mktClass: 'comp',  track: 5, block: 2, rate: 150 },
-  { name: 'San Diego',         market: 'Hot',         mktClass: 'hot',   track: 7, block: 3, rate: 200 },
-  { name: 'Beverly Hills',     market: 'Elite',       mktClass: 'elite', track: 6, block: 2, rate: 250 },
-  { name: 'Riverside',         market: 'Standard',    mktClass: 'std',   track: 4, block: 0, rate: 100 },
-]
+const API = import.meta.env.VITE_API_URL ?? ''
 
-const DISCOUNT = 0.85
+interface UsageData {
+  total_slots: number
+  tracking_slots: number
+  blocking_slots: number
+  monthly_cost: number
+  discount_tier: string
+  next_billing_date: string | null
+}
+
+interface LocationRow {
+  id: string
+  name: string
+}
 
 const INVOICES = [
-  { date: 'Apr 1', desc: '81 slots · 15% discount', amount: '$14,025' },
-  { date: 'Mar 1', desc: '76 slots · 15% discount', amount: '$13,158' },
-  { date: 'Feb 1', desc: '68 slots · 10% discount', amount: '$11,628' },
-  { date: 'Jan 1', desc: '52 slots · 10% discount', amount: '$9,234' },
+  { date: 'Apr 1', desc: 'Invoice history coming soon', amount: '—' },
 ]
 
 const mktBadgeStyle = (mktClass: string): React.CSSProperties => {
@@ -33,15 +31,32 @@ const mktBadgeStyle = (mktClass: string): React.CSSProperties => {
 
 export default function BillingUsage() {
   const navigate = useNavigate()
+  const authFetch = useAuthFetch()
   const [toast, setToast] = useState<string | null>(null)
+  const [usage, setUsage] = useState<UsageData | null>(null)
+  const [locations, setLocations] = useState<LocationRow[]>([])
+  const [loading, setLoading] = useState(true)
 
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2400) }
 
-  /* computed totals */
-  const totalSlots = LOCS.reduce((s, l) => s + l.track + l.block, 0)
-  const totalCost = LOCS.reduce((s, l) => s + Math.round((l.track + l.block) * l.rate * DISCOUNT), 0)
-  const trackSlots = LOCS.reduce((s, l) => s + l.track, 0)
-  const blockSlots = LOCS.reduce((s, l) => s + l.block, 0)
+  useEffect(() => {
+    Promise.all([
+      authFetch(`${API}/api/v1/billing/usage`).then((r) => r.json()),
+      authFetch(`${API}/api/v1/locations`).then((r) => r.json()),
+    ]).then(([usageRes, locsRes]) => {
+      if (usageRes.success) setUsage(usageRes.data)
+      if (locsRes.locations) setLocations(locsRes.locations)
+    }).catch(() => {}).finally(() => setLoading(false))
+  }, [])
+
+  const totalSlots = usage?.total_slots ?? 0
+  const totalCost = usage?.monthly_cost ?? 0
+  const trackSlots = usage?.tracking_slots ?? 0
+  const blockSlots = usage?.blocking_slots ?? 0
+  const nextBilling = usage?.next_billing_date
+    ? new Date(usage.next_billing_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : '—'
+  const discountPct = totalSlots >= 50 ? 15 : totalSlots >= 20 ? 10 : totalSlots >= 10 ? 5 : 0
 
   /* ── styles ── */
   const topbar: React.CSSProperties = { padding: '0 28px', borderBottom: '1px solid var(--border)', flexShrink: 0, background: 'var(--surface)' }
@@ -148,7 +163,7 @@ export default function BillingUsage() {
           </div>
           <div>
             <div style={tbTitle}>Billing & Slot Usage</div>
-            <div style={tbSub}>Catalyst Group MSO · Next billing May 1</div>
+            <div style={tbSub}>{loading ? 'Loading…' : `${locations.length} location${locations.length !== 1 ? 's' : ''} · Next billing ${nextBilling}`}</div>
           </div>
           <div style={tbActions}>
             <button style={btn} onClick={() => showToast('Invoice downloaded')}>
@@ -174,12 +189,12 @@ export default function BillingUsage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <div style={planBadge}><div style={planDot} />Active subscription</div>
                   <div style={planName}>À La Carte Plan</div>
-                  <div style={planSub}>$100–$250 per slot · 10 active locations · 15% volume discount applied</div>
+                  <div style={planSub}>{usage?.discount_tier ?? '$100/slot'} · {locations.length} active location{locations.length !== 1 ? 's' : ''}{discountPct > 0 ? ` · ${discountPct}% volume discount applied` : ''}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={mrrN}>$14,025</div>
+                  <div style={mrrN}>{loading ? '—' : `$${totalCost.toLocaleString()}`}</div>
                   <div style={mrrLabel}>Monthly recurring</div>
-                  <div style={mrrNext}>Next charge May 1, 2026</div>
+                  <div style={mrrNext}>Next charge {nextBilling}</div>
                 </div>
               </div>
 
@@ -191,8 +206,8 @@ export default function BillingUsage() {
                     <div style={scOf}>of 100 max</div>
                   </div>
                   <div style={scN('var(--accent)')}>{trackSlots}</div>
-                  <div style={scPrice}>{trackSlots} slots × avg $148/slot = $9,324/mo</div>
-                  <div style={scBarWrap}><div style={scBar('var(--accent)', trackSlots)} /></div>
+                  <div style={scPrice}>{trackSlots} slot{trackSlots !== 1 ? 's' : ''} × $100/slot = ${(trackSlots * 100).toLocaleString()}/mo</div>
+                  <div style={scBarWrap}><div style={scBar('var(--accent)', Math.min(trackSlots, 100))} /></div>
                 </div>
                 <div style={slotCard('var(--rose)')}>
                   <div style={scTop}>
@@ -200,24 +215,30 @@ export default function BillingUsage() {
                     <div style={scOf}>of 40 max</div>
                   </div>
                   <div style={scN('var(--rose)')}>{blockSlots}</div>
-                  <div style={scPrice}>{blockSlots} slots × avg $205/slot = $3,690/mo</div>
-                  <div style={scBarWrap}><div style={scBar('var(--rose)', Math.round(blockSlots / 40 * 100))} /></div>
+                  <div style={scPrice}>{blockSlots} slot{blockSlots !== 1 ? 's' : ''} × $100/slot = ${(blockSlots * 100).toLocaleString()}/mo</div>
+                  <div style={scBarWrap}><div style={scBar('var(--rose)', Math.min(blockSlots, 40))} /></div>
                 </div>
               </div>
 
               {/* Discount callout */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--accent-soft)', border: '1px solid rgba(9,161,161,0.2)', borderRadius: 'var(--r-sm)' }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" style={{ width: 14, height: 14 }}><polyline points="20 6 9 17 4 12" /></svg>
-                <div style={{ fontSize: 11, color: 'var(--text-1)', lineHeight: 1.5 }}>
-                  <strong>15% volume discount</strong> active on all 81 slots (50+ slot tier). You're saving <strong style={{ color: 'var(--accent)' }}>$2,480/month</strong> vs standard rate.
+              {discountPct > 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--accent-soft)', border: '1px solid rgba(9,161,161,0.2)', borderRadius: 'var(--r-sm)' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" style={{ width: 14, height: 14 }}><polyline points="20 6 9 17 4 12" /></svg>
+                  <div style={{ fontSize: 11, color: 'var(--text-1)', lineHeight: 1.5 }}>
+                    <strong>{discountPct}% volume discount</strong> active on all {totalSlots} slots. Saving <strong style={{ color: 'var(--accent)' }}>${Math.round(totalSlots * 100 * discountPct / 100).toLocaleString()}/month</strong> vs standard rate.
+                  </div>
                 </div>
-              </div>
+              ) : totalSlots > 0 ? (
+                <div style={{ fontSize: 11, color: 'var(--text-2)', padding: '8px 12px', background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}>
+                  Add 10+ slots to unlock volume discounts (5–15% off).
+                </div>
+              ) : null}
             </div>
 
             {/* Location breakdown table */}
             <div style={sectionCard}>
               <div style={scHead}>
-                <div><span style={scHeadTitle}>Slot usage by location</span><span style={scHeadSub}>— 10 locations · Click to manage</span></div>
+                <div><span style={scHeadTitle}>Slot usage by location</span><span style={scHeadSub}>— {locations.length} location{locations.length !== 1 ? 's' : ''}</span></div>
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
@@ -230,28 +251,25 @@ export default function BillingUsage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {LOCS.map((l, i) => {
-                    const slots = l.track + l.block
-                    const cost = Math.round(slots * l.rate * DISCOUNT)
-                    return (
-                      <tr key={i} style={{ borderBottom: i < LOCS.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'default' }} onClick={() => showToast(`Managing ${l.name}…`)}>
-                        <td style={lbtTd}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>{l.name}</div>
-                        </td>
-                        <td style={lbtTd}><span style={{ ...mktBadgeBase, ...mktBadgeStyle(l.mktClass) }}>{l.market}</span></td>
-                        <td style={lbtTd}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                            <span style={slotChip('var(--accent)', 'rgba(9,161,161,0.1)')}>{l.track} track</span>
-                            {l.block > 0 && <span style={slotChip('var(--rose)', 'rgba(211,150,166,0.14)')}>{l.block} block</span>}
-                          </div>
-                        </td>
-                        <td style={lbtTd}><div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)' }}>${l.rate}/slot</div></td>
-                        <td style={lbtTdR}><div style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: 'var(--text-1)' }}>${cost.toLocaleString()}</div></td>
-                      </tr>
-                    )
-                  })}
+                  {loading ? (
+                    <tr><td colSpan={5} style={{ padding: '24px 16px', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-3)', textAlign: 'center' }}>Loading locations…</td></tr>
+                  ) : locations.length === 0 ? (
+                    <tr><td colSpan={5} style={{ padding: '24px 16px', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-3)', textAlign: 'center' }}>No locations added yet.</td></tr>
+                  ) : locations.map((l, i) => (
+                    <tr key={l.id} style={{ borderBottom: i < locations.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'default' }}>
+                      <td style={lbtTd}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)' }}>{l.name}</div>
+                      </td>
+                      <td style={lbtTd}><span style={{ ...mktBadgeBase, ...mktBadgeStyle('std') }}>Standard</span></td>
+                      <td style={lbtTd}>
+                        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)' }}>—</div>
+                      </td>
+                      <td style={lbtTd}><div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-3)' }}>$100/slot</div></td>
+                      <td style={lbtTdR}><div style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: 'var(--text-1)' }}>—</div></td>
+                    </tr>
+                  ))}
                   <tr style={{ background: 'var(--surface-2)', borderTop: '2px solid var(--border-2)' }}>
-                    <td colSpan={2} style={{ padding: '12px 16px', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-2)' }}>Total · {totalSlots} slots · 15% discount applied</td>
+                    <td colSpan={2} style={{ padding: '12px 16px', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-2)' }}>Total · {totalSlots} slot{totalSlots !== 1 ? 's' : ''}{discountPct > 0 ? ` · ${discountPct}% discount applied` : ''}</td>
                     <td colSpan={2} style={{ padding: '12px 16px' }} />
                     <td style={{ padding: '12px 16px', textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: 'var(--accent)' }}>${totalCost.toLocaleString()}</td>
                   </tr>
@@ -265,30 +283,32 @@ export default function BillingUsage() {
             {/* Next invoice */}
             <div style={invoiceCard}>
               <div style={icHead}>
-                <div style={icTitle}>Next invoice · May 1</div>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)' }}>16 days away</span>
+                <div style={icTitle}>Next invoice · {nextBilling}</div>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)' }}>{totalSlots} slots</span>
               </div>
               <div style={icBody}>
-                <div style={invoiceRow}>
-                  <div><div style={irLabel}>63 track slots</div><div style={irSub}>Avg $148/slot after discount</div></div>
-                  <div style={irAmount}>$9,324</div>
-                </div>
-                <div style={invoiceRow}>
-                  <div><div style={irLabel}>18 block slots</div><div style={irSub}>Avg $205/slot after discount</div></div>
-                  <div style={irAmount}>$3,690</div>
-                </div>
-                <div style={invoiceRow}>
-                  <div><div style={irLabel}>Subtotal</div></div>
-                  <div style={irAmount}>$13,014</div>
-                </div>
-                <div style={invoiceRowLast}>
-                  <div><div style={irLabel}>Volume discount (15%)</div><div style={irSub}>50+ slots tier</div></div>
-                  <div style={irAmountTeal}>−$2,480</div>
-                </div>
+                {trackSlots > 0 && (
+                  <div style={invoiceRow}>
+                    <div><div style={irLabel}>{trackSlots} track slot{trackSlots !== 1 ? 's' : ''}</div><div style={irSub}>$100/slot</div></div>
+                    <div style={irAmount}>${(trackSlots * 100).toLocaleString()}</div>
+                  </div>
+                )}
+                {blockSlots > 0 && (
+                  <div style={invoiceRow}>
+                    <div><div style={irLabel}>{blockSlots} block slot{blockSlots !== 1 ? 's' : ''}</div><div style={irSub}>$100/slot</div></div>
+                    <div style={irAmount}>${(blockSlots * 100).toLocaleString()}</div>
+                  </div>
+                )}
+                {discountPct > 0 && (
+                  <div style={invoiceRowLast}>
+                    <div><div style={irLabel}>Volume discount ({discountPct}%)</div><div style={irSub}>{totalSlots}+ slot tier</div></div>
+                    <div style={irAmountTeal}>−${Math.round(totalSlots * 100 * discountPct / 100).toLocaleString()}</div>
+                  </div>
+                )}
                 <div style={invoiceDivider} />
                 <div style={invoiceTotal}>
                   <div style={itLabel}>Total due</div>
-                  <div style={itAmount}>$14,025</div>
+                  <div style={itAmount}>{loading ? '—' : `$${totalCost.toLocaleString()}`}</div>
                 </div>
               </div>
             </div>
@@ -298,7 +318,7 @@ export default function BillingUsage() {
               <div style={baIcon}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" style={{ width: 9, height: 9 }}><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
               </div>
-              <div style={baText}>You have <strong>2 active blocks auto-renewing May 1</strong> (STIIIZY WeHo, Off The Charts DTLA). Both slots continue automatically — cancel before Apr 30 if you want to stop either block. If a block lapses, the rival is added to the active prospect list within 24 hours.</div>
+              <div style={baText}>{blockSlots > 0 ? <>You have <strong>{blockSlots} active block{blockSlots !== 1 ? 's' : ''} auto-renewing {nextBilling}</strong>. Slot{blockSlots !== 1 ? 's' : ''} continue automatically — cancel before renewal if you want to stop a block. If a block lapses, the rival is added to the active prospect list within 24 hours.</> : <>No active blocks. Add a block to suppress a rival from accessing CannaSpy.</>}</div>
             </div>
 
             {/* Payment method */}
@@ -347,12 +367,12 @@ export default function BillingUsage() {
                   <div style={tierRange}>50+ slots</div>
                   <div style={tierBarWrap}><div style={tierBar(100, true)} /></div>
                   <div style={tierPct(true)}>15%</div>
-                  <div style={tierLbl(true)}>← You are here (81 slots)</div>
+                  <div style={tierLbl(true)}>← You are here {totalSlots >= 50 ? `(${totalSlots} slots)` : ''}</div>
                 </div>
               </div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--accent)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
-                Saving $2,480/month at current slot count
+                {discountPct > 0 ? `Saving $${Math.round(totalSlots * 100 * discountPct / 100).toLocaleString()}/month at current slot count` : `Add more slots to unlock volume discounts`}
               </div>
             </div>
 

@@ -224,6 +224,7 @@ export const dispensaryRingLayer: LayerProps = {
     'circle-color': [
       'case',
       ['==', ['get', 'track_state'], 'blocked'], PALETTE.accentBlock,
+      ['==', ['get', 'business_type'], 'delivery'], PALETTE.accentTrust,
       PALETTE.accentIntel,
     ] as unknown as string,
     // Ring radius: 21px prospect, 26px enriched/blocked, +4px on hover
@@ -283,10 +284,11 @@ export const dispensaryPointLayer: LayerProps = {
   source: SOURCE.DISPENSARIES,
   filter: ['!', ['has', 'point_count']],
   paint: {
-    // Blocked is amber; prospect + enriched share teal — opacity tells them apart.
+    // Blocked is amber; delivery is trust-blue; storefront/both share teal — opacity tells them apart.
     'circle-color': [
       'case',
       ['==', ['get', 'track_state'], 'blocked'], PALETTE.accentBlock,
+      ['==', ['get', 'business_type'], 'delivery'], PALETTE.accentTrust,
       PALETTE.accentIntel,
     ] as unknown as string,
     // Fill radius: 15px enriched/blocked, 12px prospect. +4px on hover.
