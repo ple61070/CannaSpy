@@ -1,4 +1,113 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-20 (Session 35 — CompetitorDiscovery map rebuild: DCC pins, radius slider, flyTo fix)
+
+---
+
+## Session 35 — 2026-05-20
+
+**Commits:** `6ef6674` feat(discover): wire DCC dispensary pins, radius slider, flyTo fix + redo-search button → `e3a0390` fix(discover): show location selector for single location + remove pin minzoom
+**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` (auto-deploys on push, both commits live) | Railway API ✅ unchanged
+
+---
+
+### 1. What Was Done
+
+#### CompetitorDiscovery map rebuild (`packages/web/src/pages/CompetitorDiscovery.tsx`)
+
+**flyTo race condition fixed**
+Replaced the fragile `useEffect([selectedLocation])` + `handleMapLoad(selectedLocation)` combo with a `mapReadyRef` + `pendingFlyRef` pattern. When `selectedLocation` changes, if the map is ready it flies immediately; if not, it stores the center in `pendingFlyRef` and fires it in `onLoad`. Same pattern used in MarketHeatMap.
+
+**DCC dispensary pins — background GL layer**
+Wired `useDispensaryMap(bbox)` hook to load all 1,785 CA dispensaries as a background GL layer. Added `<Source id="cs-dispensaries">` with `dispensaryRingLayer`, `dispensaryPointLayer`, `dispensaryClusterLayer`, `dispensaryClusterCountLayer` imported from `layers.ts`. Bbox updates on `onLoad` and `onMoveEnd`. Debounced 300ms in the hook (cancels in-flight requests). Initially shipped with `minzoom={9}` — removed in follow-up fix so clusters appear at all zoom levels including the California overview.
+
+**Radius slider**
+Added `radius` state (default 5, range 1–25 mi). Wired to `makeCircleGeoJSON(centerLat, centerLng, radius)`. Slider UI rendered in the right panel header below OperatorTypeFilter using Space Mono font for label/value.
+
+**"Redo search in this area" button**
+`mapMoved` state tracks whether the map has been panned/zoomed since the last scan. When `mapMoved && scanned`, an overlay button appears centered on the map: "Redo search in this area". Clicking re-runs `handleDiscover()` and resets `mapMoved`. `handleDiscover` also resets `mapMoved` at the start.
+
+**Location selector fix**
+The location `<select>` was gated on `locations.length > 1`, hiding it when only 1 location was loaded. Changed to `locations.length >= 1` so the selected location is always visible (and switchable) regardless of count.
+
+**Legend update**
+Added "CA dispensaries" entry (teal 70% dot) to the map legend above "Detected rivals".
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/web/src/pages/CompetitorDiscovery.tsx` | flyTo fix, DCC pins via useDispensaryMap, radius slider, redo-search button, location selector fix, legend update |
+
+No schema migrations. No new npm dependencies. No Railway deploy.
+
+---
+
+### 3. What Failed
+
+- **DCC pins not visible at California overview** — initial commit used `minzoom={9}` (same as MarketHeatMap), which hides pins at zoom 5.5. Fixed in follow-up commit `e3a0390` by removing the minzoom override — clusters now appear at all zoom levels.
+- **Location selector not visible** — was gated on `> 1` locations. Fixed in `e3a0390`.
+- **Screenshot timeout on Vercel** — `mcp__chrome-devtools__take_screenshot` timed out on the live Vercel URL (Mapbox GL render takes too long for the devtools protocol). Used `take_snapshot` (a11y tree) instead for production verification.
+
+Known standing issues (not touched this session):
+- `diff_engine.py` not tested end-to-end — alerts table empty
+- Stripe live-mode webhook not registered
+- API package has no dotenv — must source `.env` manually when starting locally
+- `promoteId="id"` on MarketHeatMap.tsx still not applied
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Wire BlockManagement** — swap static `BLOCKS[]` mock for real API data via `GET /api/v1/blocks` at `packages/web/src/pages/BlockManagement.tsx`
+2. **Wire BillingUsage** — `packages/web/src/pages/BillingUsage.tsx` to `/api/v1/billing/usage` + `/api/v1/locations`
+3. **Investigate Scan market disabled in production** — "Scan market" button was disabled in Patrick's prod session (selectedLocation may be null); verify locations API is returning data for the org and map flies correctly on load
+4. **`promoteId="id"` on MarketHeatMap** — 1-line fix in `packages/web/src/components/MarketHeatMap.tsx` to enable hover state on dispensary pins
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**CompetitorDiscovery:**
+- [ ] Investigate "Scan market" disabled in production — confirm locations load and flyTo fires on authenticated session
+- [ ] Investigate Culture Stanton discover API returning wrong data — check `locations` table lat/lng for that location ID
+
+**Frontend (account screens):**
+- [ ] Wire BlockManagement (`/blocks`) — swap `BLOCKS[]` for real data from `GET /api/v1/blocks`
+- [ ] Wire BillingUsage (`/billing`) to `/api/v1/billing/usage` + `/api/v1/locations`
+- [ ] Wire NotificationSettings to `GET/PATCH /api/v1/settings`
+- [ ] Wire LocationManagement to `GET /api/v1/locations`
+- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions`
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Map / Data Pipeline:**
+- [ ] `promoteId="id"` on dispensary `<Source>` in `MarketHeatMap.tsx` (1-line fix, enables hover)
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
+- [ ] `scrape.worker.ts` → call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
+- [ ] `diff_engine.py` — test end-to-end with two real snapshots
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] 462 dispensaries missing lat/lng — run `dcc_ingest.py` full geocoding when `GOOGLE_PLACES_API_KEY` available
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Add `import 'dotenv/config'` to `packages/api/src/index.ts`
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Culture Cannabis Club, Corona)
+Location ID:      9354f184-5b88-4a8f-abc3-012fdaa4058f (Cannabis House, LA)
+```
+
+---
+
 **Date:** 2026-05-19 (Session 34 — Onboarding flow verified + CompetitorDiscovery UI fixes)
 
 ---
