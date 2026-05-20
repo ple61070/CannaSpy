@@ -5,8 +5,16 @@
 
 ## Session 35 — 2026-05-20
 
-**Commits:** `6ef6674` feat(discover): wire DCC dispensary pins, radius slider, flyTo fix + redo-search button → `e3a0390` fix(discover): show location selector for single location + remove pin minzoom
-**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` (auto-deploys on push, both commits live) | Railway API ✅ unchanged
+**Commits:** `6ef6674` feat(discover): DCC pins, radius slider, flyTo fix → `e3a0390` fix: location selector + remove pin minzoom → `30d7b29` fix: cluster click zooms via getClusterExpansionZoom
+**Deploy:** Vercel ✅ `web-rouge-one-15.vercel.app` (all 3 commits live) | Railway API ✅ unchanged
+
+**⚠️ Three issues discovered during production verification — tackle first in Session 36:**
+
+1. **Location selector not appearing** — `locations` array stays empty in prod → `/api/v1/locations` returning 500 from Railway API for this org. Need to check Railway API logs + auth middleware. The select renders correctly (code is `>= 1`) but no data arrives.
+
+2. **Storefront/Delivery toggle produces identical results** — `business_type` column is likely NULL for all DCC dispensary records in the DB. The map API filter on `business_type` returns 0 rows for both 'retail' and 'delivery'. Fix: run a DB query to confirm nulls, then update `dcc_ingest.py` to populate `business_type` from DCC license type field (storefronts vs delivery).
+
+3. **Pin visual differentiation needed** — all dispensary pins are the same teal regardless of type. Delivery operators should use a distinct color (trust-blue `#3b8bd4`). Fix is a `layers.ts` edit to `dispensaryPointLayer` paint expression using `license_type` or `business_type`.
 
 ---
 
