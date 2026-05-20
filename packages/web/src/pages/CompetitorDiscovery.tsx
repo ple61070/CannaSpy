@@ -326,10 +326,10 @@ export default function CompetitorDiscovery() {
               data={dispensaries as unknown as Parameters<typeof Source>[0]['data']}
               cluster clusterMaxZoom={13} clusterRadius={35}
             >
-              <Layer {...dispensaryRingLayer} minzoom={9} />
-              <Layer {...dispensaryPointLayer} minzoom={9} />
-              <Layer {...dispensaryClusterLayer} minzoom={9} />
-              <Layer {...dispensaryClusterCountLayer} minzoom={9} />
+              <Layer {...dispensaryRingLayer} />
+              <Layer {...dispensaryPointLayer} />
+              <Layer {...dispensaryClusterLayer} />
+              <Layer {...dispensaryClusterCountLayer} />
             </Source>
 
             {/* Redo search overlay — appears after map pan when a scan has been run */}
@@ -480,7 +480,7 @@ export default function CompetitorDiscovery() {
           </div>
 
           <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
-            {locations.length > 1 && (
+            {locations.length >= 1 && (
               <select
                 value={selectedLocation?.id || ''}
                 onChange={(e) => {
