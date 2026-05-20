@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Map, { Source, Layer, Marker, NavigationControl, type MapRef } from 'react-map-gl'
+import Map, { Source, Layer, Marker, NavigationControl, type MapRef, type MapLayerMouseEvent } from 'react-map-gl'
 import type { LayerProps } from 'react-map-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useAuthFetch } from '../lib/useAuthFetch'
@@ -203,6 +203,21 @@ export default function CompetitorDiscovery() {
     setMapMoved(true)
   }, [])
 
+  const handleMapClick = useCallback((e: MapLayerMouseEvent) => {
+    const f = e.features?.[0]
+    if (f?.layer?.id !== 'cs-dispensary-cluster') return
+    const map = mapRef.current?.getMap()
+    if (!map) return
+    const clusterId = (f.properties as { cluster_id: number }).cluster_id
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const source = map.getSource('cs-dispensaries') as any
+    source.getClusterExpansionZoom(clusterId, (err: Error | null, zoom: number | null) => {
+      if (err) return
+      const coords = (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
+      map.easeTo({ center: coords, zoom: zoom ?? 10, duration: 400 })
+    })
+  }, [])
+
   const handleDiscover = async () => {
     if (!selectedLocation?.id) return
     setLoading(true)
@@ -314,8 +329,10 @@ export default function CompetitorDiscovery() {
             mapStyle={MAP_STYLES[mapStyleId][appTheme]}
             style={{ width: '100%', height: '100%' }}
             attributionControl={true}
+            interactiveLayerIds={['cs-dispensary-cluster']}
             onLoad={handleMapLoad}
             onMoveEnd={handleMoveEnd}
+            onClick={handleMapClick}
           >
             <NavigationControl position="top-right" showCompass={false} />
 
