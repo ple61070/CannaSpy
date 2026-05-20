@@ -62,6 +62,7 @@ export default function App() {
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/sign-in" element={<SignUp />} />
         <Route path="/offboarded" element={<Offboarded />} />
+        <Route path="/setup" element={<Navigate to="/setup/org" replace />} />
         <Route path="/setup/org" element={<SignUp />} />
         <Route path="/setup/locations" element={<LocationWizard />} />
         <Route path="/setup/competitors" element={<CompetitorDiscovery />} />
