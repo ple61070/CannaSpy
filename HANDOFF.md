@@ -1,4 +1,116 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-21 (Session 38 — onboarding flow E2E: /setup/locations autocomplete + dual-name search)
+
+---
+
+## Session 38 — 2026-05-21
+
+**Commits:** `7a7a828` feat(map): dual-name dispensary search — DBA + legal name → `73c0133` fix(map/suggest): switch to Railway Postgres → `725f343` fix(location-wizard): show all suggestions + no-results hint
+**Deploy:** Vercel ✅ auto-deployed on push | Railway API ✅ redeployed twice (suggest endpoint fix)
+
+---
+
+### 1. What Was Done
+
+#### /setup route blank screen — fixed (pre-session)
+`/setup` had no route defined; added `Navigate` redirect to `/setup/org` in `App.tsx`. All three setup routes now wrapped in `ProtectedRoute` so Clerk token is available for API calls.
+
+#### LocationWizard — dispensary name autocomplete
+Rewrote the Location Name field into a full autocomplete backed by `GET /api/v1/map/suggest`. Results show DBA name, city, address, and a Storefront/Delivery/Storefront+Delivery badge. Keyboard navigation (↑↓ Enter Escape) and click-outside dismissal wired. Auto-fills Full Address and DCC License when a result is selected; drops a map pin at the dispensary's lat/lng.
+
+#### LocationWizard — address autocomplete
+Full Address field now calls Mapbox Geocoding API (CA bbox, address types only, debounced). Selecting a suggestion fills the address and flies the map to the location at zoom 15.
+
+#### API auth fixes
+Two root causes of "Unauthorized" on `POST /api/v1/locations`:
+1. `pg Pool` had no SSL config → `query()` threw on Railway's public URL → caught by Clerk middleware → returned 401. Fixed: `ssl: { rejectUnauthorized: false }` in production.
+2. Org slug uniqueness collision on INSERT — random 6-char suffix added to slug generation in `middleware/clerk.ts`.
+
+#### Dual-name dispensary search (DBA + legal name)
+Added `legal_name` column to dispensaries (`migration 012`). Updated `map/suggest` endpoint to search `name OR legal_name` via Railway Postgres (`query()` — not Supabase). Updated `dcc_ingest.py` to store `legal_name = businessLegalName`. Re-ran ingest to backfill all 957 active DCC records. Verified: typing "Stoney Point" returns "Culture Cannabis Club" (Chatsworth).
+
+#### LocationWizard — increased suggest limit + no-results hint
+Raised suggest fetch limit from 8→20 (Culture Cannabis Club has 11 locations; only 8 were appearing). Added `noResults` state: when query ≥2 chars returns empty, shows "No match in DCC registry — continue typing and add your location manually."
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/web/src/App.tsx` | `/setup` redirect + ProtectedRoute for setup routes |
+| `packages/web/src/pages/LocationWizard.tsx` | Name autocomplete, address autocomplete, noResults state, limit 8→20 |
+| `packages/api/src/routes/map.ts` | Added `/suggest` endpoint; switched to `query()` for dual-name search |
+| `packages/api/src/db/migrations/012_dispensary_legal_name.sql` | New: add legal_name + GIN index |
+| `packages/api/src/db/client.ts` | SSL config for Railway Postgres |
+| `packages/api/src/middleware/clerk.ts` | Split try/catch; random slug suffix |
+| `packages/scraper/dcc_ingest.py` | Store legal_name; UPSERT includes legal_name column |
+
+Railway Postgres: migration 012 applied, 957 records backfilled with legal_name.
+
+---
+
+### 3. What Failed
+
+Nothing failed — LocationWizard is fully verified. Known data gaps:
+- Cannabis House (LA) and several user dispensaries are not in the DCC registry; users can still type them manually.
+- 835 DCC dispensaries have `legal_name = NULL` because DCC's `businessLegalName` is empty for those records.
+
+---
+
+### 4. What Is Next
+
+**Immediately:** `/setup/competitors` page assessment — user is moving there now.
+
+Key issues on CompetitorDiscovery:
+1. **Discover endpoint returns unfiltered global competitors** — `GET /api/v1/locations/:id/discover` returns ALL competitors in the DB not already tracked at that location, regardless of geographic radius. Radius slider sets state but is NOT sent to the API. For a brand-new user (empty `competitors` table), this returns 0 results — critical for onboarding.
+2. **Fix: query DCC dispensaries by lat/lng radius** — update discover endpoint to find DCC dispensaries within `radius` miles of the location's lat/lng, return them as candidates. This makes the scan work for any user, not just Patrick who has pre-seeded competitors.
+3. **Block buttons locked** — intentional during trial; should unlock on paid plan.
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Onboarding (active focus):**
+- [x] /setup blank screen — ✅ session 38
+- [x] LocationWizard autocomplete — ✅ session 38
+- [x] Dual-name DBA+legal search — ✅ session 38
+- [ ] CompetitorDiscovery — discover endpoint returns 0 for new users; fix with DCC radius query
+- [ ] CompetitorDiscovery — radius slider not wired to API
+
+**Frontend (account screens):**
+- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions`
+- [ ] BillingUsage — per-location slot breakdown
+- [ ] BillingUsage — invoice history
+- [ ] BlockManagement — "Rivals blocking you" section
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Map / Data Pipeline:**
+- [ ] Wire `alert.worker.ts` to Resend — logs only, no emails
+- [ ] `scrape.worker.ts` → call `collector.py` as primary
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after scrape
+- [ ] 462 dispensaries missing lat/lng — geocode when `GOOGLE_PLACES_API_KEY` available
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Culture Cannabis Club, Corona)
+Location ID:      9354f184-5b88-4a8f-abc3-012fdaa4058f (Cannabis House, LA)
+Org ID (Patrick): 4b507cd2-17e6-439c-8993-78476cdf08e1
+Railway project token: ce3cf795-c0ab-45fe-b815-eb3ef2a81331
+```
+
+---
+
 **Date:** 2026-05-20 (Session 37 — wrap-up: commit trailing session-36 work, clean synthetic DB events)
 
 ---
