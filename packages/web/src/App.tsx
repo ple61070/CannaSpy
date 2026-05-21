@@ -62,10 +62,12 @@ export default function App() {
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/sign-in" element={<SignUp />} />
         <Route path="/offboarded" element={<Offboarded />} />
+
+        {/* Setup flow — requires Clerk auth so API calls have a valid token */}
         <Route path="/setup" element={<Navigate to="/setup/org" replace />} />
-        <Route path="/setup/org" element={<SignUp />} />
-        <Route path="/setup/locations" element={<LocationWizard />} />
-        <Route path="/setup/competitors" element={<CompetitorDiscovery />} />
+        <Route path="/setup/org" element={<ProtectedRoute><SignUp /></ProtectedRoute>} />
+        <Route path="/setup/locations" element={<ProtectedRoute><LocationWizard /></ProtectedRoute>} />
+        <Route path="/setup/competitors" element={<ProtectedRoute><CompetitorDiscovery /></ProtectedRoute>} />
 
         {/* Protected app routes */}
         <Route
@@ -78,10 +80,6 @@ export default function App() {
         >
           <Route index element={<Navigate to="/command-center" replace />} />
           <Route path="command-center" element={<CommandCenter />} />
-
-          {/* Onboarding */}
-          <Route path="setup/locations" element={<LocationWizard />} />
-          <Route path="setup/competitors" element={<CompetitorDiscovery />} />
 
           {/* Locations */}
           <Route path="locations" element={<LocationManagement />} />
