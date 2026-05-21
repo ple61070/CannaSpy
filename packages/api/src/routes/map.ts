@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { getAuth } from '@clerk/fastify'
-import { getAdminDb } from '../db/client'
+import { getAdminDb, query } from '../db/client'
 
 interface MapQuerystring {
   bbox?: string
@@ -30,23 +30,23 @@ export async function mapRoutes(fastify: FastifyInstance) {
       }
 
       const maxLimit = Math.min(parseInt(limit, 10) || 8, 20)
-      const supabase = getAdminDb()
-
       const term = q.trim()
-      const { data, error } = await supabase
-        .from('dispensaries')
-        .select('id, name, legal_name, address, city, county, business_type, dcc_license, lat, lng')
-        .or(`name.ilike.%${term}%,legal_name.ilike.%${term}%`)
-        .order('name', { ascending: true })
-        .limit(maxLimit)
 
-      if (error) {
-        req.log.error({ err: error.message }, '[map/suggest] query error')
-        return reply.code(500).send({ success: false, error: 'Internal server error' })
-      }
+      const { rows, rowCount } = await query<{
+        id: string; name: string; legal_name: string | null
+        address: string; city: string; county: string
+        business_type: string; dcc_license: string; lat: number | null; lng: number | null
+      }>(
+        `SELECT id, name, legal_name, address, city, county, business_type, dcc_license, lat, lng
+         FROM dispensaries
+         WHERE name ILIKE $1 OR legal_name ILIKE $1
+         ORDER BY name ASC
+         LIMIT $2`,
+        [`%${term}%`, maxLimit]
+      )
 
       reply.header('Cache-Control', 'public, max-age=30')
-      return { success: true, data: data ?? [] }
+      return { success: true, data: rows }
     }
   )
 
