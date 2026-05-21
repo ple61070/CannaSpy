@@ -11,7 +11,44 @@ interface MapQuerystring {
   limit?: string
 }
 
+interface SuggestQuerystring {
+  q?: string
+  limit?: string
+}
+
 export async function mapRoutes(fastify: FastifyInstance) {
+  // GET /api/v1/map/suggest — dispensary name autocomplete for location setup
+  fastify.get(
+    '/suggest',
+    async (
+      req: FastifyRequest<{ Querystring: SuggestQuerystring }>,
+      reply: FastifyReply
+    ) => {
+      const { q, limit = '8' } = req.query
+      if (!q || q.trim().length < 2) {
+        return { success: true, data: [] }
+      }
+
+      const maxLimit = Math.min(parseInt(limit, 10) || 8, 20)
+      const supabase = getAdminDb()
+
+      const { data, error } = await supabase
+        .from('dispensaries')
+        .select('id, name, address, city, county, business_type, dcc_license, lat, lng')
+        .ilike('name', `%${q.trim()}%`)
+        .order('name', { ascending: true })
+        .limit(maxLimit)
+
+      if (error) {
+        req.log.error({ err: error.message }, '[map/suggest] query error')
+        return reply.code(500).send({ success: false, error: 'Internal server error' })
+      }
+
+      reply.header('Cache-Control', 'public, max-age=30')
+      return { success: true, data: data ?? [] }
+    }
+  )
+
   // GET /api/v1/map/dispensaries
   // Optional auth — if JWT present, include per-org track_state; if not, all 'untracked'
   fastify.get(

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import cannaspyIcon from '../assets/cannaspy-icon.png';
 import Map, { Marker, NavigationControl } from 'react-map-gl';
@@ -15,6 +15,24 @@ interface Location {
   dcc_license: string | null;
   active: boolean;
 }
+
+interface DispensarySuggestion {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  county: string;
+  business_type: 'storefront' | 'delivery' | 'both';
+  dcc_license: string | null;
+  lat: number | null;
+  lng: number | null;
+}
+
+const BTYPE_CONFIG = {
+  storefront: { label: 'Storefront', bg: 'var(--accent-soft)', color: 'var(--accent)', border: 'rgba(9,161,161,0.3)' },
+  delivery:   { label: 'Delivery',   bg: 'var(--warm-soft)',   color: 'var(--warm)',   border: 'rgba(186,117,23,0.3)' },
+  both:       { label: 'Storefront + Delivery', bg: 'var(--surface-3)', color: 'var(--text-2)', border: 'var(--border-2)' },
+} as const;
 
 const TIER_STYLES: Record<string, { bg: string; color: string; border: string; label: string }> = {
   elite:       { bg: 'rgba(211,150,166,0.13)', color: 'var(--rose)',  border: 'rgba(211,150,166,0.28)', label: 'ELITE' },
@@ -93,7 +111,14 @@ export default function LocationWizard() {
   const [toast, setToast] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const nameRef = useRef<HTMLInputElement>(null);
+  // Autocomplete state
+  const [nameInput, setNameInput] = useState('');
+  const [suggestions, setSuggestions] = useState<DispensarySuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightIdx, setHighlightIdx] = useState(-1);
+  const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nameWrapRef = useRef<HTMLDivElement>(null);
+
   const addressRef = useRef<HTMLInputElement>(null);
   const licenseRef = useRef<HTMLInputElement>(null);
 
@@ -119,6 +144,51 @@ export default function LocationWizard() {
     }, 600);
   };
 
+  const fetchSuggestions = useCallback((q: string) => {
+    if (suggestTimer.current) clearTimeout(suggestTimer.current);
+    if (q.trim().length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
+    suggestTimer.current = setTimeout(async () => {
+      try {
+        const res = await authFetch(`${API}/api/v1/map/suggest?q=${encodeURIComponent(q)}&limit=8`);
+        const json = await res.json();
+        if (json.success && json.data.length > 0) {
+          setSuggestions(json.data);
+          setShowSuggestions(true);
+          setHighlightIdx(-1);
+        } else {
+          setSuggestions([]);
+          setShowSuggestions(false);
+        }
+      } catch { setSuggestions([]); setShowSuggestions(false); }
+    }, 280);
+  }, [authFetch]);
+
+  const selectSuggestion = (s: DispensarySuggestion) => {
+    setNameInput(s.name);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    const fullAddress = `${s.address}, ${s.city}, CA`;
+    if (addressRef.current) addressRef.current.value = fullAddress;
+    if (licenseRef.current && s.dcc_license) licenseRef.current.value = s.dcc_license;
+    if (s.lat && s.lng) {
+      setMarkerPos({ lng: s.lng, lat: s.lat });
+      setViewport({ lng: s.lng, lat: s.lat, zoom: 14 });
+    } else {
+      geocodeAddress(fullAddress);
+    }
+  };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (nameWrapRef.current && !nameWrapRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2400);
@@ -133,7 +203,7 @@ export default function LocationWizard() {
   }, []);
 
   const handleAdd = async () => {
-    const name = nameRef.current?.value.trim() ?? '';
+    const name = nameInput.trim();
     const address = addressRef.current?.value.trim() ?? '';
     const dcc_license = licenseRef.current?.value.trim() || null;
 
@@ -151,9 +221,10 @@ export default function LocationWizard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Failed to add location');
       setLocs(prev => [...prev, { id: data.id, name, address, dcc_license, active: true }]);
-      if (nameRef.current) nameRef.current.value = '';
+      setNameInput('');
       if (addressRef.current) addressRef.current.value = '';
       if (licenseRef.current) licenseRef.current.value = '';
+      setMarkerPos(null);
       showToast(`${name} added`);
     } catch (err: any) {
       setFormError(err.message);
@@ -231,9 +302,66 @@ export default function LocationWizard() {
                 </Map>
               </div>
 
-              <div style={{ marginBottom: 15 }}>
+              <div style={{ marginBottom: 15, position: 'relative' }} ref={nameWrapRef}>
                 <label style={labelStyle}>Location name <span style={{ color: 'var(--rose)' }}>*</span></label>
-                <input ref={nameRef} type="text" placeholder="e.g. West Hollywood Flagship" style={inputStyle} />
+                <input
+                  type="text"
+                  placeholder="Start typing your dispensary name…"
+                  style={inputStyle}
+                  value={nameInput}
+                  onChange={e => { setNameInput(e.target.value); fetchSuggestions(e.target.value); }}
+                  onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+                  onKeyDown={e => {
+                    if (!showSuggestions) return;
+                    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlightIdx(i => Math.min(i + 1, suggestions.length - 1)); }
+                    else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlightIdx(i => Math.max(i - 1, 0)); }
+                    else if (e.key === 'Enter' && highlightIdx >= 0) { e.preventDefault(); selectSuggestion(suggestions[highlightIdx]); }
+                    else if (e.key === 'Escape') setShowSuggestions(false);
+                  }}
+                  autoComplete="off"
+                />
+                {showSuggestions && suggestions.length > 0 && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9000,
+                    background: 'var(--surface)', border: '1px solid var(--border-2)',
+                    borderRadius: 'var(--r-sm)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
+                    marginTop: 4, overflow: 'hidden',
+                  }}>
+                    {suggestions.map((s, i) => {
+                      const bt = BTYPE_CONFIG[s.business_type] ?? BTYPE_CONFIG.storefront;
+                      const isHigh = i === highlightIdx;
+                      return (
+                        <div
+                          key={s.id}
+                          onMouseDown={() => selectSuggestion(s)}
+                          onMouseEnter={() => setHighlightIdx(i)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10, padding: '10px 13px',
+                            cursor: 'pointer', background: isHigh ? 'var(--surface-2)' : 'transparent',
+                            borderBottom: i < suggestions.length - 1 ? '1px solid var(--border)' : 'none',
+                          }}
+                        >
+                          {/* Icon */}
+                          <div style={{ width: 30, height: 30, borderRadius: 8, background: bt.bg, border: `1px solid ${bt.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke={bt.color} strokeWidth="2" style={{ width: 14, height: 14 }}>
+                              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                              <polyline points="9 22 9 12 15 12 15 22" />
+                            </svg>
+                          </div>
+                          {/* Text */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1 }}>{s.address}, {s.city}, CA</div>
+                          </div>
+                          {/* Badge */}
+                          <div style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 600, letterSpacing: '0.07em', padding: '3px 8px', borderRadius: 20, background: bt.bg, color: bt.color, border: `1px solid ${bt.border}`, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            {bt.label.toUpperCase()}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div style={{ marginBottom: 15 }}>
