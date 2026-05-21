@@ -111,7 +111,13 @@ export async function mapRoutes(fastify: FastifyInstance) {
           dispensaryQuery = dispensaryQuery.eq('market_tier', tier)
         }
         if (type && type !== 'both') {
-          dispensaryQuery = dispensaryQuery.eq('business_type', type)
+          // microbusiness operators do both storefront + delivery — include in either filter
+          const types = type === 'storefront'
+            ? ['storefront', 'microbusiness']
+            : type === 'delivery'
+            ? ['delivery', 'microbusiness']
+            : [type]
+          dispensaryQuery = dispensaryQuery.in('business_type', types)
         }
         if (enriched === 'true') {
           dispensaryQuery = dispensaryQuery.eq('enriched', true)

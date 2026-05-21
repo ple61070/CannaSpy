@@ -40,6 +40,7 @@ export interface DispensaryFeatureProps {
   city: string
   county: string
   license_type: LicenseType
+  business_type: string | null
   market_tier: MarketTier | null
   enriched: boolean
   threat_score: number | null

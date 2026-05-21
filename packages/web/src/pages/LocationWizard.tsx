@@ -262,7 +262,12 @@ export default function LocationWizard() {
       const res = await authFetch(`${API}/api/v1/locations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, address, ...(dcc_license ? { dcc_license } : {}) }),
+        body: JSON.stringify({
+          name,
+          address,
+          ...(dcc_license ? { dcc_license } : {}),
+          ...(markerPos ? { lat: markerPos.lat, lng: markerPos.lng } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Failed to add location');

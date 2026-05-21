@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Map, { Source, Layer, Marker, NavigationControl, type MapRef, type MapLayerMouseEvent } from 'react-map-gl'
+import Map, { Source, Layer, Marker, NavigationControl, Popup, type MapRef, type MapLayerMouseEvent } from 'react-map-gl'
 import type { LayerProps } from 'react-map-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useAuthFetch } from '../lib/useAuthFetch'
 import { OperatorTypeFilter, type OperatorType } from '../components/filters/OperatorTypeFilter'
 import { useDispensaryMap } from '../hooks/useDispensaryMap'
+import type { DispensaryFeatureProps } from '../components/map/types'
 import {
   dispensaryRingLayer,
   dispensaryClusterLayer,
@@ -145,8 +146,11 @@ export default function CompetitorDiscovery() {
   const [operatorType, setOperatorType] = useState<OperatorType>('both')
   const [bbox, setBbox] = useState<string | null>(null)
   const [radius, setRadius] = useState(5)
+  const [dispPopup, setDispPopup] = useState<{ lng: number; lat: number; props: DispensaryFeatureProps } | null>(null)
 
-  const { data: dispensaries } = useDispensaryMap(bbox)
+  const { data: dispensaries } = useDispensaryMap(bbox, {
+    type: operatorType === 'both' ? undefined : operatorType,
+  })
 
   useEffect(() => {
     authFetch(`${API}/api/v1/locations`)
@@ -205,17 +209,27 @@ export default function CompetitorDiscovery() {
 
   const handleMapClick = useCallback((e: MapLayerMouseEvent) => {
     const f = e.features?.[0]
-    if (f?.layer?.id !== 'cs-dispensary-cluster') return
+    if (!f) return
     const map = mapRef.current?.getMap()
     if (!map) return
-    const clusterId = (f.properties as { cluster_id: number }).cluster_id
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const source = map.getSource('cs-dispensaries') as any
-    source.getClusterExpansionZoom(clusterId, (err: Error | null, zoom: number | null) => {
-      if (err) return
+
+    if (f.layer?.id === 'cs-dispensary-cluster') {
+      const clusterId = (f.properties as { cluster_id: number }).cluster_id
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const source = map.getSource('cs-dispensaries') as any
+      source.getClusterExpansionZoom(clusterId, (err: Error | null, zoom: number | null) => {
+        if (err) return
+        const coords = (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
+        map.easeTo({ center: coords, zoom: zoom ?? 10, duration: 400 })
+      })
+      setDispPopup(null)
+      return
+    }
+
+    if (f.layer?.id === 'cs-dispensary-point') {
       const coords = (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
-      map.easeTo({ center: coords, zoom: zoom ?? 10, duration: 400 })
-    })
+      setDispPopup({ lng: coords[0], lat: coords[1], props: f.properties as DispensaryFeatureProps })
+    }
   }, [])
 
   const handleDiscover = async () => {
@@ -290,12 +304,15 @@ export default function CompetitorDiscovery() {
   const centerLng = selectedLocation?.lng ? Number(selectedLocation.lng) : null
   const radiusGeoJSON = centerLat && centerLng ? makeCircleGeoJSON(centerLat, centerLng, radius) : null
 
-  // Filter competitors by operator type — fall back to showing all if business_type not set
+  // Filter competitor list by operator type; microbusiness operators do both storefront + delivery
   const filteredCompetitors = operatorType === 'both'
     ? competitors
     : competitors.filter(c => {
         const bt = (c as any).business_type
-        return !bt || bt === operatorType
+        if (!bt) return true
+        if (operatorType === 'storefront') return bt === 'storefront' || bt === 'microbusiness'
+        if (operatorType === 'delivery') return bt === 'delivery' || bt === 'microbusiness'
+        return true
       })
 
   return (
@@ -333,7 +350,7 @@ export default function CompetitorDiscovery() {
             mapStyle={MAP_STYLES[mapStyleId][appTheme]}
             style={{ width: '100%', height: '100%' }}
             attributionControl={true}
-            interactiveLayerIds={['cs-dispensary-cluster']}
+            interactiveLayerIds={['cs-dispensary-cluster', 'cs-dispensary-point']}
             onLoad={handleMapLoad}
             onMoveEnd={handleMoveEnd}
             onClick={handleMapClick}
@@ -416,6 +433,36 @@ export default function CompetitorDiscovery() {
                 </Marker>
               )
             })}
+
+            {/* Dispensary info popup on pin click */}
+            {dispPopup && (
+              <Popup
+                longitude={dispPopup.lng}
+                latitude={dispPopup.lat}
+                closeButton
+                closeOnClick={false}
+                onClose={() => setDispPopup(null)}
+                anchor="bottom"
+                offset={[0, -10] as [number, number]}
+              >
+                <div style={{ minWidth: 200, fontFamily: 'var(--sans)', fontSize: 12, color: 'var(--text-1)', background: 'var(--surface)', padding: '10px 12px' }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 3 }}>{dispPopup.props.name}</div>
+                  <div style={{ color: 'var(--text-3)', fontSize: 11, marginBottom: 8 }}>{dispPopup.props.city}{dispPopup.props.county ? `, ${dispPopup.props.county} Co.` : ''}</div>
+                  <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' as const, marginBottom: 6 }}>
+                    {dispPopup.props.business_type && (
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: 'var(--surface-3)', color: 'var(--text-2)', textTransform: 'uppercase' as const }}>{dispPopup.props.business_type}</span>
+                    )}
+                    {dispPopup.props.market_tier && (
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: 'rgba(29,158,117,0.12)', color: 'var(--accent)', textTransform: 'uppercase' as const }}>{dispPopup.props.market_tier}</span>
+                    )}
+                    {dispPopup.props.track_state !== 'untracked' && (
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: dispPopup.props.track_state === 'blocked' ? 'rgba(186,117,23,0.15)' : 'rgba(29,158,117,0.15)', color: dispPopup.props.track_state === 'blocked' ? '#ba7517' : '#1d9e75', textTransform: 'uppercase' as const }}>{dispPopup.props.track_state}</span>
+                    )}
+                  </div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)', letterSpacing: '0.04em' }}>DCC {dispPopup.props.dcc_license}</div>
+                </div>
+              </Popup>
+            )}
           </Map>
         )}
         {/* Streets / Satellite toggle */}
