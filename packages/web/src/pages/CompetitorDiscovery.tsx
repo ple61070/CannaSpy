@@ -224,7 +224,7 @@ export default function CompetitorDiscovery() {
     setMapMoved(false)
     setSelections(new globalThis.Map())
     try {
-      const res = await authFetch(`${API}/api/v1/locations/${selectedLocation.id}/discover`)
+      const res = await authFetch(`${API}/api/v1/locations/${selectedLocation.id}/discover?radius=${radius}`)
       const data = await res.json()
       setCompetitors(data.data?.competitors || [])
     } catch {
@@ -260,6 +260,10 @@ export default function CompetitorDiscovery() {
               address: sel.competitor.address,
               google_place_id: sel.competitor.google_place_id,
               platform: sel.competitor.platform || 'unknown',
+              lat: sel.competitor.lat ?? undefined,
+              lng: sel.competitor.lng ?? undefined,
+              dcc_license: (sel.competitor as any).dcc_license ?? undefined,
+              business_type: (sel.competitor as any).business_type ?? undefined,
             }),
           })
           const compData = await compRes.json()

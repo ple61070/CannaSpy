@@ -244,7 +244,7 @@ export async function locationsRoutes(fastify: FastifyInstance) {
     }
   })
 
-  // GET /api/v1/locations/:id/discover — competitors not yet tracked at this location
+  // GET /api/v1/locations/:id/discover — find nearby DCC dispensaries not yet tracked
   fastify.get('/:id/discover', async (req: FastifyRequest<{
     Params: { id: string }
     Querystring: { radius?: string }
@@ -252,28 +252,75 @@ export async function locationsRoutes(fastify: FastifyInstance) {
     const orgDbId = req.auth?.orgDbId
     if (!orgDbId) return reply.code(404).send({ error: 'Organization not found', code: 'ORG_NOT_FOUND' })
 
-    const loc = await query(
-      'SELECT id, lat, lng FROM locations WHERE id = $1 AND org_id = $2',
+    const loc = await query<{ lat: string; lng: string }>(
+      'SELECT lat, lng FROM locations WHERE id = $1 AND org_id = $2',
       [req.params.id, orgDbId]
     )
     if (!loc.rows.length) {
       return reply.code(404).send({ error: 'Location not found', code: 'LOCATION_NOT_FOUND' })
     }
 
-    // Return competitors in DB not already actively tracked at this location
-    const result = await query(
-      `SELECT c.id, c.name, c.address, c.google_place_id, c.platform, c.lat, c.lng, c.last_scraped
-       FROM competitors c
-       WHERE NOT EXISTS (
-         SELECT 1 FROM tracked_competitors tc
-         WHERE tc.competitor_id = c.id AND tc.location_id = $1 AND tc.active = TRUE
-       )
-       ORDER BY c.name
+    const lat = parseFloat(loc.rows[0].lat)
+    const lng = parseFloat(loc.rows[0].lng)
+    if (!lat || !lng) {
+      return { success: true, data: { competitors: [], total: 0 } }
+    }
+
+    const radiusMiles = Math.min(parseFloat(req.query.radius || '5') || 5, 50)
+
+    // Find DCC dispensaries within radius, exclude already-tracked at this location
+    const result = await query<{
+      dispensary_id: string; competitor_id: string | null
+      name: string; full_address: string; lat: string; lng: string
+      business_type: string; dcc_license: string; distance_miles: number
+    }>(
+      `SELECT
+         d.id                                    AS dispensary_id,
+         c.id                                    AS competitor_id,
+         d.name,
+         d.address || ', ' || d.city || ', CA'  AS full_address,
+         d.lat,
+         d.lng,
+         d.business_type,
+         d.dcc_license,
+         3959 * acos(LEAST(1.0,
+           cos(radians($1)) * cos(radians(d.lat)) * cos(radians(d.lng) - radians($2)) +
+           sin(radians($1)) * sin(radians(d.lat))
+         ))                                      AS distance_miles
+       FROM dispensaries d
+       LEFT JOIN competitors c ON c.dcc_license = d.dcc_license
+       WHERE d.lat IS NOT NULL
+         AND d.lng IS NOT NULL
+         AND 3959 * acos(LEAST(1.0,
+           cos(radians($1)) * cos(radians(d.lat)) * cos(radians(d.lng) - radians($2)) +
+           sin(radians($1)) * sin(radians(d.lat))
+         )) <= $3
+         AND NOT EXISTS (
+           SELECT 1 FROM tracked_competitors tc
+           JOIN competitors co ON co.id = tc.competitor_id
+           WHERE tc.location_id = $4
+             AND tc.active = TRUE
+             AND co.dcc_license = d.dcc_license
+         )
+       ORDER BY distance_miles ASC
        LIMIT 50`,
-      [req.params.id]
+      [lat, lng, radiusMiles, req.params.id]
     )
 
-    return { success: true, data: { competitors: result.rows, total: result.rowCount } }
+    const competitors = result.rows.map(r => ({
+      id: r.competitor_id ?? undefined,
+      google_place_id: r.dcc_license,
+      name: r.name,
+      address: r.full_address,
+      distance_miles: Number(r.distance_miles).toFixed(1),
+      platform: 'dcc',
+      lat: parseFloat(r.lat),
+      lng: parseFloat(r.lng),
+      business_type: r.business_type,
+      dcc_license: r.dcc_license,
+    }))
+
+    return { success: true, data: { competitors, total: competitors.length } }
   })
 
   // DELETE /api/v1/locations/:id/competitors/:cId
