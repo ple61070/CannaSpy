@@ -115,6 +115,7 @@ export default function LocationWizard() {
   const [nameInput, setNameInput] = useState('');
   const [suggestions, setSuggestions] = useState<DispensarySuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [noResults, setNoResults] = useState(false);
   const [highlightIdx, setHighlightIdx] = useState(-1);
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nameWrapRef = useRef<HTMLDivElement>(null);
@@ -184,20 +185,22 @@ export default function LocationWizard() {
 
   const fetchSuggestions = useCallback((q: string) => {
     if (suggestTimer.current) clearTimeout(suggestTimer.current);
-    if (q.trim().length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
+    if (q.trim().length < 2) { setSuggestions([]); setShowSuggestions(false); setNoResults(false); return; }
     suggestTimer.current = setTimeout(async () => {
       try {
-        const res = await authFetch(`${API}/api/v1/map/suggest?q=${encodeURIComponent(q)}&limit=8`);
+        const res = await authFetch(`${API}/api/v1/map/suggest?q=${encodeURIComponent(q)}&limit=20`);
         const json = await res.json();
         if (json.success && json.data.length > 0) {
           setSuggestions(json.data);
           setShowSuggestions(true);
+          setNoResults(false);
           setHighlightIdx(-1);
         } else {
           setSuggestions([]);
           setShowSuggestions(false);
+          setNoResults(true);
         }
-      } catch { setSuggestions([]); setShowSuggestions(false); }
+      } catch { setSuggestions([]); setShowSuggestions(false); setNoResults(false); }
     }, 280);
   }, [authFetch]);
 
@@ -205,6 +208,7 @@ export default function LocationWizard() {
     setNameInput(s.name);
     setShowSuggestions(false);
     setSuggestions([]);
+    setNoResults(false);
     const fullAddress = `${s.address}, ${s.city}, CA`;
     setAddrInput(fullAddress);
     if (licenseRef.current && s.dcc_license) licenseRef.current.value = s.dcc_license;
@@ -221,6 +225,7 @@ export default function LocationWizard() {
     const handler = (e: MouseEvent) => {
       if (nameWrapRef.current && !nameWrapRef.current.contains(e.target as Node)) {
         setShowSuggestions(false);
+        setNoResults(false);
       }
       if (addrWrapRef.current && !addrWrapRef.current.contains(e.target as Node)) {
         setShowAddrSuggestions(false);
@@ -361,6 +366,18 @@ export default function LocationWizard() {
                   }}
                   autoComplete="off"
                 />
+                {noResults && !showSuggestions && nameInput.trim().length >= 2 && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9000,
+                    background: 'var(--surface)', border: '1px solid var(--border-2)',
+                    borderRadius: 'var(--r-sm)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
+                    marginTop: 4, padding: '11px 13px',
+                  }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                      No match in DCC registry — continue typing and add your location manually.
+                    </div>
+                  </div>
+                )}
                 {showSuggestions && suggestions.length > 0 && (
                   <div style={{
                     position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9000,
