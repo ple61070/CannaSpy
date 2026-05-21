@@ -111,7 +111,7 @@ export default function LocationWizard() {
   const [toast, setToast] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Autocomplete state
+  // Name autocomplete state
   const [nameInput, setNameInput] = useState('');
   const [suggestions, setSuggestions] = useState<DispensarySuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -119,7 +119,14 @@ export default function LocationWizard() {
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nameWrapRef = useRef<HTMLDivElement>(null);
 
-  const addressRef = useRef<HTMLInputElement>(null);
+  // Address autocomplete state
+  const [addrInput, setAddrInput] = useState('');
+  const [addrSuggestions, setAddrSuggestions] = useState<{ place_name: string; center: [number, number] }[]>([]);
+  const [showAddrSuggestions, setShowAddrSuggestions] = useState(false);
+  const [addrHighlightIdx, setAddrHighlightIdx] = useState(-1);
+  const addrTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const addrWrapRef = useRef<HTMLDivElement>(null);
+
   const licenseRef = useRef<HTMLInputElement>(null);
 
   const [viewport, setViewport] = useState({ lng: -117.5, lat: 33.9, zoom: 9 });
@@ -142,6 +149,37 @@ export default function LocationWizard() {
         }
       } catch {}
     }, 600);
+  };
+
+  const fetchAddrSuggestions = (q: string) => {
+    if (addrTimer.current) clearTimeout(addrTimer.current);
+    if (q.trim().length < 4) { setAddrSuggestions([]); setShowAddrSuggestions(false); return; }
+    addrTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?access_token=${MAPBOX_TOKEN}&country=US&types=address&limit=6&bbox=-124.4,32.5,-114.1,42.0`
+        );
+        const data = await res.json();
+        if (data.features?.length) {
+          setAddrSuggestions(data.features.map((f: any) => ({ place_name: f.place_name, center: f.center })));
+          setShowAddrSuggestions(true);
+          setAddrHighlightIdx(-1);
+        } else {
+          setAddrSuggestions([]);
+          setShowAddrSuggestions(false);
+        }
+      } catch { setAddrSuggestions([]); setShowAddrSuggestions(false); }
+    }, 300);
+  };
+
+  const selectAddrSuggestion = (s: { place_name: string; center: [number, number] }) => {
+    const clean = s.place_name.replace(/, United States$/, '');
+    setAddrInput(clean);
+    setShowAddrSuggestions(false);
+    setAddrSuggestions([]);
+    const [lng, lat] = s.center;
+    setMarkerPos({ lng, lat });
+    setViewport({ lng, lat, zoom: 15 });
   };
 
   const fetchSuggestions = useCallback((q: string) => {
@@ -168,7 +206,7 @@ export default function LocationWizard() {
     setShowSuggestions(false);
     setSuggestions([]);
     const fullAddress = `${s.address}, ${s.city}, CA`;
-    if (addressRef.current) addressRef.current.value = fullAddress;
+    setAddrInput(fullAddress);
     if (licenseRef.current && s.dcc_license) licenseRef.current.value = s.dcc_license;
     if (s.lat && s.lng) {
       setMarkerPos({ lng: s.lng, lat: s.lat });
@@ -178,11 +216,14 @@ export default function LocationWizard() {
     }
   };
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (nameWrapRef.current && !nameWrapRef.current.contains(e.target as Node)) {
         setShowSuggestions(false);
+      }
+      if (addrWrapRef.current && !addrWrapRef.current.contains(e.target as Node)) {
+        setShowAddrSuggestions(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -204,7 +245,7 @@ export default function LocationWizard() {
 
   const handleAdd = async () => {
     const name = nameInput.trim();
-    const address = addressRef.current?.value.trim() ?? '';
+    const address = addrInput.trim();
     const dcc_license = licenseRef.current?.value.trim() || null;
 
     if (!name) { setFormError('Location name is required.'); return; }
@@ -222,7 +263,7 @@ export default function LocationWizard() {
       if (!res.ok) throw new Error(data.error ?? 'Failed to add location');
       setLocs(prev => [...prev, { id: data.id, name, address, dcc_license, active: true }]);
       setNameInput('');
-      if (addressRef.current) addressRef.current.value = '';
+      setAddrInput('');
       if (licenseRef.current) licenseRef.current.value = '';
       setMarkerPos(null);
       showToast(`${name} added`);
@@ -364,9 +405,59 @@ export default function LocationWizard() {
                 )}
               </div>
 
-              <div style={{ marginBottom: 15 }}>
+              <div style={{ marginBottom: 15, position: 'relative' }} ref={addrWrapRef}>
                 <label style={labelStyle}>Full address <span style={{ color: 'var(--rose)' }}>*</span></label>
-                <input ref={addressRef} type="text" placeholder="e.g. 8001 Santa Monica Blvd, West Hollywood, CA 90046" style={inputStyle} onChange={e => geocodeAddress(e.target.value)} />
+                <input
+                  type="text"
+                  placeholder="Start typing the street address…"
+                  style={inputStyle}
+                  value={addrInput}
+                  autoComplete="off"
+                  onChange={e => { setAddrInput(e.target.value); fetchAddrSuggestions(e.target.value); }}
+                  onFocus={() => { if (addrSuggestions.length > 0) setShowAddrSuggestions(true); }}
+                  onKeyDown={e => {
+                    if (!showAddrSuggestions) return;
+                    if (e.key === 'ArrowDown') { e.preventDefault(); setAddrHighlightIdx(i => Math.min(i + 1, addrSuggestions.length - 1)); }
+                    else if (e.key === 'ArrowUp') { e.preventDefault(); setAddrHighlightIdx(i => Math.max(i - 1, 0)); }
+                    else if (e.key === 'Enter' && addrHighlightIdx >= 0) { e.preventDefault(); selectAddrSuggestion(addrSuggestions[addrHighlightIdx]); }
+                    else if (e.key === 'Escape') setShowAddrSuggestions(false);
+                  }}
+                />
+                {showAddrSuggestions && addrSuggestions.length > 0 && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9000,
+                    background: 'var(--surface)', border: '1px solid var(--border-2)',
+                    borderRadius: 'var(--r-sm)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
+                    marginTop: 4, overflow: 'hidden',
+                  }}>
+                    {addrSuggestions.map((s, i) => {
+                      const isHigh = i === addrHighlightIdx;
+                      const [street, ...rest] = s.place_name.replace(/, United States$/, '').split(', ');
+                      return (
+                        <div
+                          key={i}
+                          onMouseDown={() => selectAddrSuggestion(s)}
+                          onMouseEnter={() => setAddrHighlightIdx(i)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 10, padding: '10px 13px',
+                            cursor: 'pointer', background: isHigh ? 'var(--surface-2)' : 'transparent',
+                            borderBottom: i < addrSuggestions.length - 1 ? '1px solid var(--border)' : 'none',
+                          }}
+                        >
+                          <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--surface-3)', border: '1px solid var(--border-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="2" style={{ width: 13, height: 13 }}>
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                            </svg>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{street}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1 }}>{rest.join(', ')}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div style={{ marginBottom: 6 }}>
