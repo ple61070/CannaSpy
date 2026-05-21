@@ -32,10 +32,11 @@ export async function mapRoutes(fastify: FastifyInstance) {
       const maxLimit = Math.min(parseInt(limit, 10) || 8, 20)
       const supabase = getAdminDb()
 
+      const term = q.trim()
       const { data, error } = await supabase
         .from('dispensaries')
-        .select('id, name, address, city, county, business_type, dcc_license, lat, lng')
-        .ilike('name', `%${q.trim()}%`)
+        .select('id, name, legal_name, address, city, county, business_type, dcc_license, lat, lng')
+        .or(`name.ilike.%${term}%,legal_name.ilike.%${term}%`)
         .order('name', { ascending: true })
         .limit(maxLimit)
 

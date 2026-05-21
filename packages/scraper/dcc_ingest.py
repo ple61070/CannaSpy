@@ -281,6 +281,7 @@ def fetch_all_licenses(
                             item.get("businessDbaName") or
                             item.get("businessLegalName") or ""
                         ).strip(),
+                        "legal_name":    item.get("businessLegalName", "").strip() or None,
                         "address":       item.get("premiseStreetAddress", "").strip(),
                         "city":          item.get("premiseCity", "").strip(),
                         "zip":           item.get("premiseZipCode", "").strip(),
@@ -314,15 +315,16 @@ def fetch_all_licenses(
 
 UPSERT_SQL = """
 INSERT INTO dispensaries (
-    dcc_license, name, address, city, zip, county,
+    dcc_license, name, legal_name, address, city, zip, county,
     license_type, business_type, dcc_status, lat, lng, geocoded_at
 )
 VALUES (
-    %(dcc_license)s, %(name)s, %(address)s, %(city)s, %(zip)s, %(county)s,
+    %(dcc_license)s, %(name)s, %(legal_name)s, %(address)s, %(city)s, %(zip)s, %(county)s,
     %(license_type)s, %(business_type)s, %(dcc_status)s, %(lat)s, %(lng)s, %(geocoded_at)s
 )
 ON CONFLICT (dcc_license) DO UPDATE SET
     name          = EXCLUDED.name,
+    legal_name    = EXCLUDED.legal_name,
     address       = EXCLUDED.address,
     city          = EXCLUDED.city,
     zip           = EXCLUDED.zip,
