@@ -13,17 +13,22 @@ export async function clerkAuthPreHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
+  let auth: ReturnType<typeof getAuth>
   try {
-    const auth = getAuth(request as any)
-    if (!auth?.userId) {
-      return reply.code(401).send({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' })
-    }
+    auth = getAuth(request as any)
+  } catch (err: any) {
+    request.log.error(`[clerk] getAuth threw: ${err?.message || String(err)}`)
+    return reply.code(401).send({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' })
+  }
 
+  if (!auth?.userId) {
+    return reply.code(401).send({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' })
+  }
+
+  try {
     // Use Clerk org ID if present, fall back to user ID as personal org key
-    // This allows the app to work without Clerk Organizations being configured
     const tenantKey = auth.orgId || `user_${auth.userId}`
 
-    // Resolve tenant key → internal DB UUID, auto-creating on first access
     let orgResult = await query<{ id: string }>(
       'SELECT id FROM organizations WHERE clerk_org_id = $1',
       [tenantKey]
@@ -46,7 +51,7 @@ export async function clerkAuthPreHandler(
     const orgDbId = orgResult.rows[0]?.id ?? null
     request.auth = { orgId: tenantKey, orgDbId, userId: auth.userId }
   } catch (err: any) {
-    request.log.error({ err: err?.message || String(err) }, '[clerk] auth middleware error')
+    request.log.error(`[clerk] db lookup threw: ${err?.message || String(err)}`)
     return reply.code(401).send({ success: false, error: 'Unauthorized', code: 'AUTH_REQUIRED' })
   }
 }
