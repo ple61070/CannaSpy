@@ -35,7 +35,8 @@ export async function clerkAuthPreHandler(
     )
 
     if (!orgResult.rows.length) {
-      const slug = tenantKey.toLowerCase().replace(/[^a-z0-9-_]/g, '-')
+      const base = tenantKey.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 24)
+      const slug = `${base}-${Math.random().toString(36).slice(2, 8)}`
       const name = auth.orgId
         ? ((auth as any).orgSlug || auth.orgId).replace(/-/g, ' ').replace(/^org_/i, '').trim()
         : `Personal (${auth.userId.slice(-6)})`
