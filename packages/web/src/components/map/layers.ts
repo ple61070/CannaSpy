@@ -223,9 +223,9 @@ export const dispensaryRingLayer: LayerProps = {
   paint: {
     'circle-color': [
       'case',
-      ['==', ['get', 'track_state'], 'blocked'],       PALETTE.accentBlock,
-      ['==', ['get', 'business_type'], 'delivery'],    PALETTE.accentTrust,
-      ['==', ['get', 'business_type'], 'microbusiness'], PALETTE.accentTrust,
+      ['==', ['get', 'track_state'], 'blocked'],   PALETTE.accentBlock,
+      ['==', ['get', 'business_type'], 'delivery'], PALETTE.accentTrust,
+      ['==', ['get', 'business_type'], 'both'],     PALETTE.accentTrust,
       PALETTE.accentIntel,
     ] as unknown as string,
     // Ring radius: 21px prospect, 26px enriched/blocked, +4px on hover
@@ -285,12 +285,12 @@ export const dispensaryPointLayer: LayerProps = {
   source: SOURCE.DISPENSARIES,
   filter: ['!', ['has', 'point_count']],
   paint: {
-    // Blocked → amber; delivery+microbusiness → trust-blue; storefront → teal.
+    // Blocked → amber; delivery+both (microbusiness) → trust-blue; storefront → teal.
     'circle-color': [
       'case',
-      ['==', ['get', 'track_state'], 'blocked'],         PALETTE.accentBlock,
-      ['==', ['get', 'business_type'], 'delivery'],      PALETTE.accentTrust,
-      ['==', ['get', 'business_type'], 'microbusiness'], PALETTE.accentTrust,
+      ['==', ['get', 'track_state'], 'blocked'],    PALETTE.accentBlock,
+      ['==', ['get', 'business_type'], 'delivery'], PALETTE.accentTrust,
+      ['==', ['get', 'business_type'], 'both'],     PALETTE.accentTrust,
       PALETTE.accentIntel,
     ] as unknown as string,
     // Fill radius: 15px enriched/blocked, 12px prospect. +4px on hover.

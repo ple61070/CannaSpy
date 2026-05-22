@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { getAuth } from '@clerk/fastify'
-import { getAdminDb, query } from '../db/client'
+import { query } from '../db/client'
 
 interface MapQuerystring {
   bbox?: string
@@ -90,73 +90,71 @@ export async function mapRoutes(fastify: FastifyInstance) {
       }
 
       try {
-        const supabase = getAdminDb()
-
-        // Build dispensaries query via PostgREST (bypasses pg Pool / pooler)
-        let dispensaryQuery = supabase
-          .from('dispensaries')
-          .select(
-            'id, dcc_license, name, city, county, license_type, business_type, market_tier, enriched, threat_score, price_observations_count, last_scraped_at, lat, lng'
-          )
-          .not('lat', 'is', null)
-          .not('lng', 'is', null)
-          .gte('lng', west)
-          .lte('lng', east)
-          .gte('lat', south)
-          .lte('lat', north)
-          .order('threat_score', { ascending: false, nullsFirst: false })
-          .limit(maxLimit)
+        // Build WHERE clause dynamically against Railway Postgres
+        const conditions: string[] = [
+          'lat IS NOT NULL', 'lng IS NOT NULL',
+          'lng >= $1', 'lng <= $2', 'lat >= $3', 'lat <= $4',
+        ]
+        const params: (string | number | string[])[] = [west, east, south, north]
+        let p = 5
 
         if (tier) {
-          dispensaryQuery = dispensaryQuery.eq('market_tier', tier)
+          conditions.push(`market_tier = $${p++}`)
+          params.push(tier)
         }
         if (type && type !== 'both') {
-          // microbusiness operators do both storefront + delivery — include in either filter
+          // 'both' = microbusiness — can operate storefront + delivery; include in either filter
           const types = type === 'storefront'
-            ? ['storefront', 'microbusiness']
+            ? ['storefront', 'both']
             : type === 'delivery'
-            ? ['delivery', 'microbusiness']
+            ? ['delivery', 'both']
             : [type]
-          dispensaryQuery = dispensaryQuery.in('business_type', types)
+          conditions.push(`business_type = ANY($${p++}::text[])`)
+          params.push(types)
         }
         if (enriched === 'true') {
-          dispensaryQuery = dispensaryQuery.eq('enriched', true)
+          conditions.push('enriched = TRUE')
         } else if (enriched === 'false') {
-          dispensaryQuery = dispensaryQuery.eq('enriched', false)
+          conditions.push('enriched = FALSE')
         }
         if (q) {
-          dispensaryQuery = dispensaryQuery.ilike('name', `%${q}%`)
+          conditions.push(`name ILIKE $${p++}`)
+          params.push(`%${q}%`)
         }
+        params.push(maxLimit)
 
-        const { data: dispensaries, error: dispError } = await dispensaryQuery
-
-        if (dispError) {
-          req.log.error({ err: dispError.message }, '[map] dispensaries query error')
-          return reply
-            .code(500)
-            .send({ success: false, error: 'Internal server error', code: 'INTERNAL_ERROR' })
-        }
+        const { rows: dispensaries } = await query<{
+          id: string; dcc_license: string; name: string; city: string; county: string
+          license_type: string; business_type: string | null; market_tier: string | null
+          enriched: boolean; threat_score: number | null; price_observations_count: number
+          last_scraped_at: string | null; lat: number; lng: number
+        }>(
+          `SELECT id, dcc_license, name, city, county, license_type, business_type,
+                  market_tier, enriched, threat_score, price_observations_count,
+                  last_scraped_at, lat, lng
+           FROM dispensaries
+           WHERE ${conditions.join(' AND ')}
+           ORDER BY threat_score DESC NULLS LAST
+           LIMIT $${p}`,
+          params
+        )
 
         // Fetch org track states if authenticated
         let trackStateMap: Record<string, string> = {}
-        if (orgDbId && dispensaries && dispensaries.length > 0) {
-          const dispensaryIds = dispensaries.map((d: any) => d.id)
-          const { data: trackStates } = await supabase
-            .from('org_dispensary_state')
-            .select('dispensary_id, track_state')
-            .eq('org_id', orgDbId)
-            .in('dispensary_id', dispensaryIds)
-
-          if (trackStates) {
-            for (const ts of trackStates as { dispensary_id: string; track_state: string }[]) {
-              trackStateMap[ts.dispensary_id] = ts.track_state
-            }
+        if (orgDbId && dispensaries.length > 0) {
+          const dispensaryIds = dispensaries.map((d) => d.id)
+          const { rows: trackStates } = await query<{ dispensary_id: string; track_state: string }>(
+            'SELECT dispensary_id, track_state FROM org_dispensary_state WHERE org_id = $1 AND dispensary_id = ANY($2::uuid[])',
+            [orgDbId, dispensaryIds]
+          )
+          for (const ts of trackStates) {
+            trackStateMap[ts.dispensary_id] = ts.track_state
           }
         }
 
         const geojson = {
           type: 'FeatureCollection' as const,
-          features: (dispensaries || []).map((r: any) => ({
+          features: dispensaries.map((r) => ({
             type: 'Feature' as const,
             geometry: {
               type: 'Point' as const,
@@ -181,7 +179,7 @@ export async function mapRoutes(fastify: FastifyInstance) {
         }
 
         reply.header('Cache-Control', 'public, max-age=60')
-        return { success: true, data: geojson, count: (dispensaries || []).length }
+        return { success: true, data: geojson, count: dispensaries.length }
       } catch (err: any) {
         const msg: string = err?.message || String(err)
         req.log.error({ err: msg }, '[map] unexpected error')

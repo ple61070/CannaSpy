@@ -310,8 +310,8 @@ export default function CompetitorDiscovery() {
     : competitors.filter(c => {
         const bt = (c as any).business_type
         if (!bt) return true
-        if (operatorType === 'storefront') return bt === 'storefront' || bt === 'microbusiness'
-        if (operatorType === 'delivery') return bt === 'delivery' || bt === 'microbusiness'
+        if (operatorType === 'storefront') return bt === 'storefront' || bt === 'both'
+        if (operatorType === 'delivery') return bt === 'delivery' || bt === 'both'
         return true
       })
 
