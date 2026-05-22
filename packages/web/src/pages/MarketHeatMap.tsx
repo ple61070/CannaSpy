@@ -106,6 +106,7 @@ function buildMarketGeoJSON(markets: Market[]) {
   }
 }
 const MARKET_GEOJSON = buildMarketGeoJSON(MARKETS)
+const EMPTY_FC = { type: 'FeatureCollection' as const, features: [] as never[] }
 
 const marketCircleLayer = {
   id: 'markets-circle', type: 'circle' as const, maxzoom: 10,
@@ -199,6 +200,16 @@ export default function MarketHeatMap() {
     type: operatorType === 'both' ? undefined : operatorType,
   })
 
+  // Keep a ref to latest dispensaries so onLoad can re-seed after style/theme remount
+  const dispensariesRef = useRef(dispensaries)
+  useEffect(() => { dispensariesRef.current = dispensaries }, [dispensaries])
+
+  // Imperative source update — bypasses React reconciliation, eliminates freeze on zoom/pan
+  useEffect(() => {
+    const src = mapRef.current?.getMap()?.getSource('cs-dispensaries') as any
+    if (src?.setData) src.setData(dispensaries)
+  }, [dispensaries])
+
   // ─── Resize observer — keeps Mapbox canvas in sync with container ─────────
   useEffect(() => {
     const el = mapContainerRef.current
@@ -220,7 +231,12 @@ export default function MarketHeatMap() {
     setZoom(map.getZoom())
   }, [])
 
-  const onLoad    = useCallback(() => { updateBbox() }, [updateBbox])
+  const onLoad    = useCallback(() => {
+    updateBbox()
+    // Re-seed source after mount/remount (style switch, theme change)
+    const src = mapRef.current?.getMap()?.getSource('cs-dispensaries') as any
+    if (src?.setData) src.setData(dispensariesRef.current)
+  }, [updateBbox])
   const onMoveEnd = useCallback(() => { updateBbox() }, [updateBbox])
 
   // ─── Interaction ──────────────────────────────────────────────────────────
@@ -372,7 +388,7 @@ export default function MarketHeatMap() {
             <Source
               id="cs-dispensaries"
               type="geojson"
-              data={dispensaries as unknown as Parameters<typeof Source>[0]['data']}
+              data={EMPTY_FC as unknown as Parameters<typeof Source>[0]['data']}
               promoteId="id"
               cluster clusterMaxZoom={13} clusterRadius={35}
             >

@@ -22,7 +22,7 @@ export interface DispensaryFeatureCollection {
 }
 
 const EMPTY: DispensaryFeatureCollection = { type: 'FeatureCollection', features: [] }
-const DEBOUNCE_MS = 300
+const DEBOUNCE_MS = 500
 
 export interface DispensaryMapFilters {
   tier?: string

@@ -67,6 +67,10 @@ function useAppTheme(): AppTheme {
 // California initial view
 const CA_VIEWPORT = { longitude: -119.4179, latitude: 36.7783, zoom: 5.5 }
 
+// Stable empty FeatureCollection — passed as initial Source data so the Source
+// component never re-renders when live data arrives (updates go via setData() instead)
+const EMPTY_FC = { type: 'FeatureCollection' as const, features: [] as never[] }
+
 interface Location {
   id: string
   name: string
@@ -152,6 +156,16 @@ export default function CompetitorDiscovery() {
     type: operatorType === 'both' ? undefined : operatorType,
   })
 
+  // Keep a ref to latest dispensaries so handleMapLoad can seed after remount
+  const dispensariesRef = useRef(dispensaries)
+  useEffect(() => { dispensariesRef.current = dispensaries }, [dispensaries])
+
+  // Imperative source update — bypasses React reconciliation, eliminates freeze
+  useEffect(() => {
+    const src = mapRef.current?.getMap()?.getSource('cs-dispensaries') as any
+    if (src?.setData) src.setData(dispensaries)
+  }, [dispensaries])
+
   useEffect(() => {
     authFetch(`${API}/api/v1/locations`)
       .then((r) => r.json())
@@ -192,6 +206,9 @@ export default function CompetitorDiscovery() {
     if (map) {
       const b = map.getBounds()
       if (b) setBbox(`${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`)
+      // Re-seed source after mount/remount (style switch, theme change)
+      const src = map.getSource('cs-dispensaries') as any
+      if (src?.setData) src.setData(dispensariesRef.current)
     }
     if (pendingFlyRef.current) {
       mapRef.current?.flyTo({ center: pendingFlyRef.current, zoom: 12, duration: 800 })
@@ -361,7 +378,7 @@ export default function CompetitorDiscovery() {
             <Source
               id="cs-dispensaries"
               type="geojson"
-              data={dispensaries as unknown as Parameters<typeof Source>[0]['data']}
+              data={EMPTY_FC as unknown as Parameters<typeof Source>[0]['data']}
               promoteId="id"
               cluster clusterMaxZoom={13} clusterRadius={35}
             >
