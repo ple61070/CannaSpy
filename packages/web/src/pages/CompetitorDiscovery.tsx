@@ -639,7 +639,7 @@ export default function CompetitorDiscovery() {
                         fontSize: 10, color: 'var(--text-3)', fontFamily: 'Space Mono, monospace',
                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                       }}>
-                        {comp.distance_miles ? `${comp.distance_miles.toFixed(1)} mi` : ''}
+                        {comp.distance_miles != null ? `${Number(comp.distance_miles).toFixed(1)} mi` : ''}
                         {comp.distance_miles && comp.address ? '  ·  ' : ''}
                         {comp.address}
                       </div>

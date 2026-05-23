@@ -312,7 +312,7 @@ export async function locationsRoutes(fastify: FastifyInstance) {
       google_place_id: r.dcc_license,
       name: r.name,
       address: r.full_address,
-      distance_miles: Number(r.distance_miles).toFixed(1),
+      distance_miles: Math.round(Number(r.distance_miles) * 10) / 10,
       platform: 'dcc',
       lat: parseFloat(r.lat),
       lng: parseFloat(r.lng),
