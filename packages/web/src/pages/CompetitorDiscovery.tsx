@@ -276,6 +276,27 @@ export default function CompetitorDiscovery() {
     })
   }, [])
 
+  // Track or Block a dispensary directly from its map popup
+  const handlePopupSelect = useCallback((action: 'track' | 'block') => {
+    if (!dispPopup) return
+    const { props, lat, lng } = dispPopup
+    const comp: Competitor = {
+      google_place_id: props.dcc_license,
+      name: props.name,
+      address: `${props.city}${props.county ? `, ${props.county} Co.` : ''}, CA`,
+      platform: 'dcc',
+      lat,
+      lng,
+      ...(props.business_type ? { business_type: props.business_type } as Record<string, unknown> : {}),
+      ...(props.dcc_license ? { dcc_license: props.dcc_license } as Record<string, unknown> : {}),
+    }
+    setCompetitors(prev =>
+      prev.some(c => c.google_place_id === props.dcc_license) ? prev : [...prev, comp]
+    )
+    setSelection(comp, action)
+    setDispPopup(null)
+  }, [dispPopup, setSelection])
+
   const handleLaunch = async () => {
     if (!selections.size) { navigate('/command-center'); return }
     setSaving(true)
@@ -462,7 +483,7 @@ export default function CompetitorDiscovery() {
                 anchor="bottom"
                 offset={[0, -10] as [number, number]}
               >
-                <div style={{ minWidth: 200, fontFamily: 'var(--sans)', fontSize: 12, color: 'var(--text-1)', background: 'var(--surface)', padding: '10px 12px' }}>
+                <div style={{ minWidth: 210, fontFamily: 'var(--sans)', fontSize: 12, color: 'var(--text-1)', background: 'var(--surface)', padding: '10px 12px' }}>
                   <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 3 }}>{dispPopup.props.name}</div>
                   <div style={{ color: 'var(--text-3)', fontSize: 11, marginBottom: 8 }}>{dispPopup.props.city}{dispPopup.props.county ? `, ${dispPopup.props.county} Co.` : ''}</div>
                   <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' as const, marginBottom: 6 }}>
@@ -476,7 +497,22 @@ export default function CompetitorDiscovery() {
                       <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: dispPopup.props.track_state === 'blocked' ? 'rgba(186,117,23,0.15)' : 'rgba(29,158,117,0.15)', color: dispPopup.props.track_state === 'blocked' ? '#ba7517' : '#1d9e75', textTransform: 'uppercase' as const }}>{dispPopup.props.track_state}</span>
                     )}
                   </div>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)', letterSpacing: '0.04em' }}>DCC {dispPopup.props.dcc_license}</div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)', letterSpacing: '0.04em', marginBottom: 10 }}>DCC {dispPopup.props.dcc_license}</div>
+                  {/* Action buttons */}
+                  <div style={{ display: 'flex', gap: 6, borderTop: '1px solid var(--border)', paddingTop: 9 }}>
+                    <button
+                      onClick={() => handlePopupSelect('track')}
+                      style={{ flex: 1, padding: '5px 0', borderRadius: 5, border: '1px solid var(--accent)', background: 'transparent', color: 'var(--accent)', fontSize: 11, fontWeight: 600, fontFamily: 'var(--sans)', cursor: 'pointer' }}
+                    >
+                      Track
+                    </button>
+                    <button
+                      onClick={() => handlePopupSelect('block')}
+                      style={{ flex: 1, padding: '5px 0', borderRadius: 5, border: '1px solid #ba7517', background: 'transparent', color: '#ba7517', fontSize: 11, fontWeight: 600, fontFamily: 'var(--sans)', cursor: 'pointer' }}
+                    >
+                      Block
+                    </button>
+                  </div>
                 </div>
               </Popup>
             )}
@@ -517,7 +553,8 @@ export default function CompetitorDiscovery() {
         }}>
           {[
             { color: '#1d9e75', label: 'Your location' },
-            { color: 'rgba(29,158,117,0.7)', label: 'CA dispensaries' },
+            { color: '#1d9e75', label: 'Storefront dispensary' },
+            { color: '#3b8bd4', label: 'Delivery / microbusiness' },
             { color: '#94a3b8', label: 'Detected rivals' },
             { color: '#1d9e75', label: 'Selected — tracking' },
             { color: '#ba7517', label: 'Selected — blocked' },
