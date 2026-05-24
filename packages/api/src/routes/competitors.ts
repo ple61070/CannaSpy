@@ -8,7 +8,7 @@ const CreateCompetitorSchema = z.object({
   lat: z.number().optional(),
   lng: z.number().optional(),
   website_url: z.string().url().optional(),
-  platform: z.enum(['dutchie', 'custom', 'unknown']).optional(),
+  platform: z.enum(['dutchie', 'dcc', 'custom', 'unknown']).optional(),
   google_place_id: z.string().optional(),
   dcc_license: z.string().optional(),
   business_type: z.enum(['storefront', 'delivery', 'both']).optional(),

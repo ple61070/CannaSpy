@@ -819,30 +819,32 @@ export default function CommandCenter() {
                 }} title={c.name} />
               </Marker>
             ))}
-            {/* Your location marker */}
-            {firstLocation?.lat && firstLocation?.lng && (
+            {/* Your location markers — all locations */}
+            {locations.filter(l => l.lat && l.lng).map(loc => (
               <Marker
-                longitude={Number(firstLocation.lng)}
-                latitude={Number(firstLocation.lat)}
+                key={loc.id}
+                longitude={Number(loc.lng)}
+                latitude={Number(loc.lat)}
                 anchor="bottom"
               >
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                   <div style={{
-                    width: 14, height: 14, borderRadius: '50%',
-                    background: 'var(--accent)',
-                    boxShadow: '0 0 0 4px rgba(29,158,117,0.3), 0 0 0 8px rgba(29,158,117,0.15)',
+                    width: 16, height: 16, borderRadius: '50%',
+                    background: '#d4537e',
+                    border: '2px solid #e8e6e0',
+                    boxShadow: '0 0 0 4px rgba(212,83,126,0.25), 0 0 10px rgba(212,83,126,0.5)',
                   }} />
                   <div style={{
                     fontFamily: 'var(--mono)', fontSize: 8, fontWeight: 700,
-                    color: 'var(--accent)', letterSpacing: '0.12em',
+                    color: '#d4537e', letterSpacing: '0.12em',
                     whiteSpace: 'nowrap',
                     background: 'rgba(13,15,17,0.85)', backdropFilter: 'blur(8px)',
                     padding: '2px 6px', borderRadius: 4,
-                    border: '1px solid rgba(29,158,117,0.4)',
-                  }}>YOUR LOCATION</div>
+                    border: '1px solid rgba(212,83,126,0.4)',
+                  }}>{loc.name}</div>
                 </div>
               </Marker>
-            )}
+            ))}
           </Map>
         )}
 
