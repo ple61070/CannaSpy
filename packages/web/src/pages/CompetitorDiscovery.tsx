@@ -438,9 +438,9 @@ export default function CompetitorDiscovery() {
             {centerLat && centerLng && (
               <Marker longitude={centerLng} latitude={centerLat} anchor="center">
                 <div style={{
-                  width: 14, height: 14, borderRadius: '50%',
-                  background: '#1d9e75', border: '2px solid #e8e6e0',
-                  boxShadow: '0 0 8px rgba(29,158,117,0.6)',
+                  width: 16, height: 16, borderRadius: '50%',
+                  background: '#d4537e', border: '2px solid #e8e6e0',
+                  boxShadow: '0 0 10px rgba(212,83,126,0.7)',
                 }} title={selectedLocation?.name} />
               </Marker>
             )}
@@ -552,7 +552,7 @@ export default function CompetitorDiscovery() {
           display: 'flex', flexDirection: 'column', gap: 5,
         }}>
           {[
-            { color: '#1d9e75', label: 'Your location' },
+            { color: '#d4537e', label: 'Your location' },
             { color: '#1d9e75', label: 'Storefront dispensary' },
             { color: '#3b8bd4', label: 'Delivery / microbusiness' },
             { color: '#94a3b8', label: 'Detected rivals' },
