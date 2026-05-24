@@ -43,14 +43,14 @@ const DISP_RING_LAYER: LayerProps = {
   paint: {
     'circle-radius': 7,
     'circle-color': 'transparent',
-    'circle-stroke-width': 1.5,
+    'circle-stroke-width': 2,
     'circle-stroke-color': [
       'case',
-      ['==', ['get', 'track_state'], 'blocked'],  '#ba7517',
-      ['==', ['get', 'track_state'], 'tracked'],  '#1d9e75',
-      '#4a4845',
+      ['==', ['get', 'track_state'], 'blocked'], '#ba7517',
+      ['==', ['get', 'track_state'], 'tracked'], '#1d9e75',
+      '#b8f0d8',  // bright mint ring for untracked prospects
     ],
-    'circle-opacity': 0.85,
+    'circle-stroke-opacity': 1,
   },
 }
 const DISP_FILL_LAYER: LayerProps = {
@@ -60,16 +60,11 @@ const DISP_FILL_LAYER: LayerProps = {
     'circle-radius': 4,
     'circle-color': [
       'case',
-      ['==', ['get', 'track_state'], 'blocked'],  '#ba7517',
-      ['==', ['get', 'track_state'], 'tracked'],  '#1d9e75',
-      '#4a4845',
+      ['==', ['get', 'track_state'], 'blocked'], '#ba7517',
+      ['==', ['get', 'track_state'], 'tracked'], '#1d9e75',
+      '#d6f5e8',  // bright light mint fill — pops on dark map
     ],
-    'circle-opacity': [
-      'case',
-      ['==', ['get', 'track_state'], 'blocked'], 1,
-      ['==', ['get', 'track_state'], 'tracked'], 1,
-      0.55,
-    ],
+    'circle-opacity': 1,
   },
 }
 
