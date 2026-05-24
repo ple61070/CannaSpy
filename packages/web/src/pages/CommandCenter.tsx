@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Map, { Marker, NavigationControl, type MapRef } from 'react-map-gl'
+import Map, { Marker, NavigationControl, Popup, Source, Layer, type MapRef, type LayerProps } from 'react-map-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useAlerts, type Alert } from '../hooks/useAlerts'
 import { useBlocks } from '../hooks/useBlocks'
@@ -34,6 +34,44 @@ function useAppTheme(): AppTheme {
 
 // Default to LA if no location coords
 const LA_VIEWPORT = { longitude: -118.2437, latitude: 34.0522, zoom: 11 }
+
+const EMPTY_FC = { type: 'FeatureCollection' as const, features: [] as never[] }
+
+const DISP_RING_LAYER: LayerProps = {
+  id: 'cc-disp-ring',
+  type: 'circle',
+  paint: {
+    'circle-radius': 7,
+    'circle-color': 'transparent',
+    'circle-stroke-width': 1.5,
+    'circle-stroke-color': [
+      'case',
+      ['==', ['get', 'track_state'], 'blocked'],  '#ba7517',
+      ['==', ['get', 'track_state'], 'tracked'],  '#1d9e75',
+      '#4a4845',
+    ],
+    'circle-opacity': 0.85,
+  },
+}
+const DISP_FILL_LAYER: LayerProps = {
+  id: 'cc-disp-fill',
+  type: 'circle',
+  paint: {
+    'circle-radius': 4,
+    'circle-color': [
+      'case',
+      ['==', ['get', 'track_state'], 'blocked'],  '#ba7517',
+      ['==', ['get', 'track_state'], 'tracked'],  '#1d9e75',
+      '#4a4845',
+    ],
+    'circle-opacity': [
+      'case',
+      ['==', ['get', 'track_state'], 'blocked'], 1,
+      ['==', ['get', 'track_state'], 'tracked'], 1,
+      0.55,
+    ],
+  },
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -187,6 +225,12 @@ export default function CommandCenter() {
     lat: number | null; lng: number | null; slot_type: string; blocked_at: string | null
   }[]>([])
 
+  const [dispensaries, setDispensaries] = useState<typeof EMPTY_FC>(EMPTY_FC)
+  const dispensariesRef = useRef<typeof EMPTY_FC>(EMPTY_FC)
+  const [dispPopup, setDispPopup] = useState<{ lng: number; lat: number; props: Record<string, any> } | null>(null)
+  const [trackLocId, setTrackLocId] = useState<string>('')
+  const [savingTrack, setSavingTrack] = useState(false)
+
   const { alerts, loading, markReviewed } = useAlerts({
     reviewed: statusFilter,
     type: operatorType === 'both' ? undefined : operatorType,
@@ -235,6 +279,97 @@ export default function CommandCenter() {
     return () => ro.disconnect()
   }, [])
 
+  // Sync dispensaries ref for imperative setData
+  useEffect(() => { dispensariesRef.current = dispensaries }, [dispensaries])
+  useEffect(() => {
+    const src = mapRef.current?.getMap()?.getSource('cc-dispensaries') as any
+    if (src?.setData) src.setData(dispensaries)
+  }, [dispensaries])
+
+  // Fetch dispensaries for current bbox
+  const fetchDispensaries = useCallback(async () => {
+    const map = mapRef.current?.getMap()
+    if (!map) return
+    const b = map.getBounds()
+    if (!b) return
+    const bbox = `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`
+    try {
+      const r = await authFetch(`${API}/api/v1/map/dispensaries?bbox=${bbox}&limit=500`)
+      const data = await r.json()
+      if (data?.type === 'FeatureCollection') setDispensaries(data)
+    } catch { /* silent */ }
+  }, [authFetch])
+
+  // Refresh tracked competitors list (called after tracking from popup)
+  const refreshCompetitors = useCallback(async () => {
+    if (!locations.length) return
+    const results = await Promise.all(
+      locations.map(loc =>
+        authFetch(`${API}/api/v1/locations/${loc.id}/competitors`)
+          .then(r => r.json()).then(d => d.competitors || []).catch(() => [])
+      )
+    )
+    const seen = new Set<string>()
+    const merged = results.flat().filter((c: any) => {
+      if (seen.has(c.competitor_id)) return false
+      seen.add(c.competitor_id)
+      return true
+    })
+    setCompetitors(merged)
+  }, [authFetch, locations])
+
+  // Handle click on dispensary pin layer
+  const handleMapClick = useCallback((e: any) => {
+    const map = mapRef.current?.getMap()
+    if (!map) return
+    const features = map.queryRenderedFeatures(e.point, { layers: ['cc-disp-fill'] })
+    if (!features.length) { setDispPopup(null); return }
+    const f = features[0]
+    setDispPopup({ lng: e.lngLat.lng, lat: e.lngLat.lat, props: f.properties as Record<string, any> })
+  }, [])
+
+  // Set default trackLocId when locations load
+  useEffect(() => {
+    if (locations.length > 0 && !trackLocId) setTrackLocId(locations[0].id)
+  }, [locations, trackLocId])
+
+  // Handle Track/Block from popup
+  const handlePopupAction = useCallback(async (action: 'track' | 'block') => {
+    if (!dispPopup || !trackLocId) return
+    setSavingTrack(true)
+    try {
+      const { props } = dispPopup
+      // Create or find competitor
+      let competitorId: string | undefined
+      const compRes = await authFetch(`${API}/api/v1/competitors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: props.name,
+          address: `${props.city}, CA`,
+          lat: props.lat ?? dispPopup.lat,
+          lng: props.lng ?? dispPopup.lng,
+          platform: 'dcc',
+          dcc_license: props.dcc_license ?? undefined,
+          business_type: props.business_type ?? 'storefront',
+          google_place_id: props.dcc_license ?? undefined,
+        }),
+      })
+      const compData = await compRes.json()
+      competitorId = compData.data?.id || compData.id
+      if (!competitorId) { showToast('Failed to create competitor', '#d4537e'); return }
+      await authFetch(`${API}/api/v1/locations/${trackLocId}/competitors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ competitor_id: competitorId, slot_type: action }),
+      })
+      showToast(`${action === 'block' ? 'Blocked' : 'Tracking'} ${props.name}`, action === 'block' ? '#ba7517' : '#1d9e75')
+      setDispPopup(null)
+      await Promise.all([refreshCompetitors(), fetchDispensaries()])
+    } catch { showToast('Something went wrong', '#d4537e') }
+    finally { setSavingTrack(false) }
+  }, [dispPopup, trackLocId, authFetch, refreshCompetitors, fetchDispensaries])
+
   // ── Computed ──────────────────────────────────────────────────────────────
   const unreviewedCount = alerts.filter((a) => !a.reviewed).length
 
@@ -277,15 +412,19 @@ export default function CommandCenter() {
     ? { longitude: Number(firstLocation.lng), latitude: Number(firstLocation.lat), zoom: 12 }
     : LA_VIEWPORT
 
-  // Fly to first location when it loads
+  // Fly to first location and seed dispensary data on load
   const handleMapLoad = useCallback(() => {
-    if (!firstLocation?.lat || !firstLocation?.lng) return
-    mapRef.current?.flyTo({
-      center: [Number(firstLocation.lng), Number(firstLocation.lat)],
-      zoom: 12,
-      duration: 800,
-    })
-  }, [firstLocation])
+    if (firstLocation?.lat && firstLocation?.lng) {
+      mapRef.current?.flyTo({
+        center: [Number(firstLocation.lng), Number(firstLocation.lat)],
+        zoom: 12,
+        duration: 800,
+      })
+    }
+    fetchDispensaries()
+    const src = mapRef.current?.getMap()?.getSource('cc-dispensaries') as any
+    if (src?.setData) src.setData(dispensariesRef.current)
+  }, [firstLocation, fetchDispensaries])
 
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
@@ -805,8 +944,73 @@ export default function CommandCenter() {
             style={{ width: '100%', height: '100%' }}
             attributionControl={false}
             onLoad={handleMapLoad}
+            onMoveEnd={fetchDispensaries}
+            onClick={handleMapClick}
           >
             <NavigationControl position="top-right" showCompass={false} />
+
+            {/* All dispensaries from DCC — untracked grey, tracked teal, blocked amber */}
+            <Source id="cc-dispensaries" type="geojson" data={EMPTY_FC as any} promoteId="id">
+              <Layer {...DISP_RING_LAYER} />
+              <Layer {...DISP_FILL_LAYER} />
+            </Source>
+
+            {/* Dispensary click popup */}
+            {dispPopup && (
+              <Popup
+                longitude={dispPopup.lng}
+                latitude={dispPopup.lat}
+                anchor="bottom"
+                closeOnClick={false}
+                onClose={() => setDispPopup(null)}
+                style={{ padding: 0 }}
+              >
+                <div style={{
+                  background: 'var(--surface)', border: '1px solid var(--border)',
+                  borderRadius: 8, padding: '12px 14px', minWidth: 220,
+                  fontFamily: 'var(--sans)', color: 'var(--text-1)',
+                }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{dispPopup.props.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 10 }}>
+                    {dispPopup.props.city}, CA · {dispPopup.props.business_type || 'storefront'}
+                  </div>
+                  {locations.length > 1 && (
+                    <select
+                      value={trackLocId}
+                      onChange={e => setTrackLocId(e.target.value)}
+                      style={{
+                        width: '100%', marginBottom: 8, fontSize: 11,
+                        background: 'var(--surface-2)', border: '1px solid var(--border)',
+                        borderRadius: 4, color: 'var(--text-1)', padding: '4px 6px',
+                      }}
+                    >
+                      {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                    </select>
+                  )}
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      disabled={savingTrack}
+                      onClick={() => handlePopupAction('track')}
+                      style={{
+                        flex: 1, padding: '6px 0', borderRadius: 5, border: 'none',
+                        background: '#1d9e75', color: '#fff', fontSize: 11, fontWeight: 600,
+                        cursor: savingTrack ? 'not-allowed' : 'pointer', opacity: savingTrack ? 0.6 : 1,
+                      }}
+                    >Track rival</button>
+                    <button
+                      disabled={savingTrack}
+                      onClick={() => handlePopupAction('block')}
+                      style={{
+                        flex: 1, padding: '6px 0', borderRadius: 5, border: 'none',
+                        background: '#ba7517', color: '#fff', fontSize: 11, fontWeight: 600,
+                        cursor: savingTrack ? 'not-allowed' : 'pointer', opacity: savingTrack ? 0.6 : 1,
+                      }}
+                    >Block this rival</button>
+                  </div>
+                </div>
+              </Popup>
+            )}
+
             {/* Competitor pins */}
             {competitors.filter(c => c.lat && c.lng).map(c => (
               <Marker key={c.competitor_id} longitude={Number(c.lng)} latitude={Number(c.lat)} anchor="center">
