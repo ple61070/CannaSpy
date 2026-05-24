@@ -118,6 +118,9 @@ def upsert_listing(cur, listing: dict) -> str:
     # Only ingest California listings
     if state not in ("California", "CA"):
         return "skip"
+    # Storefronts are fully covered by DCC ingest with authoritative data — skip to avoid duplicates
+    if business_type == "storefront":
+        return "skip"
 
     # Step 1: if we have a DCC license, try to update existing DCC record
     if license_num:
