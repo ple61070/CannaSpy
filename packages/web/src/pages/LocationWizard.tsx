@@ -110,6 +110,8 @@ export default function LocationWizard() {
   const [nextLoading, setNextLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
 
   // Name autocomplete state
   const [nameInput, setNameInput] = useState('');
@@ -296,6 +298,18 @@ export default function LocationWizard() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ active: false }),
+    }).catch(() => {});
+  };
+
+  const saveEdit = async (id: string) => {
+    const name = editingName.trim();
+    if (!name) { setEditingId(null); return; }
+    setLocs(prev => prev.map(l => l.id === id ? { ...l, name } : l));
+    setEditingId(null);
+    await authFetch(`${API}/api/v1/locations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
     }).catch(() => {});
   };
 
@@ -529,13 +543,33 @@ export default function LocationWizard() {
                         <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" style={{ width: 13, height: 13 }}><polyline points="20 6 9 17 4 12" /></svg>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{loc.name}</div>
+                        {editingId === loc.id ? (
+                          <input
+                            autoFocus
+                            value={editingName}
+                            onChange={e => setEditingName(e.target.value)}
+                            onBlur={() => saveEdit(loc.id)}
+                            onKeyDown={e => { if (e.key === 'Enter') saveEdit(loc.id); if (e.key === 'Escape') setEditingId(null); }}
+                            style={{ width: '100%', fontSize: 13, fontWeight: 600, background: 'var(--surface)', border: '1.5px solid var(--accent)', borderRadius: 4, padding: '3px 7px', color: 'var(--text-1)', outline: 'none', fontFamily: 'var(--sans)' }}
+                          />
+                        ) : (
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-1)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{loc.name}</div>
+                        )}
                         <div style={{ fontSize: 11, color: 'var(--text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{loc.address}</div>
                       </div>
                       {loc.dcc_license && (
                         <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)', border: '1px solid var(--border-2)', borderRadius: 20, padding: '2px 8px', whiteSpace: 'nowrap' as const }}>{loc.dcc_license}</div>
                       )}
-                      <button onClick={() => removeLocation(loc.id)} style={{ width: 22, height: 22, borderRadius: '50%', border: '1px solid var(--border-2)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', flexShrink: 0 }}>
+                      {/* Edit name button */}
+                      <button
+                        onClick={() => { setEditingId(loc.id); setEditingName(loc.name); }}
+                        title="Rename"
+                        style={{ width: 22, height: 22, borderRadius: '50%', border: '1px solid var(--border-2)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', flexShrink: 0 }}
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 11, height: 11 }}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      {/* Remove button */}
+                      <button onClick={() => removeLocation(loc.id)} title="Remove" style={{ width: 22, height: 22, borderRadius: '50%', border: '1px solid var(--border-2)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)', flexShrink: 0 }}>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 11, height: 11 }}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                       </button>
                     </div>

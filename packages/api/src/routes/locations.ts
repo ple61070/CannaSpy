@@ -28,7 +28,7 @@ export async function locationsRoutes(fastify: FastifyInstance) {
     const offset = parseInt(req.query.offset || '0', 10)
 
     const countResult = await query<{ count: string }>(
-      'SELECT COUNT(*) as count FROM locations WHERE org_id = $1',
+      'SELECT COUNT(*) as count FROM locations WHERE org_id = $1 AND active = true',
       [orgDbId]
     )
     const total = parseInt(countResult.rows[0]?.count || '0', 10)
@@ -36,7 +36,7 @@ export async function locationsRoutes(fastify: FastifyInstance) {
     const result = await query(
       `SELECT id, name, address, lat, lng, dcc_license, active, created_at
        FROM locations
-       WHERE org_id = $1
+       WHERE org_id = $1 AND active = true
        ORDER BY created_at ASC
        LIMIT $2 OFFSET $3`,
       [orgDbId, limit, offset]
