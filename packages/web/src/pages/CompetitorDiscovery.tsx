@@ -286,7 +286,7 @@ export default function CompetitorDiscovery() {
     if (!dispPopup) return
     const { props, lat, lng } = dispPopup
     const comp: Competitor = {
-      google_place_id: props.dcc_license,
+      google_place_id: props.dcc_license ?? `dcc-popup-${props.name}`,
       name: props.name,
       address: `${props.city}${props.county ? `, ${props.county} Co.` : ''}, CA`,
       platform: 'dcc',
@@ -446,8 +446,8 @@ export default function CompetitorDiscovery() {
     })
   }, [sidebarItems, selections, sortMode])
 
-  // Popup live state — must match the key used in handlePopupSelect (props.dcc_license)
-  const popupKey = dispPopup?.props.dcc_license ?? null
+  // Popup live state — key must match handlePopupSelect exactly (dcc_license or name fallback)
+  const popupKey = dispPopup ? (dispPopup.props.dcc_license ?? `dcc-popup-${dispPopup.props.name}`) : null
   const popupSel = popupKey ? selections.get(popupKey) : undefined
   const popupTracked = popupSel?.track ?? false
   const popupBlocked = popupSel?.block ?? false
