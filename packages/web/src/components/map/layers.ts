@@ -228,13 +228,13 @@ export const dispensaryRingLayer: LayerProps = {
       ['==', ['get', 'business_type'], 'both'],     PALETTE.accentTrust,
       PALETTE.accentIntel,
     ] as unknown as string,
-    // Ring radius: 21px prospect, 26px enriched/blocked, +4px on hover
+    // Ring radius: 16px prospect, 19px enriched/blocked, +4px on hover
     'circle-radius': [
       '+',
       ['case',
-        ['==', ['get', 'track_state'], 'blocked'],  26,
-        ['boolean', ['get', 'enriched'], false],     26,
-        21,
+        ['==', ['get', 'track_state'], 'blocked'],  19,
+        ['boolean', ['get', 'enriched'], false],     19,
+        16,
       ],
       ['case', ['boolean', ['feature-state', 'hover'], false], 4, 0],
     ] as unknown as number,
@@ -249,7 +249,7 @@ export const dispensaryClusterLayer: LayerProps = {
   source: SOURCE.DISPENSARIES,
   filter: ['has', 'point_count'],
   paint: {
-    'circle-color': PALETTE.accentIntel,
+    'circle-color': PALETTE.accentAlert,
     'circle-radius': [
       'step',
       ['get', 'point_count'],
@@ -293,13 +293,13 @@ export const dispensaryPointLayer: LayerProps = {
       ['==', ['get', 'business_type'], 'both'],     PALETTE.accentTrust,
       PALETTE.accentIntel,
     ] as unknown as string,
-    // Fill radius: 15px enriched/blocked, 12px prospect. +4px on hover.
+    // Fill radius: 14px enriched/blocked, 11px prospect. +4px on hover.
     'circle-radius': [
       '+',
       ['case',
-        ['==', ['get', 'track_state'], 'blocked'],  15,
-        ['boolean', ['get', 'enriched'], false],     15,
-        12,
+        ['==', ['get', 'track_state'], 'blocked'],  14,
+        ['boolean', ['get', 'enriched'], false],     14,
+        11,
       ],
       ['case', ['boolean', ['feature-state', 'hover'], false], 4, 0],
     ] as unknown as number,

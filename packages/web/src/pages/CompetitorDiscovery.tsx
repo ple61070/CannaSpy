@@ -437,11 +437,25 @@ export default function CompetitorDiscovery() {
             {/* Your location marker */}
             {centerLat && centerLng && (
               <Marker longitude={centerLng} latitude={centerLat} anchor="center">
-                <div style={{
-                  width: 16, height: 16, borderRadius: '50%',
-                  background: '#d4537e', border: '2px solid #e8e6e0',
-                  boxShadow: '0 0 10px rgba(212,83,126,0.7)',
-                }} title={selectedLocation?.name} />
+                <div style={{ position: 'relative', width: 28, height: 28 }} title={selectedLocation?.name}>
+                  {/* Outer glow ring */}
+                  <div style={{
+                    position: 'absolute', inset: 0, borderRadius: '50%',
+                    background: 'rgba(29,158,117,0.18)',
+                    boxShadow: '0 0 0 3px rgba(29,158,117,0.25)',
+                  }} />
+                  {/* Teal fill */}
+                  <div style={{
+                    position: 'absolute', inset: 4, borderRadius: '50%',
+                    background: '#1d9e75',
+                    boxShadow: '0 0 10px rgba(29,158,117,0.6)',
+                  }} />
+                  {/* White center dot */}
+                  <div style={{
+                    position: 'absolute', inset: 10, borderRadius: '50%',
+                    background: '#ffffff',
+                  }} />
+                </div>
               </Marker>
             )}
 
@@ -450,7 +464,10 @@ export default function CompetitorDiscovery() {
               if (!comp.lat || !comp.lng) return null
               const key = comp.id || comp.google_place_id
               const sel = selections.get(key)
-              const color = sel?.action === 'block' ? '#ba7517' : sel?.action === 'track' ? '#1d9e75' : '#4a4845'
+              const isDelivery = (comp as any).business_type === 'delivery' || (comp as any).business_type === 'both'
+              const outerColor = isDelivery ? '#3b8bd4' : '#1d9e75'
+              const innerColor = sel?.action === 'block' ? '#67e8f9' : sel?.action === 'track' ? '#fb923c' : null
+              const size = sel ? 14 : 10
               return (
                 <Marker
                   key={key}
@@ -459,15 +476,30 @@ export default function CompetitorDiscovery() {
                   anchor="center"
                   onClick={() => setSelection(comp, sel ? null : 'track')}
                 >
-                  <div style={{
-                    width: sel ? 11 : 8, height: sel ? 11 : 8,
-                    borderRadius: '50%',
-                    background: color,
-                    border: '1.5px solid #0d0f11',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    boxShadow: sel ? `0 0 6px ${color}88` : 'none',
-                  }} title={comp.name} />
+                  <div style={{ position: 'relative', width: size, height: size, cursor: 'pointer' }}>
+                    {/* Outer circle */}
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      borderRadius: '50%',
+                      background: outerColor,
+                      border: '1.5px solid #0d0f11',
+                      opacity: sel ? 1 : 0.5,
+                      transition: 'all 0.15s',
+                      boxShadow: sel ? `0 0 8px ${outerColor}8c` : 'none',
+                    }} />
+                    {/* Inner dot — only when selected */}
+                    {innerColor && (
+                      <div style={{
+                        position: 'absolute',
+                        inset: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 6, height: 6,
+                        borderRadius: '50%',
+                        background: innerColor,
+                        pointerEvents: 'none',
+                      }} />
+                    )}
+                  </div>
                 </Marker>
               )
             })}
@@ -549,21 +581,47 @@ export default function CompetitorDiscovery() {
           position: 'absolute', bottom: 12, left: 12, pointerEvents: 'none',
           background: 'var(--surface)', border: '1px solid var(--border)',
           borderRadius: 6, padding: '8px 12px', boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-          display: 'flex', flexDirection: 'column', gap: 5,
+          display: 'flex', flexDirection: 'column', gap: 6,
         }}>
-          {[
-            { color: '#d4537e', label: 'Your location' },
-            { color: '#1d9e75', label: 'Storefront dispensary' },
-            { color: '#3b8bd4', label: 'Delivery / microbusiness' },
-            { color: '#94a3b8', label: 'Detected rivals' },
-            { color: '#1d9e75', label: 'Selected — tracking' },
-            { color: '#ba7517', label: 'Selected — blocked' },
-          ].map((item) => (
-            <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: item.color, flexShrink: 0 }} />
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-2)', letterSpacing: '0.04em' }}>{item.label}</span>
+          {/* Your location */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ position: 'relative', width: 10, height: 10, flexShrink: 0 }}>
+              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#1d9e75' }} />
+              <div style={{ position: 'absolute', inset: '50%', transform: 'translate(-50%,-50%)', width: 4, height: 4, borderRadius: '50%', background: '#fff' }} />
             </div>
-          ))}
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-2)', letterSpacing: '0.04em' }}>Your location</span>
+          </div>
+          {/* Storefront */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#1d9e75', opacity: 0.5, flexShrink: 0, display: 'inline-block' }} />
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-2)', letterSpacing: '0.04em' }}>Storefront dispensary</span>
+          </div>
+          {/* Delivery */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b8bd4', opacity: 0.5, flexShrink: 0, display: 'inline-block' }} />
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-2)', letterSpacing: '0.04em' }}>Delivery / microbusiness</span>
+          </div>
+          {/* Clusters */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#d4537e', flexShrink: 0, display: 'inline-block' }} />
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-2)', letterSpacing: '0.04em' }}>Multiple nearby (cluster)</span>
+          </div>
+          {/* Tracking */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ position: 'relative', width: 10, height: 10, flexShrink: 0 }}>
+              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#1d9e75' }} />
+              <div style={{ position: 'absolute', inset: '50%', transform: 'translate(-50%,-50%)', width: 4, height: 4, borderRadius: '50%', background: '#fb923c' }} />
+            </div>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-2)', letterSpacing: '0.04em' }}>Selected — tracking</span>
+          </div>
+          {/* Blocked */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ position: 'relative', width: 10, height: 10, flexShrink: 0 }}>
+              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#1d9e75' }} />
+              <div style={{ position: 'absolute', inset: '50%', transform: 'translate(-50%,-50%)', width: 4, height: 4, borderRadius: '50%', background: '#67e8f9' }} />
+            </div>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-2)', letterSpacing: '0.04em' }}>Selected — blocked</span>
+          </div>
         </div>
       </div>
 
