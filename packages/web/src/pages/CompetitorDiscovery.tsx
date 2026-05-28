@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Map, { Source, Layer, Marker, NavigationControl, Popup, type MapRef, type MapLayerMouseEvent } from 'react-map-gl'
 import type { LayerProps } from 'react-map-gl'
@@ -92,7 +92,8 @@ interface Competitor {
 
 interface Selection {
   competitor: Competitor
-  action: 'track' | 'block'
+  track: boolean
+  block: boolean
 }
 
 // Build a GeoJSON circle polygon (approximate) for the radius ring
@@ -266,18 +267,20 @@ export default function CompetitorDiscovery() {
     }
   }
 
-  const setSelection = useCallback((comp: Competitor, action: 'track' | 'block' | null) => {
+  const setSelection = useCallback((comp: Competitor, field: 'track' | 'block', value: boolean) => {
     const key = comp.id || comp.google_place_id
     setSelections((prev) => {
       const next = new globalThis.Map(prev)
-      if (action === null) next.delete(key)
-      else next.set(key, { competitor: comp, action })
+      const existing = next.get(key)
+      const updated: Selection = { competitor: comp, track: false, block: false, ...existing, [field]: value }
+      if (!updated.track && !updated.block) next.delete(key)
+      else next.set(key, updated)
       return next
     })
   }, [])
 
   // Track or Block a dispensary directly from its map popup
-  const handlePopupSelect = useCallback((action: 'track' | 'block') => {
+  const handlePopupSelect = useCallback((field: 'track' | 'block') => {
     if (!dispPopup) return
     const { props, lat, lng } = dispPopup
     const comp: Competitor = {
@@ -293,9 +296,11 @@ export default function CompetitorDiscovery() {
     setCompetitors(prev =>
       prev.some(c => c.google_place_id === props.dcc_license) ? prev : [...prev, comp]
     )
-    setSelection(comp, action)
+    const key = comp.google_place_id
+    const existing = selections.get(key)
+    setSelection(comp, field, !(existing?.[field]))
     setDispPopup(null)
-  }, [dispPopup, setSelection])
+  }, [dispPopup, setSelection, selections])
 
   const handleLaunch = async () => {
     if (!selections.size) { navigate('/command-center'); return }
@@ -322,11 +327,20 @@ export default function CompetitorDiscovery() {
           competitorId = compData.data?.id || compData.id
         }
         if (!competitorId) continue
-        await authFetch(`${API}/api/v1/locations/${selectedLocation!.id}/competitors`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ competitor_id: competitorId, slot_type: sel.action }),
-        })
+        if (sel.track) {
+          await authFetch(`${API}/api/v1/locations/${selectedLocation!.id}/competitors`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ competitor_id: competitorId, slot_type: 'track' }),
+          })
+        }
+        if (sel.block) {
+          await authFetch(`${API}/api/v1/locations/${selectedLocation!.id}/competitors`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ competitor_id: competitorId, slot_type: 'block' }),
+          })
+        }
       }
       navigate('/command-center')
     } finally {
@@ -334,8 +348,8 @@ export default function CompetitorDiscovery() {
     }
   }
 
-  const trackCount = [...selections.values()].filter((s) => s.action === 'track').length
-  const blockCount = [...selections.values()].filter((s) => s.action === 'block').length
+  const trackCount = [...selections.values()].filter((s) => s.track).length
+  const blockCount = [...selections.values()].filter((s) => s.block).length
   const estimatedCost = (trackCount + blockCount) * 100
 
   const centerLat = selectedLocation?.lat ? Number(selectedLocation.lat) : null
@@ -352,6 +366,49 @@ export default function CompetitorDiscovery() {
         if (operatorType === 'delivery') return bt === 'delivery' || bt === 'both'
         return true
       })
+
+  // Sidebar items derived from live DCC dispensary GeoJSON within radius — no scan required
+  const sidebarItems = useMemo(() => {
+    if (!dispensaries?.features?.length || !centerLat || !centerLng) return []
+    const R = 6371
+    return dispensaries.features
+      .filter(f => {
+        if (!f.geometry || (f.geometry as any).type !== 'Point') return false
+        const [lng, lat] = (f.geometry as any).coordinates as [number, number]
+        const dLat = (lat - centerLat) * Math.PI / 180
+        const dLng = (lng - centerLng) * Math.PI / 180
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(centerLat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+        const distMiles = (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))) / 1.60934
+        return distMiles <= radius
+      })
+      .filter(f => {
+        const bt = (f.properties as any)?.business_type
+        if (operatorType === 'storefront') return bt === 'storefront' || bt === 'both' || !bt
+        if (operatorType === 'delivery') return bt === 'delivery' || bt === 'both'
+        return true
+      })
+      .map(f => {
+        const p = f.properties as DispensaryFeatureProps
+        const [lng, lat] = (f.geometry as any).coordinates as [number, number]
+        const dLat = (lat - centerLat) * Math.PI / 180
+        const dLng = (lng - centerLng) * Math.PI / 180
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(centerLat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+        const distMiles = (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))) / 1.60934
+        return {
+          google_place_id: p.dcc_license ?? `dcc-${p.name}`,
+          name: p.name,
+          address: `${p.city ?? ''}${p.county ? `, ${p.county} Co.` : ''}, CA`,
+          distance_miles: Math.round(distMiles * 10) / 10,
+          platform: 'dcc' as const,
+          lat,
+          lng,
+          business_type: p.business_type,
+          dcc_license: p.dcc_license,
+        } as Competitor & { business_type?: string; dcc_license?: string }
+      })
+      .sort((a, b) => (a.distance_miles ?? 999) - (b.distance_miles ?? 999))
+      .slice(0, 150)
+  }, [dispensaries, centerLat, centerLng, radius, operatorType])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', fontFamily: 'var(--sans)' }}>
@@ -437,22 +494,22 @@ export default function CompetitorDiscovery() {
             {/* Your location marker */}
             {centerLat && centerLng && (
               <Marker longitude={centerLng} latitude={centerLat} anchor="center">
-                <div style={{ position: 'relative', width: 28, height: 28 }} title={selectedLocation?.name}>
+                <div style={{ position: 'relative', width: 44, height: 44 }} title={selectedLocation?.name}>
                   {/* Outer glow ring */}
                   <div style={{
                     position: 'absolute', inset: 0, borderRadius: '50%',
                     background: 'rgba(29,158,117,0.18)',
-                    boxShadow: '0 0 0 3px rgba(29,158,117,0.25)',
+                    boxShadow: '0 0 0 5px rgba(29,158,117,0.22)',
                   }} />
                   {/* Teal fill */}
                   <div style={{
-                    position: 'absolute', inset: 4, borderRadius: '50%',
+                    position: 'absolute', inset: 6, borderRadius: '50%',
                     background: '#1d9e75',
                     boxShadow: '0 0 10px rgba(29,158,117,0.6)',
                   }} />
                   {/* White center dot */}
                   <div style={{
-                    position: 'absolute', inset: 10, borderRadius: '50%',
+                    position: 'absolute', inset: 16, borderRadius: '50%',
                     background: '#ffffff',
                   }} />
                 </div>
@@ -466,15 +523,16 @@ export default function CompetitorDiscovery() {
               const sel = selections.get(key)
               const isDelivery = (comp as any).business_type === 'delivery' || (comp as any).business_type === 'both'
               const outerColor = isDelivery ? '#3b8bd4' : '#1d9e75'
-              const innerColor = sel?.action === 'block' ? '#67e8f9' : sel?.action === 'track' ? '#fb923c' : null
-              const size = sel ? 14 : 10
+              const innerColor = sel?.track && sel?.block ? '#fde047' : sel?.block ? '#67e8f9' : sel?.track ? '#fb923c' : null
+              const isAnySelected = !!(sel?.track || sel?.block)
+              const size = isAnySelected ? 20 : 12
               return (
                 <Marker
                   key={key}
                   longitude={Number(comp.lng)}
                   latitude={Number(comp.lat)}
                   anchor="center"
-                  onClick={() => setSelection(comp, sel ? null : 'track')}
+                  onClick={() => setSelection(comp, 'track', !(sel?.track))}
                 >
                   <div style={{ position: 'relative', width: size, height: size, cursor: 'pointer' }}>
                     {/* Outer circle */}
@@ -483,17 +541,17 @@ export default function CompetitorDiscovery() {
                       borderRadius: '50%',
                       background: outerColor,
                       border: '1.5px solid #0d0f11',
-                      opacity: sel ? 1 : 0.5,
+                      opacity: isAnySelected ? 1 : 0.5,
                       transition: 'all 0.15s',
-                      boxShadow: sel ? `0 0 8px ${outerColor}8c` : 'none',
+                      boxShadow: isAnySelected ? `0 0 8px ${outerColor}8c` : 'none',
                     }} />
                     {/* Inner dot — only when selected */}
                     {innerColor && (
                       <div style={{
                         position: 'absolute',
-                        inset: '50%',
+                        top: '50%', left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        width: 6, height: 6,
+                        width: 10, height: 10,
                         borderRadius: '50%',
                         background: innerColor,
                         pointerEvents: 'none',
@@ -691,40 +749,44 @@ export default function CompetitorDiscovery() {
 
         {/* Competitor list */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
-          {competitors.length === 0 ? (
+          {sidebarItems.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '32px 16px' }}>
               <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.65, maxWidth: 280, margin: '0 auto' }}>
                 {loading
-                  ? 'Scanning your market for rival dispensaries...'
-                  : scanned
-                    ? 'No rivals found in your area. You can add competitors manually from your dashboard.'
-                    : 'Click "Scan market" to discover rivals within your 5-mile radius.'}
+                  ? 'Loading dispensaries in your area...'
+                  : !selectedLocation
+                    ? 'Select a location above to see nearby rivals.'
+                    : 'No dispensaries found within your radius. Try increasing it.'}
               </div>
-              {!loading && !scanned && (
-                <button className="btn btn-primary" style={{ marginTop: 20, fontSize: 12 }} onClick={handleDiscover}>
-                  Scan nearby dispensaries
-                </button>
-              )}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {filteredCompetitors.map((comp) => {
+              {sidebarItems.map((comp) => {
                 const key = comp.id || comp.google_place_id
                 const sel = selections.get(key)
-                const isBlocked = sel?.action === 'block'
-                const isTracked = sel?.action === 'track'
+                const isTracked = sel?.track ?? false
+                const isBlocked = sel?.block ?? false
+                const bothSelected = isTracked && isBlocked
+                const isDeliveryItem = (comp as any).business_type === 'delivery' || (comp as any).business_type === 'both'
+                const rowBg = bothSelected ? 'rgba(253,224,71,0.07)' : isBlocked ? 'rgba(103,232,249,0.07)' : isTracked ? 'rgba(251,146,60,0.07)' : 'var(--surface-2)'
+                const rowBorder = bothSelected ? 'rgba(253,224,71,0.3)' : isBlocked ? 'rgba(103,232,249,0.3)' : isTracked ? 'rgba(251,146,60,0.3)' : 'var(--border)'
+                const dotColor = bothSelected ? '#fde047' : isBlocked ? '#67e8f9' : isTracked ? '#fb923c' : 'var(--text-3)'
                 return (
                   <div key={key} style={{
-                    background: isBlocked ? 'rgba(186,117,23,0.07)' : isTracked ? 'rgba(29,158,117,0.07)' : 'var(--surface-2)',
-                    border: `1px solid ${isBlocked ? 'rgba(186,117,23,0.28)' : isTracked ? 'rgba(29,158,117,0.28)' : 'var(--border)'}`,
+                    background: rowBg,
+                    border: `1px solid ${rowBorder}`,
                     borderRadius: 6, padding: '10px 12px',
                     display: 'flex', alignItems: 'center', gap: 10,
                     transition: 'border-color 0.1s, background 0.1s',
                   }}>
-                    <span style={{
-                      width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-                      background: isBlocked ? 'var(--warm)' : isTracked ? 'var(--accent)' : 'var(--text-3)',
-                    }} />
+                    {(isTracked || isBlocked) ? (
+                      <div style={{ position: 'relative', width: 10, height: 10, flexShrink: 0 }}>
+                        <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: isDeliveryItem ? '#3b8bd4' : '#1d9e75' }} />
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 5, height: 5, borderRadius: '50%', background: dotColor }} />
+                      </div>
+                    ) : (
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: isDeliveryItem ? 'rgba(59,139,212,0.5)' : 'rgba(29,158,117,0.5)', display: 'inline-block' }} />
+                    )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{
                         fontSize: 13, fontWeight: 500, color: 'var(--text-1)', marginBottom: 2,
@@ -744,16 +806,22 @@ export default function CompetitorDiscovery() {
                         style={{
                           fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
                           fontFamily: 'DM Sans, sans-serif', fontWeight: 500,
-                          border: `1px solid ${isTracked ? 'var(--accent)' : 'var(--border-2)'}`,
-                          background: isTracked ? 'var(--accent)' : 'transparent',
+                          border: `1px solid ${isTracked ? '#fb923c' : 'var(--border-2)'}`,
+                          background: isTracked ? '#fb923c' : 'transparent',
                           color: isTracked ? '#fff' : 'var(--text-2)',
                         }}
-                        onClick={() => setSelection(comp, isTracked ? null : 'track')}
+                        onClick={() => setSelection(comp, 'track', !isTracked)}
                       >Track</button>
-                      <div title="Blocking unlocks when you upgrade" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, padding: '4px 10px', borderRadius: 4, fontFamily: 'DM Sans, sans-serif', fontWeight: 500, border: '1px solid var(--border-2)', color: 'var(--text-3)', cursor: 'not-allowed', opacity: 0.5, userSelect: 'none' as const }}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 10, height: 10, flexShrink: 0 }}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        Block
-                      </div>
+                      <button
+                        style={{
+                          fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
+                          fontFamily: 'DM Sans, sans-serif', fontWeight: 500,
+                          border: `1px solid ${isBlocked ? '#67e8f9' : 'var(--border-2)'}`,
+                          background: isBlocked ? '#67e8f9' : 'transparent',
+                          color: isBlocked ? '#0d0f11' : 'var(--text-2)',
+                        }}
+                        onClick={() => setSelection(comp, 'block', !isBlocked)}
+                      >Block</button>
                     </div>
                   </div>
                 )

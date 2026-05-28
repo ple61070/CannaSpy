@@ -228,14 +228,9 @@ export const dispensaryRingLayer: LayerProps = {
       ['==', ['get', 'business_type'], 'both'],     PALETTE.accentTrust,
       PALETTE.accentIntel,
     ] as unknown as string,
-    // Ring radius: 16px prospect, 19px enriched/blocked, +4px on hover
+    // Ring radius: uniform 24px + 4px hover — large glow, no enriched/prospect branching
     'circle-radius': [
-      '+',
-      ['case',
-        ['==', ['get', 'track_state'], 'blocked'],  19,
-        ['boolean', ['get', 'enriched'], false],     19,
-        16,
-      ],
+      '+', 24,
       ['case', ['boolean', ['feature-state', 'hover'], false], 4, 0],
     ] as unknown as number,
     'circle-opacity': 0.25,
@@ -293,14 +288,9 @@ export const dispensaryPointLayer: LayerProps = {
       ['==', ['get', 'business_type'], 'both'],     PALETTE.accentTrust,
       PALETTE.accentIntel,
     ] as unknown as string,
-    // Fill radius: 14px enriched/blocked, 11px prospect. +4px on hover.
+    // Fill radius: uniform 13px + 4px hover — no enriched/prospect branching
     'circle-radius': [
-      '+',
-      ['case',
-        ['==', ['get', 'track_state'], 'blocked'],  14,
-        ['boolean', ['get', 'enriched'], false],     14,
-        11,
-      ],
+      '+', 13,
       ['case', ['boolean', ['feature-state', 'hover'], false], 4, 0],
     ] as unknown as number,
     'circle-stroke-color': PALETTE.bgBase,
