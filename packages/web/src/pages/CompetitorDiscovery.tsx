@@ -45,6 +45,7 @@ function StepBar({ active }: { active: number }) {
   )
 }
 
+type SortMode = 'distance' | 'name' | 'status'
 type MapStyleId = 'streets' | 'satellite'
 type AppTheme = 'light' | 'dark'
 const MAP_STYLES: Record<MapStyleId, Record<AppTheme, string>> = {
@@ -149,6 +150,7 @@ export default function CompetitorDiscovery() {
   const [scanned, setScanned] = useState(false)
   const [mapMoved, setMapMoved] = useState(false)
   const [operatorType, setOperatorType] = useState<OperatorType>('both')
+  const [sortMode, setSortMode] = useState<SortMode>('distance')
   const [bbox, setBbox] = useState<string | null>(null)
   const [radius, setRadius] = useState(5)
   const [dispPopup, setDispPopup] = useState<{ lng: number; lat: number; props: DispensaryFeatureProps } | null>(null)
@@ -296,11 +298,17 @@ export default function CompetitorDiscovery() {
     setCompetitors(prev =>
       prev.some(c => c.google_place_id === props.dcc_license) ? prev : [...prev, comp]
     )
-    const key = comp.google_place_id
-    const existing = selections.get(key)
-    setSelection(comp, field, !(existing?.[field]))
+    setSelections(prev => {
+      const key = comp.google_place_id
+      const next = new globalThis.Map(prev)
+      const existing = next.get(key)
+      const updated: Selection = { competitor: comp, track: false, block: false, ...existing, [field]: !(existing?.[field]) }
+      if (!updated.track && !updated.block) next.delete(key)
+      else next.set(key, updated)
+      return next
+    })
     setDispPopup(null)
-  }, [dispPopup, setSelection, selections])
+  }, [dispPopup])
 
   const handleLaunch = async () => {
     if (!selections.size) { navigate('/command-center'); return }
@@ -410,6 +418,26 @@ export default function CompetitorDiscovery() {
       .slice(0, 150)
   }, [dispensaries, centerLat, centerLng, radius, operatorType])
 
+  // Selected items always float to top; within each group sort by sortMode
+  const sortedSidebarItems = useMemo(() => {
+    return [...sidebarItems].sort((a, b) => {
+      const aKey = a.id || a.google_place_id
+      const bKey = b.id || b.google_place_id
+      const aSel = selections.get(aKey)
+      const bSel = selections.get(bKey)
+      const aActive = !!(aSel?.track || aSel?.block)
+      const bActive = !!(bSel?.track || bSel?.block)
+      if (aActive !== bActive) return aActive ? -1 : 1
+      if (sortMode === 'name') return a.name.localeCompare(b.name)
+      if (sortMode === 'status') {
+        const aScore = aSel?.block ? 2 : aSel?.track ? 1 : 0
+        const bScore = bSel?.block ? 2 : bSel?.track ? 1 : 0
+        if (aScore !== bScore) return bScore - aScore
+      }
+      return (a.distance_miles ?? 999) - (b.distance_miles ?? 999)
+    })
+  }, [sidebarItems, selections, sortMode])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', fontFamily: 'var(--sans)' }}>
       {/* Topbar */}
@@ -491,25 +519,41 @@ export default function CompetitorDiscovery() {
               </Source>
             )}
 
-            {/* Your location marker */}
+            {/* Your location marker — 5-layer concentric rings with pulse */}
             {centerLat && centerLng && (
               <Marker longitude={centerLng} latitude={centerLat} anchor="center">
-                <div style={{ position: 'relative', width: 44, height: 44 }} title={selectedLocation?.name}>
-                  {/* Outer glow ring */}
+                <style>{`@keyframes cs-ping{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.3);opacity:0}}`}</style>
+                <div style={{ position: 'relative', width: 48, height: 48 }} title={selectedLocation?.name}>
+                  {/* L1: Animated pulse ring */}
                   <div style={{
                     position: 'absolute', inset: 0, borderRadius: '50%',
-                    background: 'rgba(29,158,117,0.18)',
-                    boxShadow: '0 0 0 5px rgba(29,158,117,0.22)',
+                    border: '2px solid rgba(29,158,117,0.65)',
+                    animation: 'cs-ping 2.5s ease-out infinite',
                   }} />
-                  {/* Teal fill */}
+                  {/* L2: Static outer ring */}
                   <div style={{
-                    position: 'absolute', inset: 6, borderRadius: '50%',
-                    background: '#1d9e75',
-                    boxShadow: '0 0 10px rgba(29,158,117,0.6)',
+                    position: 'absolute', inset: 4, borderRadius: '50%',
+                    border: '1.5px solid rgba(29,158,117,0.35)',
                   }} />
-                  {/* White center dot */}
+                  {/* L3: Mid ring with subtle fill */}
+                  <div style={{
+                    position: 'absolute', inset: 10, borderRadius: '50%',
+                    border: '1.5px solid rgba(29,158,117,0.55)',
+                    background: 'rgba(29,158,117,0.08)',
+                  }} />
+                  {/* L4: Teal fill */}
                   <div style={{
                     position: 'absolute', inset: 16, borderRadius: '50%',
+                    background: '#1d9e75',
+                    boxShadow: '0 0 8px rgba(29,158,117,0.7)',
+                  }} />
+                  {/* L5: White center dot */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%', left: '50%',
+                    transform: 'translate(-50%,-50%)',
+                    width: 8, height: 8,
+                    borderRadius: '50%',
                     background: '#ffffff',
                   }} />
                 </div>
@@ -643,9 +687,10 @@ export default function CompetitorDiscovery() {
         }}>
           {/* Your location */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <div style={{ position: 'relative', width: 10, height: 10, flexShrink: 0 }}>
-              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#1d9e75' }} />
-              <div style={{ position: 'absolute', inset: '50%', transform: 'translate(-50%,-50%)', width: 4, height: 4, borderRadius: '50%', background: '#fff' }} />
+            <div style={{ position: 'relative', width: 14, height: 14, flexShrink: 0 }}>
+              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1.5px solid rgba(29,158,117,0.45)', animation: 'cs-ping 2.5s ease-out infinite' }} />
+              <div style={{ position: 'absolute', inset: 3, borderRadius: '50%', background: '#1d9e75' }} />
+              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 4, height: 4, borderRadius: '50%', background: '#fff' }} />
             </div>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-2)', letterSpacing: '0.04em' }}>Your location</span>
           </div>
@@ -718,6 +763,28 @@ export default function CompetitorDiscovery() {
             </span>
           </div>
 
+          {/* Sort controls */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 10 }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-3)', letterSpacing: '0.06em', marginRight: 2 }}>SORT</span>
+            {(['distance', 'name', 'status'] as SortMode[]).map(mode => (
+              <button
+                key={mode}
+                onClick={() => setSortMode(mode)}
+                style={{
+                  fontSize: 9, padding: '3px 8px', borderRadius: 4, cursor: 'pointer',
+                  fontFamily: 'var(--mono)', fontWeight: 600, letterSpacing: '0.04em',
+                  border: `1px solid ${sortMode === mode ? 'var(--accent)' : 'var(--border-2)'}`,
+                  background: sortMode === mode ? 'rgba(29,158,117,0.12)' : 'transparent',
+                  color: sortMode === mode ? 'var(--accent)' : 'var(--text-3)',
+                  textTransform: 'uppercase' as const,
+                  transition: 'all 0.12s',
+                }}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+
           <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
             {locations.length >= 1 && (
               <select
@@ -761,7 +828,7 @@ export default function CompetitorDiscovery() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {sidebarItems.map((comp) => {
+              {sortedSidebarItems.map((comp) => {
                 const key = comp.id || comp.google_place_id
                 const sel = selections.get(key)
                 const isTracked = sel?.track ?? false
