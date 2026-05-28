@@ -386,7 +386,7 @@ export default function CompetitorDiscovery() {
         const dLng = (lng - centerLng) * Math.PI / 180
         const a = Math.sin(dLat / 2) ** 2 + Math.cos(centerLat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2
         const distMiles = (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))) / 1.60934
-        return distMiles > 0.01 && distMiles <= radius
+        return distMiles > 0.01
       })
       .filter(f => {
         const bt = (f.properties as any)?.business_type
