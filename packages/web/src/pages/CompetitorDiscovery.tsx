@@ -307,7 +307,6 @@ export default function CompetitorDiscovery() {
       else next.set(key, updated)
       return next
     })
-    setDispPopup(null)
   }, [dispPopup])
 
   const handleLaunch = async () => {
@@ -403,7 +402,7 @@ export default function CompetitorDiscovery() {
         const a = Math.sin(dLat / 2) ** 2 + Math.cos(centerLat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2
         const distMiles = (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))) / 1.60934
         return {
-          google_place_id: p.dcc_license ?? `dcc-${p.name}`,
+          google_place_id: p.dcc_license ?? `dcc-${p.name}-${lat.toFixed(4)}-${lng.toFixed(4)}`,
           name: p.name,
           address: `${p.city ?? ''}${p.county ? `, ${p.county} Co.` : ''}, CA`,
           distance_miles: Math.round(distMiles * 10) / 10,
@@ -414,6 +413,15 @@ export default function CompetitorDiscovery() {
           dcc_license: p.dcc_license,
         } as Competitor & { business_type?: string; dcc_license?: string }
       })
+      .reduce((acc, item) => {
+        const dedupKey = (item as any).dcc_license || item.name
+        if (!acc.seen.has(dedupKey)) {
+          acc.seen.add(dedupKey)
+          acc.items.push(item)
+        }
+        return acc
+      }, { seen: new Set<string>(), items: [] as (Competitor & { business_type?: string; dcc_license?: string })[] })
+      .items
       .sort((a, b) => (a.distance_miles ?? 999) - (b.distance_miles ?? 999))
       .slice(0, 150)
   }, [dispensaries, centerLat, centerLng, radius, operatorType])
@@ -437,6 +445,12 @@ export default function CompetitorDiscovery() {
       return (a.distance_miles ?? 999) - (b.distance_miles ?? 999)
     })
   }, [sidebarItems, selections, sortMode])
+
+  // Popup live state — must match the key used in handlePopupSelect (props.dcc_license)
+  const popupKey = dispPopup?.props.dcc_license ?? null
+  const popupSel = popupKey ? selections.get(popupKey) : undefined
+  const popupTracked = popupSel?.track ?? false
+  const popupBlocked = popupSel?.block ?? false
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)', fontFamily: 'var(--sans)' }}>
@@ -527,25 +541,25 @@ export default function CompetitorDiscovery() {
                   {/* L1: Animated pulse ring */}
                   <div style={{
                     position: 'absolute', inset: 0, borderRadius: '50%',
-                    border: '2px solid rgba(29,158,117,0.65)',
+                    border: '2px solid rgba(139,92,246,0.5)',
                     animation: 'cs-ping 2.5s ease-out infinite',
                   }} />
                   {/* L2: Static outer ring */}
                   <div style={{
                     position: 'absolute', inset: 4, borderRadius: '50%',
-                    border: '1.5px solid rgba(29,158,117,0.35)',
+                    border: '1.5px solid rgba(139,92,246,0.35)',
                   }} />
                   {/* L3: Mid ring with subtle fill */}
                   <div style={{
                     position: 'absolute', inset: 10, borderRadius: '50%',
-                    border: '1.5px solid rgba(29,158,117,0.55)',
-                    background: 'rgba(29,158,117,0.08)',
+                    border: '1.5px solid rgba(139,92,246,0.55)',
+                    background: 'rgba(139,92,246,0.08)',
                   }} />
-                  {/* L4: Teal fill */}
+                  {/* L4: Purple fill */}
                   <div style={{
                     position: 'absolute', inset: 16, borderRadius: '50%',
-                    background: '#1d9e75',
-                    boxShadow: '0 0 8px rgba(29,158,117,0.7)',
+                    background: '#8b5cf6',
+                    boxShadow: '0 0 12px rgba(139,92,246,0.7)',
                   }} />
                   {/* L5: White center dot */}
                   <div style={{
@@ -636,17 +650,40 @@ export default function CompetitorDiscovery() {
                   <div style={{ display: 'flex', gap: 6, borderTop: '1px solid var(--border)', paddingTop: 9 }}>
                     <button
                       onClick={() => handlePopupSelect('track')}
-                      style={{ flex: 1, padding: '5px 0', borderRadius: 5, border: '1px solid var(--accent)', background: 'transparent', color: 'var(--accent)', fontSize: 11, fontWeight: 600, fontFamily: 'var(--sans)', cursor: 'pointer' }}
+                      style={{
+                        flex: 1, padding: '5px 0', borderRadius: 5, fontSize: 11, fontWeight: 600,
+                        fontFamily: 'var(--sans)', cursor: 'pointer',
+                        border: `1px solid ${popupTracked ? '#fb923c' : 'var(--border-2)'}`,
+                        background: popupTracked ? '#fb923c' : 'transparent',
+                        color: popupTracked ? '#fff' : 'var(--text-2)',
+                      }}
                     >
                       Track
                     </button>
                     <button
                       onClick={() => handlePopupSelect('block')}
-                      style={{ flex: 1, padding: '5px 0', borderRadius: 5, border: '1px solid #ba7517', background: 'transparent', color: '#ba7517', fontSize: 11, fontWeight: 600, fontFamily: 'var(--sans)', cursor: 'pointer' }}
+                      style={{
+                        flex: 1, padding: '5px 0', borderRadius: 5, fontSize: 11, fontWeight: 600,
+                        fontFamily: 'var(--sans)', cursor: 'pointer',
+                        border: `1px solid ${popupBlocked ? '#67e8f9' : 'var(--border-2)'}`,
+                        background: popupBlocked ? '#67e8f9' : 'transparent',
+                        color: popupBlocked ? '#0d0f11' : 'var(--text-2)',
+                      }}
                     >
                       Block
                     </button>
                   </div>
+                  <button
+                    onClick={() => setDispPopup(null)}
+                    style={{
+                      marginTop: 8, width: '100%', fontSize: 11, padding: '5px 0',
+                      borderRadius: 4, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
+                      fontWeight: 500, border: '1px solid var(--border-2)',
+                      background: 'transparent', color: 'var(--text-2)',
+                    }}
+                  >
+                    Done
+                  </button>
                 </div>
               </Popup>
             )}
@@ -688,8 +725,8 @@ export default function CompetitorDiscovery() {
           {/* Your location */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <div style={{ position: 'relative', width: 14, height: 14, flexShrink: 0 }}>
-              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1.5px solid rgba(29,158,117,0.45)', animation: 'cs-ping 2.5s ease-out infinite' }} />
-              <div style={{ position: 'absolute', inset: 3, borderRadius: '50%', background: '#1d9e75' }} />
+              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1.5px solid rgba(139,92,246,0.4)', animation: 'cs-ping 2.5s ease-out infinite' }} />
+              <div style={{ position: 'absolute', inset: 3, borderRadius: '50%', background: '#8b5cf6' }} />
               <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 4, height: 4, borderRadius: '50%', background: '#fff' }} />
             </div>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-2)', letterSpacing: '0.04em' }}>Your location</span>
