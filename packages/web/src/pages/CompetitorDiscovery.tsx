@@ -414,7 +414,9 @@ export default function CompetitorDiscovery() {
         } as Competitor & { business_type?: string; dcc_license?: string }
       })
       .reduce((acc, item) => {
-        const dedupKey = (item as any).dcc_license || item.name
+        // Use google_place_id — already includes coords for no-license items so distinct
+        // physical locations with the same brand name are NOT collapsed to one entry
+        const dedupKey = item.google_place_id
         if (!acc.seen.has(dedupKey)) {
           acc.seen.add(dedupKey)
           acc.items.push(item)
