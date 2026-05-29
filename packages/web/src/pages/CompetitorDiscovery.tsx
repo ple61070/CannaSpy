@@ -122,13 +122,13 @@ function makeCircleGeoJSON(lat: number, lng: number, radiusMiles: number) {
 const radiusFillLayer: LayerProps = {
   id: 'radius-fill',
   type: 'fill',
-  paint: { 'fill-color': '#1d9e75', 'fill-opacity': 0.15 },
+  paint: { 'fill-color': '#1d9e75', 'fill-opacity': 0.28 },
 }
 
 const radiusOutlineLayer: LayerProps = {
   id: 'radius-outline',
   type: 'line',
-  paint: { 'line-color': '#1d9e75', 'line-width': 2, 'line-opacity': 0.75, 'line-dasharray': [4, 3] },
+  paint: { 'line-color': '#1d9e75', 'line-width': 3, 'line-opacity': 1, 'line-dasharray': [5, 3] },
 }
 
 export default function CompetitorDiscovery() {
