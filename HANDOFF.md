@@ -1,4 +1,99 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-29 (Session 41 — doc sync: CLAUDE.md migration count corrected 12→13)
+
+---
+
+## Session 41 — 2026-05-29
+
+**Commits:** no new feature commits — CLAUDE.md migration count fix committed with this handoff
+**Deploy:** Vercel ✅ unchanged | Railway API ✅ unchanged
+
+---
+
+### 1. What Was Done
+
+#### CLAUDE.md — migration count correction (12 → 13)
+
+Ran `cannaspy-session-open` at session start. Found one contradiction that Session 40's sync missed: `013_platform_slug.sql` exists on disk but CLAUDE.md still said "12 migrations" in four places.
+
+Migration 013 was added in Session 39 (`feat(data): platform ingest for delivery dispensaries with coordinates`) but wasn't listed in that session's HANDOFF.md "What Changed" table, so the Session 40 sync pass missed it when updating the count from 11→12.
+
+Fixed four occurrences in CLAUDE.md:
+- Repo tree: `migrations/ ← ✅ 001–012` → `001–013`
+- "Built and Live" summary: `all 12 migrations applied (012: legal_name…)` → `all 13 migrations applied` with 013 noted
+- Phase 1 Done: `12 migrations on Railway Postgres` → `13 migrations`
+- Phase 4 Done: `all 12 migrations applied` → `all 13 migrations`
+- Footer: v2.2 → v2.3
+
+No feature work this session. User accidentally posted a prompt file reference from another project; confirmed it was a mistake.
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `CLAUDE.md` | Migration count corrected 12→13 in 4 places; footer updated to v2.3 (2026-05-29) |
+
+No schema migrations. No npm dependencies. No new env vars. No Railway or Vercel deploys.
+
+---
+
+### 3. What Failed
+
+Nothing failed.
+
+Known standing issues (not touched this session):
+- `alert.worker.ts` — logs only, no emails sent on alerts
+- `scrape.worker.ts` — still falls back to `dispensary_scraper.py` as primary
+- Stripe live-mode webhook not registered
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Wire PromotionsTracker** — add `GET /api/v1/competitors/:id/promotions` to `packages/api/src/routes/competitors.ts`, then wire `packages/web/src/pages/PromotionsTracker.tsx` to it
+2. **Wire alert.worker.ts → Resend** — `packages/api/src/workers/alert.worker.ts` currently logs only; read from `change_events`, send real price-change emails via Resend
+3. **BillingUsage per-location slot breakdown** — new endpoint returning `tracked_competitors` grouped by location + wire `packages/web/src/pages/BillingUsage.tsx`
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Frontend (account screens):**
+- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions` (backend route not yet built)
+- [ ] BillingUsage — per-location slot breakdown
+- [ ] BillingUsage — invoice history
+- [ ] BlockManagement — "Rivals blocking you" section
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Map / Data Pipeline:**
+- [ ] `promoteId="id"` on dispensary `<Source>` in `MarketHeatMap.tsx` — hover state not yet applied (1-line fix)
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] `scrape.worker.ts` → call `collector.py` as primary
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after scrape
+- [ ] 462 dispensaries missing lat/lng — geocode when `GOOGLE_PLACES_API_KEY` available
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Culture Cannabis Club, Corona)
+Location ID:      9354f184-5b88-4a8f-abc3-012fdaa4058f (Cannabis House, LA)
+Org ID (Patrick): 4b507cd2-17e6-439c-8993-78476cdf08e1
+Railway project token: ce3cf795-c0ab-45fe-b815-eb3ef2a81331
+```
+
+---
+
 **Date:** 2026-05-28 (Session 40 — doc sync: CLAUDE.md contradictions fixed + session open/close skills + SessionStart hook)
 
 ---

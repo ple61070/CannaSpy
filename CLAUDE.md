@@ -124,7 +124,7 @@ cannaspy/
 │   │       ├── db/
 │   │       │   ├── schema.sql       ← ✅ complete schema
 │   │       │   ├── redis.ts         ← ✅ shared IORedis cache singleton
-│   │       │   └── migrations/      ← ✅ 001–012 applied (Railway Postgres)
+│   │       │   └── migrations/      ← ✅ 001–013 applied (Railway Postgres)
 │   │       ├── scheduler.ts         ← ✅ exists
 │   │       └── index.ts             ← ✅ exists
 │   │
@@ -168,7 +168,7 @@ cannaspy/
 - Diff engine (`diff_engine.py`)
 - Promo parser (`promo_parser.py`)
 - CLI tools (all 4 + test-block-cancel.py)
-- Database schema — all 12 migrations applied to Railway Postgres (012: legal_name on dispensaries, Session 38)
+- Database schema — all 13 migrations applied to Railway Postgres (012: legal_name on dispensaries, Session 38; 013: platform_slug + drop NOT NULL on dcc_license for delivery operators, Session 39)
 - Parsers (Dutchie, HTML, normalizer)
 - Places client (slug discovery)
 - Robots checker
@@ -472,7 +472,7 @@ WEB_PORT=3000
 **Status: COMPLETE ✅ — Pipeline live in production since 2026-04-28.**
 
 Done:
-- [x] Schema applied — 12 migrations on Railway Postgres
+- [x] Schema applied — 13 migrations on Railway Postgres
 - [x] `dispensary_scraper.py` rebranded (no CannaIntel references)
 - [x] `collector.py` built and run — 9,584 menu items collected (4 Corona + 4 LA competitors)
 - [x] `ip_pool.py` built
@@ -541,7 +541,7 @@ Still needed:
 
 Done:
 - [x] Railway API deployed and live: `https://cannaspy-production.up.railway.app` (us-west2) — Session 20 (migrated from Fly.io)
-- [x] Railway Postgres active — 1,787 CA dispensaries, all 12 migrations applied, 9,584 menu items
+- [x] Railway Postgres active — 1,787 CA dispensaries, all 13 migrations applied, 9,584 menu items
 - [x] Frontend deployed to Vercel (`web-rouge-one-15.vercel.app`) — monorepo deploy from workspace root
 - [x] Dunning logic — 3-day grace period on `invoice.payment_failed`
 - [x] Webhook test-mode endpoint registered + verified
@@ -627,5 +627,5 @@ Total menu items in DB: **9,584** (8 competitors, 2 locations as of Session 28)
 ---
 
 *Maintained by the CannaSpy founder and Claude.*
-*Last updated: 2026-05-28 — v2.2 (Sessions 37-39: diff_engine tested, migration 012 legal_name, setup flow, CompetitorDiscovery overhaul + auto-save)*
+*Last updated: 2026-05-28 — v2.3 (Session 40: migration count 12→13 — 013_platform_slug added Session 39)*
 *Do not commit changes to this file without founder approval.*
