@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Map, { Marker, NavigationControl, Popup, Source, Layer, type MapRef, type LayerProps } from 'react-map-gl'
+import Map, { Marker, NavigationControl, Popup, Source, Layer, type MapRef, type MapLayerMouseEvent } from 'react-map-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useAlerts, type Alert } from '../hooks/useAlerts'
 import { useBlocks } from '../hooks/useBlocks'
 import { useAuthFetch } from '../lib/useAuthFetch'
 import { useStore } from '../store'
 import { OperatorTypeFilter, type OperatorType } from '../components/filters/OperatorTypeFilter'
+import {
+  dispensaryRingLayer,
+  dispensaryClusterLayer,
+  dispensaryClusterCountLayer,
+  dispensaryPointLayer,
+} from '../components/map/layers'
+import { useDispensaryMap } from '../hooks/useDispensaryMap'
 
 const API = import.meta.env.VITE_API_URL ?? ''
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
@@ -36,37 +43,6 @@ function useAppTheme(): AppTheme {
 const LA_VIEWPORT = { longitude: -118.2437, latitude: 34.0522, zoom: 11 }
 
 const EMPTY_FC = { type: 'FeatureCollection' as const, features: [] as never[] }
-
-const DISP_RING_LAYER: LayerProps = {
-  id: 'cc-disp-ring',
-  type: 'circle',
-  paint: {
-    'circle-radius': 7,
-    'circle-color': 'transparent',
-    'circle-stroke-width': 2,
-    'circle-stroke-color': [
-      'case',
-      ['==', ['get', 'track_state'], 'blocked'], '#ba7517',
-      ['==', ['get', 'track_state'], 'tracked'], '#1d9e75',
-      '#b8f0d8',  // bright mint ring for untracked prospects
-    ],
-    'circle-stroke-opacity': 1,
-  },
-}
-const DISP_FILL_LAYER: LayerProps = {
-  id: 'cc-disp-fill',
-  type: 'circle',
-  paint: {
-    'circle-radius': 4,
-    'circle-color': [
-      'case',
-      ['==', ['get', 'track_state'], 'blocked'], '#ba7517',
-      ['==', ['get', 'track_state'], 'tracked'], '#1d9e75',
-      '#d6f5e8',  // bright light mint fill — pops on dark map
-    ],
-    'circle-opacity': 1,
-  },
-}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -220,8 +196,9 @@ export default function CommandCenter() {
     lat: number | null; lng: number | null; slot_type: string; blocked_at: string | null
   }[]>([])
 
-  const [dispensaries, setDispensaries] = useState<typeof EMPTY_FC>(EMPTY_FC)
-  const dispensariesRef = useRef<typeof EMPTY_FC>(EMPTY_FC)
+  const [bbox, setBbox] = useState<string | null>(null)
+  const { data: dispensaries } = useDispensaryMap(bbox)
+  const dispensariesRef = useRef(dispensaries)
   const [dispPopup, setDispPopup] = useState<{ lng: number; lat: number; props: Record<string, any> } | null>(null)
   const [trackLocId, setTrackLocId] = useState<string>('')
   const [savingTrack, setSavingTrack] = useState(false)
@@ -274,26 +251,12 @@ export default function CommandCenter() {
     return () => ro.disconnect()
   }, [])
 
-  // Sync dispensaries ref for imperative setData
+  // Sync dispensaries ref + imperative source update (bypasses React reconciliation)
   useEffect(() => { dispensariesRef.current = dispensaries }, [dispensaries])
   useEffect(() => {
-    const src = mapRef.current?.getMap()?.getSource('cc-dispensaries') as any
+    const src = mapRef.current?.getMap()?.getSource('cs-dispensaries') as any
     if (src?.setData) src.setData(dispensaries)
   }, [dispensaries])
-
-  // Fetch dispensaries for current bbox
-  const fetchDispensaries = useCallback(async () => {
-    const map = mapRef.current?.getMap()
-    if (!map) return
-    const b = map.getBounds()
-    if (!b) return
-    const bbox = `${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`
-    try {
-      const r = await authFetch(`${API}/api/v1/map/dispensaries?bbox=${bbox}&limit=500`)
-      const data = await r.json()
-      if (data?.type === 'FeatureCollection') setDispensaries(data)
-    } catch { /* silent */ }
-  }, [authFetch])
 
   // Refresh tracked competitors list (called after tracking from popup)
   const refreshCompetitors = useCallback(async () => {
@@ -313,14 +276,29 @@ export default function CommandCenter() {
     setCompetitors(merged)
   }, [authFetch, locations])
 
-  // Handle click on dispensary pin layer
-  const handleMapClick = useCallback((e: any) => {
+  // Handle click on dispensary pin layers
+  const handleMapClick = useCallback((e: MapLayerMouseEvent) => {
+    const f = e.features?.[0]
+    if (!f) { setDispPopup(null); return }
     const map = mapRef.current?.getMap()
     if (!map) return
-    const features = map.queryRenderedFeatures(e.point, { layers: ['cc-disp-fill'] })
-    if (!features.length) { setDispPopup(null); return }
-    const f = features[0]
-    setDispPopup({ lng: e.lngLat.lng, lat: e.lngLat.lat, props: f.properties as Record<string, any> })
+
+    if (f.layer?.id === 'cs-dispensary-cluster') {
+      const clusterId = (f.properties as { cluster_id: number }).cluster_id
+      const source = map.getSource('cs-dispensaries') as any
+      source.getClusterExpansionZoom(clusterId, (err: Error | null, zoom: number | null) => {
+        if (err) return
+        const coords = (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
+        map.easeTo({ center: coords, zoom: zoom ?? 10, duration: 400 })
+      })
+      setDispPopup(null)
+      return
+    }
+
+    if (f.layer?.id === 'cs-dispensary-point') {
+      const coords = (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
+      setDispPopup({ lng: coords[0], lat: coords[1], props: f.properties as Record<string, any> })
+    }
   }, [])
 
   // Set default trackLocId when locations load
@@ -360,10 +338,10 @@ export default function CommandCenter() {
       })
       showToast(`${action === 'block' ? 'Blocked' : 'Tracking'} ${props.name}`, action === 'block' ? '#ba7517' : '#1d9e75')
       setDispPopup(null)
-      await Promise.all([refreshCompetitors(), fetchDispensaries()])
+      await refreshCompetitors()
     } catch { showToast('Something went wrong', '#d4537e') }
     finally { setSavingTrack(false) }
-  }, [dispPopup, trackLocId, authFetch, refreshCompetitors, fetchDispensaries])
+  }, [dispPopup, trackLocId, authFetch, refreshCompetitors])
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const unreviewedCount = alerts.filter((a) => !a.reviewed).length
@@ -416,10 +394,21 @@ export default function CommandCenter() {
         duration: 800,
       })
     }
-    fetchDispensaries()
-    const src = mapRef.current?.getMap()?.getSource('cc-dispensaries') as any
-    if (src?.setData) src.setData(dispensariesRef.current)
-  }, [firstLocation, fetchDispensaries])
+    const map = mapRef.current?.getMap()
+    if (map) {
+      const b = map.getBounds()
+      if (b) setBbox(`${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`)
+      const src = map.getSource('cs-dispensaries') as any
+      if (src?.setData) src.setData(dispensariesRef.current)
+    }
+  }, [firstLocation])
+
+  const handleMoveEnd = useCallback(() => {
+    const map = mapRef.current?.getMap()
+    if (!map) return
+    const b = map.getBounds()
+    if (b) setBbox(`${b.getWest()},${b.getSouth()},${b.getEast()},${b.getNorth()}`)
+  }, [])
 
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
@@ -938,16 +927,19 @@ export default function CommandCenter() {
             mapStyle={MAP_STYLES[mapStyleId][appTheme]}
             style={{ width: '100%', height: '100%' }}
             attributionControl={false}
+            interactiveLayerIds={['cs-dispensary-cluster', 'cs-dispensary-point']}
             onLoad={handleMapLoad}
-            onMoveEnd={fetchDispensaries}
+            onMoveEnd={handleMoveEnd}
             onClick={handleMapClick}
           >
             <NavigationControl position="top-right" showCompass={false} />
 
             {/* All dispensaries from DCC — untracked grey, tracked teal, blocked amber */}
-            <Source id="cc-dispensaries" type="geojson" data={EMPTY_FC as any} promoteId="id">
-              <Layer {...DISP_RING_LAYER} />
-              <Layer {...DISP_FILL_LAYER} />
+            <Source id="cs-dispensaries" type="geojson" data={EMPTY_FC as any} promoteId="id" cluster clusterMaxZoom={13} clusterRadius={35}>
+              <Layer {...dispensaryRingLayer} />
+              <Layer {...dispensaryPointLayer} />
+              <Layer {...dispensaryClusterLayer} />
+              <Layer {...dispensaryClusterCountLayer} />
             </Source>
 
             {/* Dispensary click popup */}
@@ -1020,26 +1012,23 @@ export default function CommandCenter() {
             ))}
             {/* Your location markers — all locations */}
             {locations.filter(l => l.lat && l.lng).map(loc => (
-              <Marker
-                key={loc.id}
-                longitude={Number(loc.lng)}
-                latitude={Number(loc.lat)}
-                anchor="bottom"
-              >
+              <Marker key={loc.id} longitude={Number(loc.lng)} latitude={Number(loc.lat)} anchor="center">
+                <style>{`@keyframes cs-ping{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.3);opacity:0}}`}</style>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  <div style={{
-                    width: 16, height: 16, borderRadius: '50%',
-                    background: '#d4537e',
-                    border: '2px solid #e8e6e0',
-                    boxShadow: '0 0 0 4px rgba(212,83,126,0.25), 0 0 10px rgba(212,83,126,0.5)',
-                  }} />
+                  <div style={{ position: 'relative', width: 48, height: 48 }} title={loc.name}>
+                    <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid rgba(139,92,246,0.5)', animation: 'cs-ping 2.5s ease-out infinite' }} />
+                    <div style={{ position: 'absolute', inset: 4, borderRadius: '50%', border: '1.5px solid rgba(139,92,246,0.35)' }} />
+                    <div style={{ position: 'absolute', inset: 10, borderRadius: '50%', border: '1.5px solid rgba(139,92,246,0.55)', background: 'rgba(139,92,246,0.08)' }} />
+                    <div style={{ position: 'absolute', inset: 16, borderRadius: '50%', background: '#8b5cf6', boxShadow: '0 0 12px rgba(139,92,246,0.7)' }} />
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 8, height: 8, borderRadius: '50%', background: '#ffffff' }} />
+                  </div>
                   <div style={{
                     fontFamily: 'var(--mono)', fontSize: 8, fontWeight: 700,
-                    color: '#d4537e', letterSpacing: '0.12em',
+                    color: '#8b5cf6', letterSpacing: '0.12em',
                     whiteSpace: 'nowrap',
                     background: 'rgba(13,15,17,0.85)', backdropFilter: 'blur(8px)',
                     padding: '2px 6px', borderRadius: 4,
-                    border: '1px solid rgba(212,83,126,0.4)',
+                    border: '1px solid rgba(139,92,246,0.4)',
                   }}>{loc.name}</div>
                 </div>
               </Marker>

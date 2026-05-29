@@ -358,9 +358,11 @@ export default function LocationWizard() {
                 >
                   <NavigationControl position="top-right" />
                   {markerPos && (
-                    <Marker longitude={markerPos.lng} latitude={markerPos.lat} anchor="bottom">
-                      <div style={{ width: 22, height: 22, background: 'var(--accent)', borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)', boxShadow: '0 4px 14px rgba(9,161,161,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ width: 8, height: 8, background: '#fff', borderRadius: '50%', transform: 'rotate(45deg)' }} />
+                    <Marker longitude={markerPos.lng} latitude={markerPos.lat} anchor="center">
+                      <div style={{ position: 'relative', width: 28, height: 28 }}>
+                        <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1.5px solid rgba(139,92,246,0.45)' }} />
+                        <div style={{ position: 'absolute', inset: 5, borderRadius: '50%', background: '#8b5cf6', boxShadow: '0 0 10px rgba(139,92,246,0.65)' }} />
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 6, height: 6, borderRadius: '50%', background: '#ffffff' }} />
                       </div>
                     </Marker>
                   )}
