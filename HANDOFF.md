@@ -1,4 +1,114 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-29 (Session 42 — map layer standardization + pin refresh fix)
+
+---
+
+## Session 42 — 2026-05-29
+
+**Commits:** `72b538b` fix(map): standardize all map layers and pin styles to match CompetitorDiscovery → `b68930d` fix(map): force dispensary pin refresh after track/block in CommandCenter
+**Deploy:** Vercel ✅ auto-deployed on push | Railway API ✅ unchanged
+
+---
+
+### 1. What Was Done
+
+#### Map layer standardization — CommandCenter, LocationWizard, MarketHeatMap
+
+CompetitorDiscovery.tsx was established as the gold standard for all map styling (shared layers, `useDispensaryMap` hook, `promoteId="id"`, cluster config, purple own-location marker).
+
+**CommandCenter.tsx** — largest change:
+- Removed inline `DISP_RING_LAYER` and `DISP_FILL_LAYER` (transparent ring + 4px fill, hardcoded mint hex colors, no clustering). These were out of sync with the shared layer definitions.
+- Replaced with `dispensaryRingLayer`, `dispensaryPointLayer`, `dispensaryClusterLayer`, `dispensaryClusterCountLayer` imported from `packages/web/src/components/map/layers.ts`.
+- Replaced manual `authFetch` dispensary loop (`fetchDispensaries` callback) with `useDispensaryMap(bbox, { refreshKey })` hook + bbox state — exactly matching CompetitorDiscovery's pattern.
+- Source id changed from `cc-dispensaries` → `cs-dispensaries`; added `cluster clusterMaxZoom={13} clusterRadius={35}`.
+- Added `interactiveLayerIds={['cs-dispensary-cluster', 'cs-dispensary-point']}` to `<Map>` so click events carry features in the event object.
+- Rewrote `handleMapClick` to use `e.features` instead of `queryRenderedFeatures`; added cluster expand-zoom handler on `cs-dispensary-cluster` click.
+- Own-location markers: coral `#d4537e` → purple `#8b5cf6` with 5-layer concentric ring + `cs-ping` pulse animation — matching CompetitorDiscovery. Name label color updated to match.
+
+**LocationWizard.tsx** — single marker change:
+- Address preview pin changed from teal teardrop (`anchor="bottom"`, rotated square with white dot) to purple dot (`anchor="center"`, `#8b5cf6`) consistent with CompetitorDiscovery's own-location style.
+
+**MarketHeatMap.tsx** — confirmed already correct:
+- Already imported shared layers, already had `promoteId="id"`, `cluster`, `clusterMaxZoom={13}`, `clusterRadius={35}`, and `useAppTheme()` MutationObserver pattern. No changes needed. The `filter==='enriched'` paint override is intentional (not a contradiction with layers.ts).
+
+#### Pin refresh fix — CommandCenter
+
+After a user clicks Track or Block on a dispensary popup in CommandCenter, the pin color wouldn't update until the map was panned or zoomed, because `useDispensaryMap` only re-fetches when `bbox` changes.
+
+Fix:
+- `useDispensaryMap.ts`: added `refreshKey?: number` to `DispensaryMapFilters` interface; added `filters?.refreshKey` to the `useEffect` dependency array. Not sent to the API — its only purpose is to drive a re-fetch.
+- `CommandCenter.tsx`: added `mapRefreshKey` state (starts at 0); passed as `{ refreshKey: mapRefreshKey }` to the hook; called `setMapRefreshKey(k => k + 1)` immediately after any successful track/block POST in `handlePopupAction`.
+
+TypeScript clean (`tsc --noEmit` exits 0) after both changes.
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/web/src/pages/CommandCenter.tsx` | Remove inline layer defs; import shared layers; replace manual fetch with `useDispensaryMap`; add cluster to Source; fix click handler; purple own-location marker; `mapRefreshKey` state wired |
+| `packages/web/src/pages/LocationWizard.tsx` | Address pin: teal teardrop → purple dot matching CompetitorDiscovery |
+| `packages/web/src/hooks/useDispensaryMap.ts` | Add `refreshKey?: number` to `DispensaryMapFilters`; add to `useEffect` dep array |
+
+No schema migrations. No new npm dependencies. No new env vars.
+
+---
+
+### 3. What Failed
+
+Nothing failed. TypeScript clean after every change.
+
+Known standing issues (not touched this session):
+- `alert.worker.ts` — logs only, no emails sent on alerts
+- `scrape.worker.ts` — still falls back to `dispensary_scraper.py` as primary
+- Stripe live-mode webhook not registered
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Wire PromotionsTracker** — add `GET /api/v1/competitors/:id/promotions` to `packages/api/src/routes/competitors.ts`, then wire `packages/web/src/pages/PromotionsTracker.tsx` to it
+2. **Wire alert.worker.ts → Resend** — `packages/api/src/workers/alert.worker.ts` currently logs only; read from `change_events`, send real price-change emails via Resend
+3. **BillingUsage per-location slot breakdown** — new endpoint returning `tracked_competitors` grouped by location + wire `packages/web/src/pages/BillingUsage.tsx`
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Frontend (account screens):**
+- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions` (backend route not yet built)
+- [ ] BillingUsage — per-location slot breakdown
+- [ ] BillingUsage — invoice history
+- [ ] BlockManagement — "Rivals blocking you" section
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Map / Data Pipeline:**
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] `scrape.worker.ts` → call `collector.py` as primary
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after scrape
+- [ ] 462 dispensaries missing lat/lng — geocode when `GOOGLE_PLACES_API_KEY` available
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Culture Cannabis Club, Corona)
+Location ID:      9354f184-5b88-4a8f-abc3-012fdaa4058f (Cannabis House, LA)
+Org ID (Patrick): 4b507cd2-17e6-439c-8993-78476cdf08e1
+Railway project token: ce3cf795-c0ab-45fe-b815-eb3ef2a81331
+```
+
+---
+
 **Date:** 2026-05-29 (Session 41 — doc sync: CLAUDE.md migration count corrected 12→13)
 
 ---

@@ -526,9 +526,12 @@ Done:
 - [x] `/setup` route — blank screen fixed (Navigate redirect + ProtectedRoute), Session 38
 - [x] `LocationWizard.tsx` — name autocomplete via `/suggest`, address autocomplete via Mapbox, dual DBA+legal name, noResults state (Session 38)
 - [x] `CompetitorDiscovery.tsx` — full overhaul: purple marker, popup stays open, per-location `allSelections`, auto-save on Track/Block click, on-mount pre-populate, sidebar dedup via google_place_id, own-location excluded, sort tabs, radius overlay tuned (Session 39)
+- [x] Map layer standardization — `CommandCenter.tsx`: replaced inline DISP_RING/FILL layers with shared `dispensaryRingLayer`, `dispensaryPointLayer`, `dispensaryClusterLayer`, `dispensaryClusterCountLayer`; replaced manual fetch with `useDispensaryMap` hook; source id `cc-dispensaries` → `cs-dispensaries`; added cluster; fixed `handleMapClick` to use event features; own-location marker coral → purple (Session 42)
+- [x] `LocationWizard.tsx` — address pin teardrop teal → purple dot matching CompetitorDiscovery own-location style (Session 42)
+- [x] `MarketHeatMap.tsx` — confirmed `promoteId="id"`, cluster, shared layers, `useAppTheme` already correct (Session 42)
+- [x] `useDispensaryMap.ts` + `CommandCenter.tsx` — `refreshKey` added to force pin recolor immediately after track/block without requiring map pan (Session 42)
 
 Still needed:
-- [ ] `promoteId="id"` on dispensary `<Source>` in `MarketHeatMap.tsx` — hover state not yet applied (1-line fix)
 - [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
 - [ ] Block Management (`/blocks`) — verify wired to real data
 - [ ] Promotions — scaffold only, not wired
@@ -627,5 +630,5 @@ Total menu items in DB: **9,584** (8 competitors, 2 locations as of Session 28)
 ---
 
 *Maintained by the CannaSpy founder and Claude.*
-*Last updated: 2026-05-28 — v2.3 (Session 40: migration count 12→13 — 013_platform_slug added Session 39)*
+*Last updated: 2026-05-29 — v2.4 (Session 42: map layer standardization; pin refresh fix; promoteId confirmed on MarketHeatMap)*
 *Do not commit changes to this file without founder approval.*
