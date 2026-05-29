@@ -122,13 +122,13 @@ function makeCircleGeoJSON(lat: number, lng: number, radiusMiles: number) {
 const radiusFillLayer: LayerProps = {
   id: 'radius-fill',
   type: 'fill',
-  paint: { 'fill-color': '#1d9e75', 'fill-opacity': 0.05 },
+  paint: { 'fill-color': '#1d9e75', 'fill-opacity': 0.15 },
 }
 
 const radiusOutlineLayer: LayerProps = {
   id: 'radius-outline',
   type: 'line',
-  paint: { 'line-color': '#1d9e75', 'line-width': 1.5, 'line-opacity': 0.4, 'line-dasharray': [4, 3] },
+  paint: { 'line-color': '#1d9e75', 'line-width': 2, 'line-opacity': 0.75, 'line-dasharray': [4, 3] },
 }
 
 export default function CompetitorDiscovery() {
@@ -144,7 +144,13 @@ export default function CompetitorDiscovery() {
   const [locations, setLocations] = useState<Location[]>([])
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null)
   const [competitors, setCompetitors] = useState<Competitor[]>([])
-  const [selections, setSelections] = useState<globalThis.Map<string, Selection>>(new globalThis.Map())
+  // Keyed by locationId → per-location selection map so switching locations preserves picks
+  const [allSelections, setAllSelections] = useState<globalThis.Map<string, globalThis.Map<string, Selection>>>(new globalThis.Map())
+  // Current location's selections — derived so UI re-renders automatically on location switch
+  const selections = useMemo(
+    () => allSelections.get(selectedLocation?.id ?? '') ?? new globalThis.Map<string, Selection>(),
+    [allSelections, selectedLocation?.id]
+  )
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [scanned, setScanned] = useState(false)
@@ -254,9 +260,10 @@ export default function CompetitorDiscovery() {
 
   const handleDiscover = async () => {
     if (!selectedLocation?.id) return
+    const locId = selectedLocation.id
     setLoading(true)
     setMapMoved(false)
-    setSelections(new globalThis.Map())
+    setAllSelections(prev => { const n = new globalThis.Map(prev); n.set(locId, new globalThis.Map()); return n })
     try {
       const res = await authFetch(`${API}/api/v1/locations/${selectedLocation.id}/discover?radius=${radius}`)
       const data = await res.json()
@@ -270,20 +277,25 @@ export default function CompetitorDiscovery() {
   }
 
   const setSelection = useCallback((comp: Competitor, field: 'track' | 'block', value: boolean) => {
+    if (!selectedLocation?.id) return
+    const locId = selectedLocation.id
     const key = comp.id || comp.google_place_id
-    setSelections((prev) => {
+    setAllSelections((prev) => {
       const next = new globalThis.Map(prev)
-      const existing = next.get(key)
+      const locMap = new globalThis.Map(next.get(locId) ?? new globalThis.Map<string, Selection>())
+      const existing = locMap.get(key)
       const updated: Selection = { competitor: comp, track: false, block: false, ...existing, [field]: value }
-      if (!updated.track && !updated.block) next.delete(key)
-      else next.set(key, updated)
+      if (!updated.track && !updated.block) locMap.delete(key)
+      else locMap.set(key, updated)
+      next.set(locId, locMap)
       return next
     })
-  }, [])
+  }, [selectedLocation?.id])
 
   // Track or Block a dispensary directly from its map popup
   const handlePopupSelect = useCallback((field: 'track' | 'block') => {
-    if (!dispPopup) return
+    if (!dispPopup || !selectedLocation?.id) return
+    const locId = selectedLocation.id
     const { props, lat, lng } = dispPopup
     const comp: Competitor = {
       google_place_id: props.dcc_license ?? `dcc-popup-${props.name}`,
@@ -296,57 +308,62 @@ export default function CompetitorDiscovery() {
       ...(props.dcc_license ? { dcc_license: props.dcc_license } as Record<string, unknown> : {}),
     }
     setCompetitors(prev =>
-      prev.some(c => c.google_place_id === props.dcc_license) ? prev : [...prev, comp]
+      prev.some(c => c.google_place_id === comp.google_place_id) ? prev : [...prev, comp]
     )
-    setSelections(prev => {
-      const key = comp.google_place_id
+    setAllSelections(prev => {
       const next = new globalThis.Map(prev)
-      const existing = next.get(key)
+      const locMap = new globalThis.Map(next.get(locId) ?? new globalThis.Map<string, Selection>())
+      const key = comp.google_place_id
+      const existing = locMap.get(key)
       const updated: Selection = { competitor: comp, track: false, block: false, ...existing, [field]: !(existing?.[field]) }
-      if (!updated.track && !updated.block) next.delete(key)
-      else next.set(key, updated)
+      if (!updated.track && !updated.block) locMap.delete(key)
+      else locMap.set(key, updated)
+      next.set(locId, locMap)
       return next
     })
-  }, [dispPopup])
+  }, [dispPopup, selectedLocation?.id])
 
   const handleLaunch = async () => {
-    if (!selections.size) { navigate('/command-center'); return }
+    const totalSize = [...allSelections.values()].reduce((s, m) => s + m.size, 0)
+    if (!totalSize) { navigate('/command-center'); return }
     setSaving(true)
     try {
-      for (const [, sel] of selections) {
-        let competitorId = sel.competitor.id
-        if (!competitorId) {
-          const compRes = await authFetch(`${API}/api/v1/competitors`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: sel.competitor.name,
-              address: sel.competitor.address,
-              google_place_id: sel.competitor.google_place_id,
-              platform: sel.competitor.platform || 'unknown',
-              lat: sel.competitor.lat ?? undefined,
-              lng: sel.competitor.lng ?? undefined,
-              dcc_license: (sel.competitor as any).dcc_license ?? undefined,
-              business_type: (sel.competitor as any).business_type ?? undefined,
-            }),
-          })
-          const compData = await compRes.json()
-          competitorId = compData.data?.id || compData.id
-        }
-        if (!competitorId) continue
-        if (sel.track) {
-          await authFetch(`${API}/api/v1/locations/${selectedLocation!.id}/competitors`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ competitor_id: competitorId, slot_type: 'track' }),
-          })
-        }
-        if (sel.block) {
-          await authFetch(`${API}/api/v1/locations/${selectedLocation!.id}/competitors`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ competitor_id: competitorId, slot_type: 'block' }),
-          })
+      for (const [locId, locSelections] of allSelections) {
+        for (const [, sel] of locSelections) {
+          let competitorId = sel.competitor.id
+          if (!competitorId) {
+            const compRes = await authFetch(`${API}/api/v1/competitors`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: sel.competitor.name,
+                address: sel.competitor.address,
+                google_place_id: sel.competitor.google_place_id,
+                platform: sel.competitor.platform || 'unknown',
+                lat: sel.competitor.lat ?? undefined,
+                lng: sel.competitor.lng ?? undefined,
+                dcc_license: (sel.competitor as any).dcc_license ?? undefined,
+                business_type: (sel.competitor as any).business_type ?? undefined,
+              }),
+            })
+            const compData = await compRes.json()
+            competitorId = compData.data?.id || compData.id
+          }
+          if (!competitorId) continue
+          if (sel.track) {
+            await authFetch(`${API}/api/v1/locations/${locId}/competitors`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ competitor_id: competitorId, slot_type: 'track' }),
+            })
+          }
+          if (sel.block) {
+            await authFetch(`${API}/api/v1/locations/${locId}/competitors`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ competitor_id: competitorId, slot_type: 'block' }),
+            })
+          }
         }
       }
       navigate('/command-center')
@@ -355,9 +372,13 @@ export default function CompetitorDiscovery() {
     }
   }
 
+  // Per-location counts for sidebar display context
   const trackCount = [...selections.values()].filter((s) => s.track).length
   const blockCount = [...selections.values()].filter((s) => s.block).length
-  const estimatedCost = (trackCount + blockCount) * 100
+  // Totals across all locations for the launch button
+  const allVals = [...allSelections.values()].flatMap(m => [...m.values()])
+  const totalTrack = allVals.filter(s => s.track).length
+  const totalBlock = allVals.filter(s => s.block).length
 
   const centerLat = selectedLocation?.lat ? Number(selectedLocation.lat) : null
   const centerLng = selectedLocation?.lng ? Number(selectedLocation.lng) : null
@@ -943,11 +964,12 @@ export default function CompetitorDiscovery() {
           alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12,
         }}>
           <div style={{ fontSize: 12, minWidth: 0 }}>
-            {selections.size > 0 ? (
+            {(totalTrack > 0 || totalBlock > 0) ? (
               <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                {trackCount > 0 && <span style={{ color: 'var(--accent)' }}>{trackCount} tracking</span>}
-                {trackCount > 0 && blockCount > 0 && <span style={{ color: 'var(--text-3)' }}>·</span>}
-                {blockCount > 0 && <span style={{ color: 'var(--warm)' }}>{blockCount} blocked</span>}
+                {totalTrack > 0 && <span style={{ color: 'var(--accent)' }}>{totalTrack} tracking</span>}
+                {totalTrack > 0 && totalBlock > 0 && <span style={{ color: 'var(--text-3)' }}>·</span>}
+                {totalBlock > 0 && <span style={{ color: 'var(--warm)' }}>{totalBlock} blocked</span>}
+                {allSelections.size > 1 && <span style={{ color: 'var(--text-3)', fontSize: 10, fontFamily: 'Space Mono, monospace' }}>across {allSelections.size} locations</span>}
               </span>
             ) : (
               <span style={{ color: 'var(--text-3)', fontSize: 11, fontFamily: 'Space Mono, monospace' }}>
@@ -961,7 +983,7 @@ export default function CompetitorDiscovery() {
             onClick={handleLaunch}
             disabled={saving}
           >
-            {saving ? 'Launching...' : selections.size > 0 ? 'Confirm & launch monitoring' : 'Skip for now'}
+            {saving ? 'Launching...' : (totalTrack + totalBlock) > 0 ? 'Confirm & launch monitoring' : 'Skip for now'}
           </button>
         </div>
       </div>
