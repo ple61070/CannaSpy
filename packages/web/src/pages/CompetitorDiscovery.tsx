@@ -122,7 +122,7 @@ function makeCircleGeoJSON(lat: number, lng: number, radiusMiles: number) {
 const radiusFillLayer: LayerProps = {
   id: 'radius-fill',
   type: 'fill',
-  paint: { 'fill-color': '#1d9e75', 'fill-opacity': 0.28 },
+  paint: { 'fill-color': '#1d9e75', 'fill-opacity': 0.12 },
 }
 
 const radiusOutlineLayer: LayerProps = {
@@ -152,8 +152,10 @@ export default function CompetitorDiscovery() {
     [allSelections, selectedLocation?.id]
   )
   const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
   const [scanned, setScanned] = useState(false)
+  const [savingKeys, setSavingKeys] = useState<Set<string>>(new Set())
+  const allSelectionsRef = useRef(allSelections)
+  useEffect(() => { allSelectionsRef.current = allSelections }, [allSelections])
   const [mapMoved, setMapMoved] = useState(false)
   const [operatorType, setOperatorType] = useState<OperatorType>('both')
   const [sortMode, setSortMode] = useState<SortMode>('distance')
@@ -184,6 +186,42 @@ export default function CompetitorDiscovery() {
       })
       .catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load existing tracked/blocked competitors for all locations on mount so hard-refresh restores state
+  useEffect(() => {
+    if (!locations.length) return
+    Promise.all(
+      locations.map(loc =>
+        authFetch(`${API}/api/v1/locations/${loc.id}/competitors`)
+          .then(r => r.json())
+          .then((d): { locId: string; rows: any[] } => ({ locId: loc.id, rows: d.competitors || [] }))
+          .catch((): { locId: string; rows: any[] } => ({ locId: loc.id, rows: [] }))
+      )
+    ).then(results => {
+      setAllSelections(prev => {
+        const next = new globalThis.Map(prev)
+        for (const { locId, rows } of results) {
+          if (!rows.length) continue
+          const locMap = new globalThis.Map<string, Selection>()
+          for (const r of rows) {
+            const gpid: string = r.google_place_id || r.competitor_id
+            const comp: Competitor = {
+              id: r.competitor_id,
+              google_place_id: gpid,
+              name: r.name,
+              address: r.address || '',
+              lat: r.lat ? Number(r.lat) : null,
+              lng: r.lng ? Number(r.lng) : null,
+              platform: r.platform || 'dcc',
+            }
+            locMap.set(gpid, { competitor: comp, track: r.slot_type === 'track', block: r.slot_type === 'block' })
+          }
+          next.set(locId, locMap)
+        }
+        return next
+      })
+    })
+  }, [locations]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keep Mapbox canvas in sync with container size (sidebar expand/collapse)
   useEffect(() => {
@@ -260,12 +298,12 @@ export default function CompetitorDiscovery() {
 
   const handleDiscover = async () => {
     if (!selectedLocation?.id) return
-    const locId = selectedLocation.id
     setLoading(true)
     setMapMoved(false)
-    setAllSelections(prev => { const n = new globalThis.Map(prev); n.set(locId, new globalThis.Map()); return n })
     try {
-      const res = await authFetch(`${API}/api/v1/locations/${selectedLocation.id}/discover?radius=${radius}`)
+      const res = await authFetch(
+        `${API}/api/v1/locations/${selectedLocation.id}/discover?radius=${radius}`
+      )
       const data = await res.json()
       setCompetitors(data.data?.competitors || [])
     } catch {
@@ -292,13 +330,99 @@ export default function CompetitorDiscovery() {
     })
   }, [selectedLocation?.id])
 
+  // Persist a track/block toggle to the API immediately (optimistic UI — reverts on error)
+  const persistToggle = useCallback(async (
+    comp: Competitor,
+    field: 'track' | 'block',
+    newValue: boolean,
+    locId: string,
+  ) => {
+    const key = comp.google_place_id || comp.id || ''
+    setSavingKeys(prev => new Set(prev).add(key))
+    try {
+      // Prefer stored DB id from the selection (set after creation or loaded from API)
+      let competitorId: string | undefined =
+        comp.id ?? allSelectionsRef.current.get(locId)?.get(key)?.competitor.id
+
+      if (newValue) {
+        if (!competitorId) {
+          const compRes = await authFetch(`${API}/api/v1/competitors`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: comp.name,
+              address: comp.address,
+              google_place_id: comp.google_place_id,
+              platform: comp.platform || 'dcc',
+              lat: comp.lat ?? undefined,
+              lng: comp.lng ?? undefined,
+              dcc_license: (comp as any).dcc_license ?? undefined,
+              business_type: (comp as any).business_type ?? undefined,
+            }),
+          })
+          const compData = await compRes.json()
+          competitorId = compData.data?.id || compData.id
+          if (!competitorId) throw new Error('Failed to create competitor')
+          // Store the DB id inside the selection so DELETE can find it later
+          setAllSelections(prev => {
+            const next = new globalThis.Map(prev)
+            const locMap = new globalThis.Map(next.get(locId) ?? new globalThis.Map<string, Selection>())
+            const existing = locMap.get(key)
+            if (existing) locMap.set(key, { ...existing, competitor: { ...existing.competitor, id: competitorId! } })
+            next.set(locId, locMap)
+            return next
+          })
+        }
+        await authFetch(`${API}/api/v1/locations/${locId}/competitors`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ competitor_id: competitorId, slot_type: field }),
+        })
+      } else {
+        if (!competitorId) {
+          // Can't delete without a DB id — revert the optimistic update
+          setAllSelections(prev => {
+            const next = new globalThis.Map(prev)
+            const locMap = new globalThis.Map(next.get(locId) ?? new globalThis.Map<string, Selection>())
+            const existing = locMap.get(key)
+            if (existing) locMap.set(key, { ...existing, [field]: true })
+            next.set(locId, locMap)
+            return next
+          })
+          return
+        }
+        await authFetch(`${API}/api/v1/locations/${locId}/competitors/${competitorId}`, {
+          method: 'DELETE',
+        })
+      }
+    } catch {
+      // Revert optimistic state on any API failure
+      setAllSelections(prev => {
+        const next = new globalThis.Map(prev)
+        const locMap = new globalThis.Map(next.get(locId) ?? new globalThis.Map<string, Selection>())
+        const existing = locMap.get(key)
+        if (existing) {
+          const reverted: Selection = { ...existing, [field]: !newValue }
+          if (!reverted.track && !reverted.block) locMap.delete(key)
+          else locMap.set(key, reverted)
+          next.set(locId, locMap)
+        }
+        return next
+      })
+    } finally {
+      setSavingKeys(prev => { const n = new Set(prev); n.delete(key); return n })
+    }
+  }, [authFetch]) // allSelectionsRef is a ref — intentionally excluded
+
   // Track or Block a dispensary directly from its map popup
   const handlePopupSelect = useCallback((field: 'track' | 'block') => {
     if (!dispPopup || !selectedLocation?.id) return
     const locId = selectedLocation.id
     const { props, lat, lng } = dispPopup
+    // Key format must match sidebarItems so popup and sidebar stay in sync
+    const gpid = props.dcc_license ?? `dcc-${props.name}-${lat.toFixed(4)}-${lng.toFixed(4)}`
     const comp: Competitor = {
-      google_place_id: props.dcc_license ?? `dcc-popup-${props.name}`,
+      google_place_id: gpid,
       name: props.name,
       address: `${props.city}${props.county ? `, ${props.county} Co.` : ''}, CA`,
       platform: 'dcc',
@@ -307,69 +431,26 @@ export default function CompetitorDiscovery() {
       ...(props.business_type ? { business_type: props.business_type } as Record<string, unknown> : {}),
       ...(props.dcc_license ? { dcc_license: props.dcc_license } as Record<string, unknown> : {}),
     }
+    const currentSel = allSelectionsRef.current.get(locId)?.get(gpid)
+    const newValue = !(currentSel?.[field])
     setCompetitors(prev =>
-      prev.some(c => c.google_place_id === comp.google_place_id) ? prev : [...prev, comp]
+      prev.some(c => c.google_place_id === gpid) ? prev : [...prev, comp]
     )
     setAllSelections(prev => {
       const next = new globalThis.Map(prev)
       const locMap = new globalThis.Map(next.get(locId) ?? new globalThis.Map<string, Selection>())
-      const key = comp.google_place_id
-      const existing = locMap.get(key)
-      const updated: Selection = { competitor: comp, track: false, block: false, ...existing, [field]: !(existing?.[field]) }
-      if (!updated.track && !updated.block) locMap.delete(key)
-      else locMap.set(key, updated)
+      const existing = locMap.get(gpid)
+      const updated: Selection = { competitor: comp, track: false, block: false, ...existing, [field]: newValue }
+      if (!updated.track && !updated.block) locMap.delete(gpid)
+      else locMap.set(gpid, updated)
       next.set(locId, locMap)
       return next
     })
-  }, [dispPopup, selectedLocation?.id])
+    persistToggle(comp, field, newValue, locId)
+  }, [dispPopup, selectedLocation?.id, persistToggle])
 
-  const handleLaunch = async () => {
-    const totalSize = [...allSelections.values()].reduce((s, m) => s + m.size, 0)
-    if (!totalSize) { navigate('/command-center'); return }
-    setSaving(true)
-    try {
-      for (const [locId, locSelections] of allSelections) {
-        for (const [, sel] of locSelections) {
-          let competitorId = sel.competitor.id
-          if (!competitorId) {
-            const compRes = await authFetch(`${API}/api/v1/competitors`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: sel.competitor.name,
-                address: sel.competitor.address,
-                google_place_id: sel.competitor.google_place_id,
-                platform: sel.competitor.platform || 'unknown',
-                lat: sel.competitor.lat ?? undefined,
-                lng: sel.competitor.lng ?? undefined,
-                dcc_license: (sel.competitor as any).dcc_license ?? undefined,
-                business_type: (sel.competitor as any).business_type ?? undefined,
-              }),
-            })
-            const compData = await compRes.json()
-            competitorId = compData.data?.id || compData.id
-          }
-          if (!competitorId) continue
-          if (sel.track) {
-            await authFetch(`${API}/api/v1/locations/${locId}/competitors`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ competitor_id: competitorId, slot_type: 'track' }),
-            })
-          }
-          if (sel.block) {
-            await authFetch(`${API}/api/v1/locations/${locId}/competitors`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ competitor_id: competitorId, slot_type: 'block' }),
-            })
-          }
-        }
-      }
-      navigate('/command-center')
-    } finally {
-      setSaving(false)
-    }
+  const handleLaunch = () => {
+    navigate('/command-center')
   }
 
   // Per-location counts for sidebar display context
@@ -469,8 +550,10 @@ export default function CompetitorDiscovery() {
     })
   }, [sidebarItems, selections, sortMode])
 
-  // Popup live state — key must match handlePopupSelect exactly (dcc_license or name fallback)
-  const popupKey = dispPopup ? (dispPopup.props.dcc_license ?? `dcc-popup-${dispPopup.props.name}`) : null
+  // Popup live state — key must match handlePopupSelect exactly (dcc_license or coord fallback)
+  const popupKey = dispPopup
+    ? (dispPopup.props.dcc_license ?? `dcc-${dispPopup.props.name}-${dispPopup.lat.toFixed(4)}-${dispPopup.lng.toFixed(4)}`)
+    : null
   const popupSel = popupKey ? selections.get(popupKey) : undefined
   const popupTracked = popupSel?.track ?? false
   const popupBlocked = popupSel?.block ?? false
@@ -931,23 +1014,35 @@ export default function CompetitorDiscovery() {
                     <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
                       <button
                         style={{
-                          fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
+                          fontSize: 11, padding: '4px 10px', borderRadius: 4,
+                          cursor: savingKeys.has(key) ? 'default' : 'pointer',
                           fontFamily: 'DM Sans, sans-serif', fontWeight: 500,
+                          opacity: savingKeys.has(key) ? 0.6 : 1,
                           border: `1px solid ${isTracked ? '#fb923c' : 'var(--border-2)'}`,
                           background: isTracked ? '#fb923c' : 'transparent',
                           color: isTracked ? '#fff' : 'var(--text-2)',
                         }}
-                        onClick={() => setSelection(comp, 'track', !isTracked)}
+                        disabled={savingKeys.has(key)}
+                        onClick={() => {
+                          setSelection(comp, 'track', !isTracked)
+                          persistToggle(comp, 'track', !isTracked, selectedLocation!.id)
+                        }}
                       >{isTracked ? 'Untrack' : 'Track'}</button>
                       <button
                         style={{
-                          fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
+                          fontSize: 11, padding: '4px 10px', borderRadius: 4,
+                          cursor: savingKeys.has(key) ? 'default' : 'pointer',
                           fontFamily: 'DM Sans, sans-serif', fontWeight: 500,
+                          opacity: savingKeys.has(key) ? 0.6 : 1,
                           border: `1px solid ${isBlocked ? '#67e8f9' : 'var(--border-2)'}`,
                           background: isBlocked ? '#67e8f9' : 'transparent',
                           color: isBlocked ? '#0d0f11' : 'var(--text-2)',
                         }}
-                        onClick={() => setSelection(comp, 'block', !isBlocked)}
+                        disabled={savingKeys.has(key)}
+                        onClick={() => {
+                          setSelection(comp, 'block', !isBlocked)
+                          persistToggle(comp, 'block', !isBlocked, selectedLocation!.id)
+                        }}
                       >{isBlocked ? 'Unblock' : 'Block'}</button>
                     </div>
                   </div>
@@ -981,9 +1076,8 @@ export default function CompetitorDiscovery() {
             className="btn btn-primary"
             style={{ fontSize: 12, padding: '7px 16px', flexShrink: 0 }}
             onClick={handleLaunch}
-            disabled={saving}
           >
-            {saving ? 'Launching...' : (totalTrack + totalBlock) > 0 ? 'Confirm & launch monitoring' : 'Skip for now'}
+            {(totalTrack + totalBlock) > 0 ? 'Go to Command Center' : 'Skip for now'}
           </button>
         </div>
       </div>

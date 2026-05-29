@@ -167,6 +167,7 @@ export async function locationsRoutes(fastify: FastifyInstance) {
          tc.active,
          tc.blocked_at,
          c.id as competitor_id,
+         c.google_place_id,
          c.name,
          c.address,
          c.lat,
