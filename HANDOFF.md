@@ -1,4 +1,122 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-28 (Session 40 — doc sync: CLAUDE.md contradictions fixed + session open/close skills + SessionStart hook)
+
+---
+
+## Session 40 — 2026-05-28
+
+**Commits:** no new feature commits — CLAUDE.md + .claude/settings.json changes committed with this handoff
+**Deploy:** Vercel ✅ unchanged | Railway API ✅ unchanged
+
+---
+
+### 1. What Was Done
+
+#### CLAUDE.md — contradiction audit and sync
+
+Compared CLAUDE.md (last updated 2026-05-17, v2.1) against HANDOFF.md Sessions 37-39. Found and fixed 7 contradictions:
+
+- **Migration count**: All occurrences of "001–011" or "11 migrations" updated to 12 (migration 012 was added in Session 38 for `legal_name` on dispensaries)
+- **`diff_engine.py` status**: "not yet tested end-to-end" in both the repo tree and the ⬜ Remaining list — updated to "tested end-to-end (Session 36)" and removed from Remaining
+- **`map.ts` route note**: Missing `/suggest` endpoint (added Session 38) — added
+- **Phase 3 Done list**: Missing all Session 37-39 completions — added NotificationSettings, LocationManagement, /setup fix, LocationWizard autocomplete, CompetitorDiscovery overhaul
+- **Phase 4 dispensary count**: "1,785" → "1,787" (consistent with repo tree)
+- **Phase 1 diff_engine**: Checked off "test diff engine end-to-end" (done Session 36)
+- **"What Is Built and Live"**: Added migration 012, /suggest endpoint, all Session 37-39 completions
+- Updated last-updated footer to 2026-05-28 v2.2
+
+#### Skills — session open/close
+
+Created `cannaspy-session-open` skill at `~/.claude/skills/cannaspy-session-open/skill.md`:
+- Reads HANDOFF.md (first 300 lines) + CLAUDE.md Build Phase Status + counts actual migration files on disk
+- Audits 5 areas: migration count, Phase Done/Pending lists, "Built and Live" section, "Remaining" section, repo tree status notes
+- HANDOFF.md is read-only ground truth; CLAUDE.md is the doc being corrected
+- Fixes contradictions with targeted Edit calls, outputs a sync report table
+
+Updated `cannaspy-handoff` skill to v2.0 at `~/.claude/skills/cannaspy-handoff/skill.md`:
+- Backlog now derived dynamically from previous session's HANDOFF.md entry — not from a static hardcoded list (which was getting stale)
+- Added Step 6: patch CLAUDE.md Build Phase Status after writing handoff
+- Removed stale backlog items (diff_engine test was still listed as pending)
+
+#### SessionStart hook — auto-opener
+
+Added a second entry to `SessionStart` in `.claude/settings.json` (project-level):
+- Command outputs `additionalContext` JSON instructing Claude to run `/cannaspy-session-open` before responding
+- `statusMessage: "Syncing project docs..."` shows in spinner while hook runs
+- Existing hook (`cat docs/SESSION-HANDOFF.md`) preserved — new hook added alongside it
+- Validated with `jq -e` (exit 0, both commands printed correctly)
+- Pipe-tested: `echo '{}' | <cmd>` → valid JSON, additionalContext field present
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `CLAUDE.md` | Fixed 7 contradictions vs HANDOFF.md; updated to v2.2 (2026-05-28) |
+| `.claude/settings.json` | Added `cannaspy-session-open` auto-invoke to SessionStart hook array |
+| `~/.claude/skills/cannaspy-handoff/skill.md` | Updated to v2.0 — dynamic backlog, Step 6 CLAUDE.md patch, corrected static seed |
+| `~/.claude/skills/cannaspy-session-open/skill.md` | New skill — 5-area contradiction audit between HANDOFF.md and CLAUDE.md |
+
+No schema migrations. No npm dependencies. No new env vars. No Railway or Vercel deploys.
+
+---
+
+### 3. What Failed
+
+Nothing failed.
+
+Known standing issues (not touched this session):
+- `alert.worker.ts` — logs only, no emails sent on alerts
+- `scrape.worker.ts` — still falls back to `dispensary_scraper.py` as primary
+- Stripe live-mode webhook not registered
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Wire PromotionsTracker** — build `GET /api/v1/competitors/:id/promotions` in `packages/api/src/routes/competitors.ts`, then wire `packages/web/src/pages/PromotionsTracker.tsx` to it
+2. **Wire alert.worker.ts → Resend** — `packages/api/src/workers/alert.worker.ts` currently logs only; read from `change_events`, send real price-change emails via Resend
+3. **BillingUsage per-location slot breakdown** — needs new endpoint returning `tracked_competitors` grouped by location + wire `packages/web/src/pages/BillingUsage.tsx`
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Frontend (account screens):**
+- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions` (backend route not yet built)
+- [ ] BillingUsage — per-location slot breakdown
+- [ ] BillingUsage — invoice history
+- [ ] BlockManagement — "Rivals blocking you" section
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Map / Data Pipeline:**
+- [ ] `promoteId="id"` on dispensary `<Source>` in `MarketHeatMap.tsx` — hover state not yet applied (1-line fix)
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] `scrape.worker.ts` → call `collector.py` as primary
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after scrape
+- [ ] 462 dispensaries missing lat/lng — geocode when `GOOGLE_PLACES_API_KEY` available
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Culture Cannabis Club, Corona)
+Location ID:      9354f184-5b88-4a8f-abc3-012fdaa4058f (Cannabis House, LA)
+Org ID (Patrick): 4b507cd2-17e6-439c-8993-78476cdf08e1
+Railway project token: ce3cf795-c0ab-45fe-b815-eb3ef2a81331
+```
+
+---
+
 **Date:** 2026-05-28 (Session 39 — CompetitorDiscovery overhaul: map UX, per-location selections, auto-save)
 
 ---

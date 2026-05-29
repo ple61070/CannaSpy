@@ -8,6 +8,15 @@
             "command": "cat docs/SESSION-HANDOFF.md 2>/dev/null || true"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"CANNASPY SESSION START: Run /cannaspy-session-open now. It reads HANDOFF.md and CLAUDE.md, finds contradictions, and fixes them. Do this before responding to the user.\"}}'",
+            "statusMessage": "Syncing project docs..."
+          }
+        ]
       }
     ],
     "Stop": [

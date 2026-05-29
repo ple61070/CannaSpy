@@ -77,7 +77,7 @@ cannaspy/
 │   ├── scraper/                     ← Python data pipeline
 │   │   ├── dispensary_scraper.py    ← ✅ FALLBACK scraper (rebranded, no CannaIntel refs)
 │   │   ├── collector.py             ← ✅ PRIMARY pipeline (9,584 items collected — 4 Corona + 4 LA competitors)
-│   │   ├── diff_engine.py           ← ✅ built (not yet tested end-to-end)
+│   │   ├── diff_engine.py           ← ✅ built + tested end-to-end (Session 36)
 │   │   ├── ip_pool.py               ← ✅ built (prod proxy pool not yet configured)
 │   │   ├── scheduler.py             ← ✅ built
 │   │   ├── promo_parser.py          ← ✅ built
@@ -89,7 +89,7 @@ cannaspy/
 │   │   │   └── places_client.py     ← ✅ exists
 │   │   ├── compliance/
 │   │   │   └── robots_checker.py    ← ✅ exists
-│   │   ├── dcc_ingest.py            ← ✅ DCC dispensary ingest (1,787 CA records)
+│   │   ├── dcc_ingest.py            ← ✅ DCC dispensary ingest (1,787 CA records; legal_name added migration 012)
 │   │   ├── requirements.txt
 │   │   └── README.md
 │   │
@@ -107,7 +107,7 @@ cannaspy/
 │   │       │   ├── billing.ts
 │   │       │   ├── billing.webhook.ts ← ✅ idempotency gate + payment_succeeded handler
 │   │       │   ├── admin.ts         ← ✅ GET /api/v1/admin/crm-failures
-│   │       │   ├── map.ts           ← ✅ GET /api/v1/map/dispensaries (bbox GeoJSON)
+│   │       │   ├── map.ts           ← ✅ GET /api/v1/map/dispensaries (bbox GeoJSON) + /suggest (name autocomplete, Session 38)
 │   │       │   └── settings.ts
 │   │       ├── workers/             ← ✅ 6 BullMQ workers live in production
 │   │       │   ├── scrape.worker.ts
@@ -124,7 +124,7 @@ cannaspy/
 │   │       ├── db/
 │   │       │   ├── schema.sql       ← ✅ complete schema
 │   │       │   ├── redis.ts         ← ✅ shared IORedis cache singleton
-│   │       │   └── migrations/      ← ✅ 001–011 applied (Railway Postgres)
+│   │       │   └── migrations/      ← ✅ 001–012 applied (Railway Postgres)
 │   │       ├── scheduler.ts         ← ✅ exists
 │   │       └── index.ts             ← ✅ exists
 │   │
@@ -168,7 +168,7 @@ cannaspy/
 - Diff engine (`diff_engine.py`)
 - Promo parser (`promo_parser.py`)
 - CLI tools (all 4 + test-block-cancel.py)
-- Database schema — all 11 migrations applied to Railway Postgres
+- Database schema — all 12 migrations applied to Railway Postgres (012: legal_name on dispensaries, Session 38)
 - Parsers (Dutchie, HTML, normalizer)
 - Places client (slug discovery)
 - Robots checker
@@ -180,10 +180,17 @@ cannaspy/
 - Frontend deployed to Vercel (`https://web-rouge-one-15.vercel.app`) — deployed from workspace root
 - `PriceHistory.tsx` — brand-compliant (Space Mono font, amber rival line, corrected delta colors) — deployed Session 19
 - `cannaspy-data-analyst` skill — installed at `/var/folders/.../skills/cannaspy-data-analyst/`; use for all data questions
+- `diff_engine.py` — tested end-to-end Session 36 (5 synthetic change_events generated + verified; synthetic rows deleted Session 37)
+- `NotificationSettings.tsx` + `LocationManagement.tsx` — wired to real API (GET settings/notifications + GET locations), committed Session 37
+- `/setup` route — fixed blank screen (Navigate redirect + ProtectedRoute), Session 38
+- `LocationWizard.tsx` — full autocomplete (dispensary name via /suggest, address via Mapbox Geocoding, dual DBA+legal name search), Session 38
+- Migration 012 (`012_dispensary_legal_name.sql`) — `legal_name` column + GIN index on dispensaries; 957 active records backfilled, Session 38
+- `map.ts` `/suggest` endpoint — dual-name search (name OR legal_name) against Railway Postgres, Session 38
+- `CompetitorDiscovery.tsx` — full overhaul: purple location marker, popup stays open, per-location selections (`allSelections` Map), auto-save on Track/Block (POST immediately), on-mount pre-populate from API, sidebar dedup via google_place_id, own location excluded, sort controls, radius overlay tuned, Session 39
+- `locations.ts` — added `c.google_place_id` to GET /:id/competitors query, Session 39
 
 ### ⬜ Remaining / Needs Verification
 - `alert.worker.ts` — logs only, not yet wired to Resend (no emails sent on alerts)
-- `diff_engine.py` — not yet tested end-to-end with two real snapshots
 - `IP_POOL` — single local IP in dev; no proxy pool configured for production
 - Webhook live-mode endpoint — test mode only; live-mode registration is a launch-checklist item
 - `scrape.worker.ts` wiring to `collector.py` — fallback to `dispensary_scraper.py` still active
@@ -465,7 +472,7 @@ WEB_PORT=3000
 **Status: COMPLETE ✅ — Pipeline live in production since 2026-04-28.**
 
 Done:
-- [x] Schema applied — 11 migrations on Railway Postgres
+- [x] Schema applied — 12 migrations on Railway Postgres
 - [x] `dispensary_scraper.py` rebranded (no CannaIntel references)
 - [x] `collector.py` built and run — 9,584 menu items collected (4 Corona + 4 LA competitors)
 - [x] `ip_pool.py` built
@@ -473,10 +480,10 @@ Done:
 - [x] `diff_engine.py` built
 - [x] `promo_parser.py` built
 - [x] All 6 BullMQ workers started in production
+- [x] `diff_engine.py` tested end-to-end (Session 36 — 5 synthetic change_events generated + verified, then deleted)
 
 Still needed:
 - [ ] Wire `scrape.worker.ts` to call `collector.py` as primary (currently falls back to `dispensary_scraper.py`)
-- [ ] Test diff engine end-to-end with two real snapshots
 - [ ] Configure production IP proxy pool (currently single IP)
 
 ### Phase 2 — API Wiring + Auth + Blocking
@@ -514,6 +521,11 @@ Done:
 - [x] `PriceHistory.tsx` brand fixes — Space Mono font, amber rival line, corrected delta colors (Session 19)
 - [x] Price Intelligence dropdown clipping fixed — `createPortal` to escape overflow (Session 29)
 - [x] `map.ts` route fixed — `getAdminDb()` instead of `query()`, returns 275+ pins for LA bbox (Session 29)
+- [x] `NotificationSettings.tsx` — wired to real GET/PATCH `/api/v1/settings/notifications` (Session 37)
+- [x] `LocationManagement.tsx` — wired to real `GET /api/v1/locations`, `makeDisplayLocation()` helper (Session 37)
+- [x] `/setup` route — blank screen fixed (Navigate redirect + ProtectedRoute), Session 38
+- [x] `LocationWizard.tsx` — name autocomplete via `/suggest`, address autocomplete via Mapbox, dual DBA+legal name, noResults state (Session 38)
+- [x] `CompetitorDiscovery.tsx` — full overhaul: purple marker, popup stays open, per-location `allSelections`, auto-save on Track/Block click, on-mount pre-populate, sidebar dedup via google_place_id, own-location excluded, sort tabs, radius overlay tuned (Session 39)
 
 Still needed:
 - [ ] `promoteId="id"` on dispensary `<Source>` in `MarketHeatMap.tsx` — hover state not yet applied (1-line fix)
@@ -529,7 +541,7 @@ Still needed:
 
 Done:
 - [x] Railway API deployed and live: `https://cannaspy-production.up.railway.app` (us-west2) — Session 20 (migrated from Fly.io)
-- [x] Railway Postgres active — 1,785 CA dispensaries, all 11 migrations applied, 9,584 menu items
+- [x] Railway Postgres active — 1,787 CA dispensaries, all 12 migrations applied, 9,584 menu items
 - [x] Frontend deployed to Vercel (`web-rouge-one-15.vercel.app`) — monorepo deploy from workspace root
 - [x] Dunning logic — 3-day grace period on `invoice.payment_failed`
 - [x] Webhook test-mode endpoint registered + verified
@@ -615,5 +627,5 @@ Total menu items in DB: **9,584** (8 competitors, 2 locations as of Session 28)
 ---
 
 *Maintained by the CannaSpy founder and Claude.*
-*Last updated: 2026-05-17 — v2.1 (corrected DB → Railway Postgres; updated item counts; fixed promoteId status)*
+*Last updated: 2026-05-28 — v2.2 (Sessions 37-39: diff_engine tested, migration 012 legal_name, setup flow, CompetitorDiscovery overhaul + auto-save)*
 *Do not commit changes to this file without founder approval.*
