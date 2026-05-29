@@ -30,6 +30,7 @@ export interface DispensaryMapFilters {
   enriched?: boolean
   q?: string
   limit?: number
+  refreshKey?: number
 }
 
 export function useDispensaryMap(
@@ -83,7 +84,7 @@ export function useDispensaryMap(
       if (timerRef.current) clearTimeout(timerRef.current)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bbox, filters?.tier, filters?.type, filters?.enriched, filters?.q, filters?.limit])
+  }, [bbox, filters?.tier, filters?.type, filters?.enriched, filters?.q, filters?.limit, filters?.refreshKey])
 
   return { data, loading, count }
 }

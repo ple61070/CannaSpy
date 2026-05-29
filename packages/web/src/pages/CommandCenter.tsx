@@ -197,7 +197,8 @@ export default function CommandCenter() {
   }[]>([])
 
   const [bbox, setBbox] = useState<string | null>(null)
-  const { data: dispensaries } = useDispensaryMap(bbox)
+  const [mapRefreshKey, setMapRefreshKey] = useState(0)
+  const { data: dispensaries } = useDispensaryMap(bbox, { refreshKey: mapRefreshKey })
   const dispensariesRef = useRef(dispensaries)
   const [dispPopup, setDispPopup] = useState<{ lng: number; lat: number; props: Record<string, any> } | null>(null)
   const [trackLocId, setTrackLocId] = useState<string>('')
@@ -338,6 +339,7 @@ export default function CommandCenter() {
       })
       showToast(`${action === 'block' ? 'Blocked' : 'Tracking'} ${props.name}`, action === 'block' ? '#ba7517' : '#1d9e75')
       setDispPopup(null)
+      setMapRefreshKey(k => k + 1)
       await refreshCompetitors()
     } catch { showToast('Something went wrong', '#d4537e') }
     finally { setSavingTrack(false) }
