@@ -1,4 +1,133 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-28 (Session 39 — CompetitorDiscovery overhaul: map UX, per-location selections, auto-save)
+
+---
+
+## Session 39 — 2026-05-28
+
+**Commits:** `cd8c5bb` feat(command-center): show all dispensary pins → `6da9d00` feat(map): pin color overhaul → `e358ec7` feat(competitor-discovery): 8-fix pass → `1425f3a` feat(discovery): sort controls + pulse marker → `bb98af8` fix(discovery): purple pin + popup overhaul → `9786a0f` fix(discovery): exclude own location from sidebar → `3fe4c8d` fix(discovery): popup buttons for delivery ops → `b9db876` fix(discovery): dedup by google_place_id → `49490e7` feat(discovery): sidebar shows all viewport pins → `b88e735` feat(discovery): per-location selections + radius opacity → `67cfb98` feat(discovery): Untrack/Unblock labels → `eb3e3c8` feat(setup): auto-save track/block to API
+**Deploy:** Vercel ✅ auto-deployed on push | Railway API ✅ locations.ts updated (add google_place_id to competitors query)
+
+---
+
+### 1. What Was Done
+
+#### CompetitorDiscovery — map UX overhaul
+
+Multiple rounds of fixes across the session:
+
+**Purple location marker** — replaced the generic green dot with a 5-layer concentric ring design in violet (#8b5cf6) with a pulsing animation (`cs-ping` keyframe). Visible in both the legend and the Marker component.
+
+**Popup improvements** — popup stays open when Track/Block is clicked (was closing on every click). Added a dedicated "Done" button. Buttons now show live state (orange = tracked, cyan = blocked) and display "Untrack" / "Unblock" when already active. Added `closeOnClick={false}` to Popup.
+
+**Sidebar deduplication** — dedup key changed from `dcc_license || name` to `google_place_id` (which includes coordinates for no-license operators). Prevents collapsing same-named delivery chains at different locations to one entry.
+
+**Own location excluded** — distance filter changed from "> 0" to "> 0.01 miles" so the user's own dispensary never appears in the rival sidebar.
+
+**Delivery operator popup fix** — DCC delivery operators have `dcc_license = NULL` in the DB. Mapbox serializes NULL as `null`, causing `null ? ...` to short-circuit to the wrong key. Fixed by using `props.dcc_license ?? \`dcc-popup-${props.name}\`` in the popup key and throughout.
+
+**Sidebar shows all viewport pins** — removed the upper-bound distance filter that was limiting the sidebar to the radius circle. Sidebar now mirrors all pins visible on the map.
+
+**Sort controls** — Distance / Name / Status sort tabs added to the sidebar header. Selected items always float to the top regardless of sort mode.
+
+**Per-location selections** — `selections` Map replaced with `allSelections: Map<locationId, Map<key, Selection>>`. Switching the location dropdown preserves that location's Track/Block choices. `handleLaunch` iterates all locations.
+
+**Radius overlay opacity** — fill opacity tuned to 0.12 (was 0.28 / too dark, was 0.05 / invisible). Outline: solid teal, 3px, dashed.
+
+**Unique google_place_id fallback** — sidebar items without DCC license use `dcc-${name}-${lat.toFixed(4)}-${lng.toFixed(4)}` as the key so each physical location is distinct.
+
+**Key format unified** — popup's `google_place_id` fallback now uses the same coordinate-based format as sidebar items, so popup and sidebar Track/Block state stay in sync.
+
+#### Auto-save — tracks and blocks persist immediately
+
+Previous behavior: selections were accumulated in state and POSTed in bulk when "Confirm & launch" was clicked. After a hard refresh, all selections were lost.
+
+New behavior:
+- Every Track/Block click immediately calls `persistToggle()` which POSTs to the API (creating the competitor in DB if needed, then POST `/locations/:id/competitors`).
+- Untrack/Unblock calls DELETE `/locations/:id/competitors/:competitorId`.
+- Optimistic UI: state updates instantly, reverts automatically if the API call fails.
+- Per-item saving indicator: buttons dim while their specific save is in-flight.
+- On page mount, `GET /api/v1/locations/:id/competitors` is called for all locations and pre-populates `allSelections` — hard-refresh restores the full state.
+- `handleLaunch` simplified to just `navigate('/command-center')`.
+- `locations.ts` updated: added `c.google_place_id` to the competitors query so the DB key matches the sidebar's DCC GeoJSON key.
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `packages/web/src/pages/CompetitorDiscovery.tsx` | Full overhaul — purple marker, popup UX, sidebar dedup, per-location selections, auto-save |
+| `packages/api/src/routes/locations.ts` | Add `c.google_place_id` to GET /:id/competitors query |
+| `packages/web/src/components/map/layers.ts` | Pin color updates for delivery/storefront differentiation |
+
+No schema migrations. No new npm dependencies. No new env vars.
+
+---
+
+### 3. What Failed
+
+Nothing failed. TypeScript compiled clean after every change.
+
+Known standing issues (not touched this session):
+- `alert.worker.ts` logs only — no emails sent on alerts
+- `scrape.worker.ts` still falls back to `dispensary_scraper.py` as primary
+- Stripe live-mode webhook not registered
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Wire PromotionsTracker (`/promotions`)** — backend route `GET /api/v1/competitors/:id/promotions` doesn't exist; add to `packages/api/src/routes/competitors.ts`, then wire `packages/web/src/pages/PromotionsTracker.tsx`
+2. **Wire alert.worker.ts → Resend** — `packages/api/src/workers/alert.worker.ts` currently logs only; wire to Resend to send real price-change emails
+3. **BillingUsage — per-location slot breakdown** — needs an API endpoint returning slots grouped by location
+4. **Register Stripe live-mode webhook** — launch blocker; currently test-mode only
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Onboarding:**
+- [x] /setup blank screen — ✅ session 38
+- [x] LocationWizard autocomplete — ✅ session 38
+- [x] Dual-name DBA+legal search — ✅ session 38
+- [x] CompetitorDiscovery — sidebar now uses DCC bbox GeoJSON (no discover API needed) ✅ session 39
+- [x] CompetitorDiscovery — radius slider filters sidebar ✅ session 39
+- [x] CompetitorDiscovery — auto-save on Track/Block ✅ session 39
+
+**Frontend (account screens):**
+- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions` (backend route not yet built)
+- [ ] BillingUsage — per-location slot breakdown
+- [ ] BillingUsage — invoice history
+- [ ] BlockManagement — "Rivals blocking you" section
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Map / Data Pipeline:**
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] `scrape.worker.ts` → call `collector.py` as primary
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after scrape
+- [ ] 462 dispensaries missing lat/lng — geocode when `GOOGLE_PLACES_API_KEY` available
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Culture Cannabis Club, Corona)
+Location ID:      9354f184-5b88-4a8f-abc3-012fdaa4058f (Cannabis House, LA)
+Org ID (Patrick): 4b507cd2-17e6-439c-8993-78476cdf08e1
+Railway project token: ce3cf795-c0ab-45fe-b815-eb3ef2a81331
+```
+
+---
+
 **Date:** 2026-05-21 (Session 38 — onboarding flow E2E: /setup/locations autocomplete + dual-name search)
 
 ---
