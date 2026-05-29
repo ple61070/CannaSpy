@@ -681,7 +681,7 @@ export default function CompetitorDiscovery() {
                         color: popupTracked ? '#fff' : 'var(--text-2)',
                       }}
                     >
-                      Track
+                      {popupTracked ? 'Untrack' : 'Track'}
                     </button>
                     <button
                       onClick={() => handlePopupSelect('block')}
@@ -693,7 +693,7 @@ export default function CompetitorDiscovery() {
                         color: popupBlocked ? '#0d0f11' : 'var(--text-2)',
                       }}
                     >
-                      Block
+                      {popupBlocked ? 'Unblock' : 'Block'}
                     </button>
                   </div>
                   <button
@@ -938,7 +938,7 @@ export default function CompetitorDiscovery() {
                           color: isTracked ? '#fff' : 'var(--text-2)',
                         }}
                         onClick={() => setSelection(comp, 'track', !isTracked)}
-                      >Track</button>
+                      >{isTracked ? 'Untrack' : 'Track'}</button>
                       <button
                         style={{
                           fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
@@ -948,7 +948,7 @@ export default function CompetitorDiscovery() {
                           color: isBlocked ? '#0d0f11' : 'var(--text-2)',
                         }}
                         onClick={() => setSelection(comp, 'block', !isBlocked)}
-                      >Block</button>
+                      >{isBlocked ? 'Unblock' : 'Block'}</button>
                     </div>
                   </div>
                 )
