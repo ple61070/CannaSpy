@@ -1,5 +1,5 @@
 # CLAUDE.md — CannaSpy Project Lead Instructions
-**Version 2.4 | May 2026**
+**Version 2.5 | May 2026**
 **Read this file at the start of every session. It is the source of truth.**
 
 ---
@@ -158,7 +158,7 @@ cannaspy/
 - Clerk auth middleware (`middleware/clerk.ts`) — all protected routes
 - RLS policies applied (migration 006)
 - All React pages (35 screens built)
-- MarketHeatMap — live Mapbox GL, 1,785 CA dispensary pins, two-layer pin system (ring + fill), bbox API. Pin states: amber=blocked, teal 100%=enriched, teal 70%=prospect (no grey pins). Clusters at zoom <10. Theme-aware basemap (dark-v11 / streets-v12), legend corrected. (`promoteId="id"` hover NOT yet applied — see pending below)
+- MarketHeatMap — live Mapbox GL, 1,785 CA dispensary pins, two-layer pin system (ring + fill), bbox API. Pin states: amber=blocked, teal 100%=enriched, teal 70%=prospect (no grey pins). Clusters at zoom <10. Theme-aware basemap (dark-v11 / streets-v12), legend corrected. `promoteId="id"` confirmed applied (Session 42)
 - `business_type` column on `competitors` + `dispensaries` (migration 011); `OperatorTypeFilter` wired to 6 screens
 - Fallback scraper (`dispensary_scraper.py` — rebranded, no CannaIntel references)
 - Primary pipeline (`collector.py` — live, 9,584 menu items from 8 competitors: 4 Corona + 4 LA)
@@ -630,5 +630,5 @@ Total menu items in DB: **9,584** (8 competitors, 2 locations as of Session 28)
 ---
 
 *Maintained by the CannaSpy founder and Claude.*
-*Last updated: 2026-05-29 — v2.4 (Session 42: map layer standardization; pin refresh fix; promoteId confirmed on MarketHeatMap)*
+*Last updated: 2026-05-30 — v2.5 (Session 43: stale promoteId note removed from MarketHeatMap Built entry)*
 *Do not commit changes to this file without founder approval.*

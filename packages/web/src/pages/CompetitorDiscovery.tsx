@@ -167,15 +167,40 @@ export default function CompetitorDiscovery() {
     type: operatorType === 'both' ? undefined : operatorType,
   })
 
-  // Keep a ref to latest dispensaries so handleMapLoad can seed after remount
-  const dispensariesRef = useRef(dispensaries)
-  useEffect(() => { dispensariesRef.current = dispensaries }, [dispensaries])
+  // Derive per-gpid track state from allSelections for immediate client-side pin color override.
+  // Blocked at any location wins over tracked. Used to patch the Mapbox source without re-fetching.
+  const selectionTrackStates = useMemo(() => {
+    const m = new globalThis.Map<string, 'tracked' | 'blocked'>()
+    for (const locMap of allSelections.values()) {
+      for (const [gpid, sel] of locMap.entries()) {
+        if (sel.block) { m.set(gpid, 'blocked') }
+        else if (sel.track && !m.has(gpid)) { m.set(gpid, 'tracked') }
+      }
+    }
+    return m
+  }, [allSelections])
 
-  // Imperative source update — bypasses React reconciliation, eliminates freeze
+  // Keep a ref to latest augmented dispensaries so handleMapLoad can seed after remount
+  const dispensariesRef = useRef(dispensaries)
+
+  // Imperative source update — applies selection overrides for immediate pin color, bypasses reconciliation
   useEffect(() => {
     const src = mapRef.current?.getMap()?.getSource('cs-dispensaries') as any
-    if (src?.setData) src.setData(dispensaries)
-  }, [dispensaries])
+    if (!src?.setData) return
+    const augmented = selectionTrackStates.size === 0 ? dispensaries : {
+      ...dispensaries,
+      features: dispensaries.features.map(f => {
+        const p = f.properties as DispensaryFeatureProps
+        const [lng, lat] = f.geometry.coordinates
+        const gpid = (p.dcc_license as string | null) ?? `dcc-${p.name}-${lat.toFixed(4)}-${lng.toFixed(4)}`
+        const override = selectionTrackStates.get(gpid)
+        if (!override) return f
+        return { ...f, properties: { ...p, track_state: override } }
+      }),
+    }
+    dispensariesRef.current = augmented
+    src.setData(augmented)
+  }, [dispensaries, selectionTrackStates])
 
   useEffect(() => {
     authFetch(`${API}/api/v1/locations`)
