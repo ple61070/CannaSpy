@@ -44,15 +44,21 @@ export async function competitorsRoutes(fastify: FastifyInstance) {
 
     const { name, address, lat, lng, website_url, platform, google_place_id, dcc_license, business_type } = parsed.data
 
+    // If a competitor with this google_place_id already exists, return its id without
+    // re-inserting (avoids partial-index ON CONFLICT complexity).
+    if (google_place_id) {
+      const existing = await query<{ id: string }>(
+        'SELECT id FROM competitors WHERE google_place_id = $1 LIMIT 1',
+        [google_place_id]
+      )
+      if (existing.rows[0]) {
+        return reply.code(200).send({ id: existing.rows[0].id })
+      }
+    }
+
     const result = await query<{ id: string }>(
       `INSERT INTO competitors (name, address, lat, lng, website_url, platform, google_place_id, dcc_license, business_type)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       ON CONFLICT (google_place_id) WHERE google_place_id IS NOT NULL
-       DO UPDATE SET
-         name = EXCLUDED.name,
-         lat = COALESCE(EXCLUDED.lat, competitors.lat),
-         lng = COALESCE(EXCLUDED.lng, competitors.lng),
-         business_type = COALESCE(EXCLUDED.business_type, competitors.business_type)
        RETURNING id`,
       [name, address, lat ?? null, lng ?? null, website_url ?? null, platform ?? 'unknown', google_place_id ?? null, dcc_license ?? null, business_type ?? 'storefront']
     )
