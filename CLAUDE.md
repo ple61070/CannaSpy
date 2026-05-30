@@ -1,5 +1,5 @@
 # CLAUDE.md — CannaSpy Project Lead Instructions
-**Version 2.5 | May 2026**
+**Version 2.6 | May 2026**
 **Read this file at the start of every session. It is the source of truth.**
 
 ---
@@ -530,6 +530,7 @@ Done:
 - [x] `LocationWizard.tsx` — address pin teardrop teal → purple dot matching CompetitorDiscovery own-location style (Session 42)
 - [x] `MarketHeatMap.tsx` — confirmed `promoteId="id"`, cluster, shared layers, `useAppTheme` already correct (Session 42)
 - [x] `useDispensaryMap.ts` + `CommandCenter.tsx` — `refreshKey` added to force pin recolor immediately after track/block without requiring map pan (Session 42)
+- [x] `CompetitorDiscovery.tsx` — sidebar + popup pin refresh fix: `selectionTrackStates` useMemo derives client-side track state overrides from `allSelections`; augmented GeoJSON pushed via `setData` immediately on any track/block action; covers initial page load pre-population too (Session 44)
 
 Still needed:
 - [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
@@ -630,5 +631,5 @@ Total menu items in DB: **9,584** (8 competitors, 2 locations as of Session 28)
 ---
 
 *Maintained by the CannaSpy founder and Claude.*
-*Last updated: 2026-05-30 — v2.5 (Session 43: stale promoteId note removed from MarketHeatMap Built entry)*
+*Last updated: 2026-05-30 — v2.6 (Session 44: CompetitorDiscovery sidebar+popup pin refresh fix; PAT security cleanup)*
 *Do not commit changes to this file without founder approval.*
