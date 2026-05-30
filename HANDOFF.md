@@ -1,4 +1,92 @@
 # CannaSpy Session Handoff
+**Date:** 2026-05-30 (Session 43 — GitHub MCP token + CLAUDE.md version fix)
+
+---
+
+## Session 43 — 2026-05-30
+
+**Commits:** no new feature commits — doc fix committed with this handoff
+**Deploy:** Vercel ✅ unchanged | Railway API ✅ unchanged
+
+---
+
+### 1. What Was Done
+
+#### GitHub MCP token rotated
+
+Updated `GITHUB_PERSONAL_ACCESS_TOKEN` in `~/.zshrc`. The GitHub MCP server at `~/.claude/plugins/marketplaces/claude-plugins-official/external_plugins/github/.mcp.json` uses `${GITHUB_PERSONAL_ACCESS_TOKEN}` variable substitution for its Bearer token header. The old token was expired/revoked; the new one is `[REDACTED — do not commit PATs to repo]`. Requires a Claude Code restart to take effect.
+
+#### CLAUDE.md version header fix (session opener)
+
+The session opener (`cannaspy-session-open`) caught one remaining contradiction: the CLAUDE.md header still read `Version 2.0 | March 2026` while the footer correctly said `v2.4`. Fixed to `Version 2.4 | May 2026`.
+
+---
+
+### 2. What Changed
+
+| File | Change |
+|---|---|
+| `CLAUDE.md` | Version header corrected: `2.0 \| March 2026` → `2.4 \| May 2026` |
+| `~/.zshrc` (global, not in repo) | `GITHUB_PERSONAL_ACCESS_TOKEN` set to new PAT |
+
+No schema migrations. No npm dependencies. No new env vars in `.env`.
+
+---
+
+### 3. What Failed
+
+Nothing failed.
+
+Known standing issues (not touched this session):
+- `alert.worker.ts` — logs only, no emails sent on alerts
+- `scrape.worker.ts` — still falls back to `dispensary_scraper.py` as primary
+- Stripe live-mode webhook not registered
+
+---
+
+### 4. What Is Next (First Things in Next Session)
+
+1. **Wire PromotionsTracker** — add `GET /api/v1/competitors/:id/promotions` to `packages/api/src/routes/competitors.ts`, then wire `packages/web/src/pages/PromotionsTracker.tsx` to it
+2. **Wire alert.worker.ts → Resend** — `packages/api/src/workers/alert.worker.ts` currently logs only; read from `change_events`, send real price-change emails via Resend
+3. **BillingUsage per-location slot breakdown** — new endpoint returning `tracked_competitors` grouped by location + wire `packages/web/src/pages/BillingUsage.tsx`
+
+---
+
+### 5. What Is Still Left To Do (Full Backlog)
+
+**Frontend (account screens):**
+- [ ] Wire PromotionsTracker (`/promotions`) to `GET /api/v1/competitors/:id/promotions` (backend route not yet built)
+- [ ] BillingUsage — per-location slot breakdown
+- [ ] BillingUsage — invoice history
+- [ ] BlockManagement — "Rivals blocking you" section
+- [ ] `LocationDashboard` — add `.catch()` to prevent infinite loading state
+- [ ] Apply DM Sans + Space Mono typography system-wide
+
+**Map / Data Pipeline:**
+- [ ] Wire `alert.worker.ts` to Resend — currently logs only, no emails sent
+- [ ] `scrape.worker.ts` → call `collector.py` as primary
+- [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after scrape
+- [ ] 462 dispensaries missing lat/lng — geocode when `GOOGLE_PLACES_API_KEY` available
+
+**Infrastructure (Launch Blockers):**
+- [ ] Register Stripe live-mode webhook endpoint (test-mode only currently)
+- [ ] Configure Stripe metered price with volume tiers
+- [ ] Sentry error tracking integration
+- [ ] Uptime Robot scrape health monitoring
+
+**Key Credentials:**
+```
+Railway Postgres: postgresql://postgres:obUqriCmHTpqQIubafxYBLXYZugPivKE@metro.proxy.rlwy.net:36204/railway
+Production API:   https://cannaspy-production.up.railway.app
+Frontend:         https://web-rouge-one-15.vercel.app
+Location ID:      ffdefc3f-8d55-4701-b7ea-6b9d4195b16f (Culture Cannabis Club, Corona)
+Location ID:      9354f184-5b88-4a8f-abc3-012fdaa4058f (Cannabis House, LA)
+Org ID (Patrick): 4b507cd2-17e6-439c-8993-78476cdf08e1
+Railway project token: ce3cf795-c0ab-45fe-b815-eb3ef2a81331
+```
+
+---
+
 **Date:** 2026-05-29 (Session 42 — map layer standardization + pin refresh fix)
 
 ---

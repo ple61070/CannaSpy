@@ -1,5 +1,5 @@
 # CLAUDE.md — CannaSpy Project Lead Instructions
-**Version 2.0 | March 2026**
+**Version 2.4 | May 2026**
 **Read this file at the start of every session. It is the source of truth.**
 
 ---
