@@ -47,6 +47,12 @@ export async function competitorsRoutes(fastify: FastifyInstance) {
     const result = await query<{ id: string }>(
       `INSERT INTO competitors (name, address, lat, lng, website_url, platform, google_place_id, dcc_license, business_type)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       ON CONFLICT (google_place_id) WHERE google_place_id IS NOT NULL
+       DO UPDATE SET
+         name = EXCLUDED.name,
+         lat = COALESCE(EXCLUDED.lat, competitors.lat),
+         lng = COALESCE(EXCLUDED.lng, competitors.lng),
+         business_type = COALESCE(EXCLUDED.business_type, competitors.business_type)
        RETURNING id`,
       [name, address, lat ?? null, lng ?? null, website_url ?? null, platform ?? 'unknown', google_place_id ?? null, dcc_license ?? null, business_type ?? 'storefront']
     )
