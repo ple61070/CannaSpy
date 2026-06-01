@@ -534,7 +534,9 @@ Done:
 
 Still needed:
 - [ ] `scrape.worker.ts` → write `dispensaries.enriched = true` after successful scrape
-- [ ] Block Management (`/blocks`) — verify wired to real data
+- [ ] Block Management (`/blocks`) — verify wired to real data; "Rivals blocking you" section not yet built
+- [ ] BillingUsage — per-location slot breakdown (new endpoint + wire `BillingUsage.tsx`)
+- [ ] BillingUsage — invoice history
 - [ ] Promotions — scaffold only, not wired
 - [ ] LocationDashboard — add `.catch()` to prevent infinite loading state
 - [ ] Apply DM Sans + Space Mono typography across all screens

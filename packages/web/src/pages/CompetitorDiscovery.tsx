@@ -398,11 +398,12 @@ export default function CompetitorDiscovery() {
             return next
           })
         }
-        await authFetch(`${API}/api/v1/locations/${locId}/competitors`, {
+        const locRes = await authFetch(`${API}/api/v1/locations/${locId}/competitors`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ competitor_id: competitorId, slot_type: field }),
         })
+        if (!locRes.ok) throw new Error(`Failed to save slot: ${locRes.status}`)
       } else {
         if (!competitorId) {
           // Can't delete without a DB id — revert the optimistic update
@@ -416,9 +417,10 @@ export default function CompetitorDiscovery() {
           })
           return
         }
-        await authFetch(`${API}/api/v1/locations/${locId}/competitors/${competitorId}`, {
+        const delRes = await authFetch(`${API}/api/v1/locations/${locId}/competitors/${competitorId}`, {
           method: 'DELETE',
         })
+        if (!delRes.ok) throw new Error(`Failed to delete slot: ${delRes.status}`)
       }
     } catch {
       // Revert optimistic state on any API failure
